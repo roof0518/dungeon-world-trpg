@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>던전월드 TRPG Roll20형 VTT 전장</title>
+  <!-- WebRTC P2P Sync Library -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
     :root {
       --wood-dark: #4a2c11;
@@ -105,6 +107,7 @@
     #vtt-world {
       position: absolute; top: 0; left: 0;
       width: 5000px; height: 5000px; transform-origin: 0 0;
+      will-change: transform;
     }
 
     #grid-overlay {
@@ -124,7 +127,7 @@
       pointer-events: none; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
       border: 2px solid var(--parchment-border); z-index: 20;
     }
-    #map-image { display: block; pointer-events: none; object-fit: contain; }
+    #map-image { display: block; pointer-events: none; object-fit: fill; }
 
     #drawing-canvas {
       position: absolute; top: 0; left: 0; width: 5000px; height: 5000px;
@@ -164,11 +167,11 @@
     .vtt-token {
       position: absolute;
       cursor: grab; user-select: none; z-index: 50;
-      transition: opacity 0.2s ease;
+      will-change: left, top;
     }
     .vtt-token.selected-token .token-circle {
       outline: 3px solid #00e5ff;
-      box-shadow: 0 0 12px #00e5ff;
+      box-shadow: 0 0 14px #00e5ff;
     }
     .vtt-token.locked { cursor: not-allowed !important; filter: brightness(0.85); }
     .vtt-token:active:not(.locked) { cursor: grabbing; z-index: 900 !important; }
@@ -223,12 +226,6 @@
     .bubble-green { background: #2e7d32; }
     .bubble-blue { background: #1976d2; }
     .bubble-red { background: #c62828; }
-    .token-bubble:hover::after {
-      content: attr(data-tooltip);
-      position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.85); color: white; padding: 2px 6px;
-      font-size: 0.65rem; white-space: nowrap; border-radius: 3px; pointer-events: none;
-    }
 
     .token-hp-bar {
       position: absolute; top: -3px; left: 4px; right: 4px; height: 4px;
@@ -300,12 +297,12 @@
     #dice-window { top: 60px; right: 20px; width: 340px; height: 460px; }
     #spawner-window { top: 120px; left: 520px; width: 390px; height: 530px; display: none; }
     #compendium-window { top: 100px; left: 250px; width: 540px; height: 500px; display: none; }
-    #map-window { top: 140px; left: 320px; width: 380px; height: 440px; display: none; }
+    #map-window { top: 140px; left: 320px; width: 440px; height: 530px; display: none; }
     #gm-toolbox-window { top: 120px; left: 360px; width: 420px; height: 560px; display: none; }
     #handouts-box-window { top: 140px; left: 420px; width: 440px; height: 520px; display: none; }
     #draw-tools-window { top: 60px; left: 520px; width: 320px; height: 290px; display: none; }
     #sfx-window { top: 200px; right: 80px; width: 340px; height: 420px; display: none; }
-    #users-window { top: 100px; left: 600px; width: 380px; height: 380px; display: none; }
+    #users-window { top: 100px; left: 600px; width: 420px; height: 420px; display: none; }
 
     .char-tab-bar {
       display: flex; gap: 6px; margin-bottom: 10px;
@@ -322,15 +319,11 @@
       padding: 4px 8px; border-radius: 4px; cursor: pointer;
       font-size: 0.78rem; font-weight: bold; margin-left: auto;
     }
-    .char-add-btn:hover { background: #388e3c; }
 
     .sheet-avatar-drop {
       width: 64px; height: 64px; border-radius: 50%;
       border: 2px dashed var(--brass); object-fit: cover;
-      cursor: pointer; transition: transform 0.15s, border-color 0.2s;
-    }
-    .sheet-avatar-drop:hover {
-      transform: scale(1.05); border-color: var(--wood-dark);
+      cursor: pointer;
     }
 
     .sheet-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
@@ -343,7 +336,6 @@
       font-size: 1.1rem; font-weight: bold; color: var(--wood-dark);
       text-align: center; width: 50px; border: none; background: transparent;
     }
-    .stat-val-input:focus { background: #fff; border: 1px solid var(--brass); }
     .stat-mod-pill {
       display: inline-block; padding: 1px 6px; background: #deb887;
       border-radius: 4px; font-size: 0.75rem; font-weight: bold;
@@ -362,8 +354,6 @@
       border: 1px solid #fff; color: #2b1704; padding: 7px;
       border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.82rem;
     }
-    .vtt-dice-btn:hover { background: linear-gradient(to bottom, #edd2a8, #c58c54); }
-
     .dice-window-display {
       background: #eedbc2; border: 2px solid #c09d6e; border-radius: 8px;
       padding: 10px; text-align: center; min-height: 90px;
@@ -377,15 +367,10 @@
       font-size: 1.35rem; font-weight: bold; color: var(--wood-dark); box-shadow: 0 3px 6px rgba(0,0,0,0.25);
     }
     .window-die.rolling { animation: diceRollShake 0.1s infinite alternate; }
-    .window-die.dramatic { animation: dramaticSuspense 0.35s ease forwards; }
 
     @keyframes diceRollShake {
       0% { transform: rotate(-14deg) scale(1.05); background: #ffeeda; }
       100% { transform: rotate(14deg) scale(0.95); background: #ffffff; }
-    }
-    @keyframes dramaticSuspense {
-      0% { transform: scale(1.3) rotate(30deg); }
-      100% { transform: scale(1) rotate(0deg); }
     }
 
     .dice-log-box {
@@ -407,7 +392,6 @@
       text-align: center; background: #faf3e6; cursor: pointer; margin-bottom: 8px;
       font-size: 0.8rem; color: var(--ink-muted);
     }
-    .drop-zone.dragover { background: #ffecb3; border-color: #e65100; }
     .form-group { margin-bottom: 8px; }
     .form-group label {
       display: block; font-weight: bold; font-size: 0.78rem;
@@ -456,7 +440,6 @@
       border-radius: 6px; padding: 8px; margin-bottom: 8px;
       display: flex; justify-content: space-between; align-items: center;
     }
-    .handout-item-card strong { color: var(--wood-dark); font-size: 0.85rem; }
 
     #chat-window {
       position: absolute; bottom: 20px; left: 20px;
@@ -513,7 +496,6 @@
       padding: 3px 8px; border-radius: 4px; cursor: pointer;
       font-size: 0.78rem; font-weight: bold;
     }
-    .bgm-btn:hover { background: #965d2d; }
     .bgm-select {
       background: #fdf8ee; border: 1px solid #deb887;
       padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; color: #2b1d0c;
@@ -531,17 +513,6 @@
       box-shadow: 0 10px 40px rgba(0,0,0,0.8);
       position: relative;
     }
-    .handout-card h2 {
-      color: var(--wood-dark); border-bottom: 2px solid var(--parchment-border);
-      padding-bottom: 6px; margin-bottom: 14px;
-    }
-    .handout-content {
-      font-size: 0.95rem; line-height: 1.6; color: var(--ink); white-space: pre-wrap;
-    }
-    .handout-img {
-      max-width: 100%; border-radius: 6px; border: 1px solid var(--parchment-border);
-      margin-bottom: 12px; display: block;
-    }
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -550,7 +521,7 @@
     }
     .welcome-card {
       background: var(--parchment); border: 3px solid var(--wood-medium);
-      border-radius: 8px; padding: 22px; width: 420px;
+      border-radius: 8px; padding: 22px; width: 440px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.7);
     }
 
@@ -589,7 +560,6 @@
       border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.8rem;
       display: flex; align-items: center; justify-content: center; gap: 5px;
     }
-    .sfx-btn:hover { background: linear-gradient(to bottom, #edd2a8, #c58c54); }
 
     .users-table {
       width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left;
@@ -623,6 +593,19 @@
     .gm-cond-btn:hover { background: #deb887; }
     .gm-cond-btn.active {
       background: #7c4c23; color: white; border-color: #381f08; font-weight: bold;
+    }
+
+    /* Map Compendium Grid Styles */
+    .map-compendium-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-top: 8px;
+    }
+    .map-compendium-card {
+      background: #f7eedf; border: 1px solid #caa372; border-radius: 6px;
+      padding: 6px; display: flex; flex-direction: column; gap: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative;
+    }
+    .map-compendium-thumb {
+      width: 100%; height: 90px; object-fit: cover; border-radius: 4px; border: 1px solid #caa372;
     }
   </style>
 </head>
@@ -664,6 +647,14 @@
         </div>
       </div>
 
+      <!-- P2P Session Sync Room Connect (Optional) -->
+      <div style="background:#eedbc2; border:1px dashed #b3814d; padding:8px; border-radius:6px; margin-bottom:8px; font-size:0.75rem;">
+        <strong style="color:var(--wood-dark);">🌐 멀티플레이 P2P 방 연결 (선택)</strong>
+        <div style="display:flex; gap:4px; margin-top:4px;">
+          <input type="text" id="entry-room-id" placeholder="방 코드 (GM은 비워두면 자동 생성)" style="font-size:0.75rem; padding:4px;">
+        </div>
+      </div>
+
       <button class="btn-create" onclick="finishEntry()">모험 시작하기</button>
     </div>
   </div>
@@ -678,7 +669,7 @@
         <button class="menu-btn" id="btn-toggle-compendium" onclick="toggleWindow('compendium-window')" style="display:none;">📖 토큰 도감 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-gm-toolbox" onclick="toggleWindow('gm-toolbox-window')" style="display:none;">🧰 마스터 도구함 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-sfx" onclick="toggleWindow('sfx-window')" style="display:none;">🔊 효과음 패널 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
-        <button class="menu-btn" id="btn-toggle-users" onclick="toggleWindow('users-window')" style="display:none;">👥 접속자 명단 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
+        <button class="menu-btn" id="btn-toggle-users" onclick="toggleWindow('users-window')">👥 접속자 명단</button>
         <button class="menu-btn" id="btn-toggle-handouts-box" onclick="toggleWindow('handouts-box-window')">📁 단서 보관함</button>
         <button class="menu-btn" id="btn-toggle-draw" onclick="toggleWindow('draw-tools-window')">✏️ 스케치 펜</button>
         <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 맵 배경 설정</button>
@@ -993,16 +984,17 @@
   <!-- FLOATING WINDOW: Connected Users List -->
   <div class="floating-window" id="users-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'users-window')">
-      <div class="window-title">👥 세션 접속자 명단 (GM 관리)</div>
+      <div class="window-title">👥 세션 접속자 명단 (실시간 연동)</div>
       <div class="window-actions">
         <button class="win-btn" onclick="minimizeWindow('users-window')" title="최소화">_</button>
         <button class="win-btn" onclick="toggleWindow('users-window')" title="닫기">×</button>
       </div>
     </div>
     <div class="window-content">
-      <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:8px;">
-        현재 세션에 참가 등록된 모험가 및 관전자 목록입니다.
-      </p>
+      <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.75rem; color:var(--ink-muted);">현재 온라인 참가자</span>
+        <button class="menu-btn" style="padding:2px 6px; font-size:0.7rem;" onclick="copyRoomShareLink()">🔗 초대 링크 복사</button>
+      </div>
       <table class="users-table">
         <thead>
           <tr>
@@ -1072,49 +1064,71 @@
     </div>
   </div>
 
-  <!-- FLOATING WINDOW 8: Map Settings -->
+  <!-- FLOATING WINDOW 8: Map Settings & Map Compendium -->
   <div class="floating-window" id="map-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'map-window')">
-      <div class="window-title">🗺️ 전장 배경 맵 & 격자 맞춤 설정</div>
+      <div class="window-title">🗺️ 전장 배경 맵 & 맵 도감</div>
       <div class="window-actions">
         <button class="win-btn" onclick="minimizeWindow('map-window')" title="최소화">_</button>
         <button class="win-btn" onclick="toggleWindow('map-window')" title="닫기">×</button>
       </div>
     </div>
     <div class="window-content">
-      <div class="drop-zone" id="map-drop-zone" onclick="document.getElementById('map-file-input').click()">
-        🗺️ 지도 이미지 드래그&드롭 또는 클릭하여 업로드
-        <input type="file" id="map-file-input" accept="image/*" style="display:none;" onchange="handleMapFileSelect(event)">
-      </div>
-      <div class="form-group">
-        <label>또는 이미지 URL 입력</label>
-        <input type="text" id="map-url-input" placeholder="https://example.com/map.jpg">
+      <div class="spawner-tabs">
+        <button class="spawner-tab-btn active" id="tab-map-apply" onclick="switchMapWindowTab('apply')">⚙️ 현재 맵 설정</button>
+        <button class="spawner-tab-btn" id="tab-map-compendium" onclick="switchMapWindowTab('compendium')">📖 맵 도감 (원클릭 교체)</button>
       </div>
 
-      <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin:8px 0; border:1px solid #d4b88b;">
-        <label style="font-weight:bold; font-size:0.8rem; color:var(--wood-dark); display:block; margin-bottom:4px;">
-          📏 지도 격자 크기 맞춤 (가로 × 세로 칸수)
-        </label>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <input type="number" id="map-grid-w" value="30" min="1" max="100" style="width:60px; padding:4px; text-align:center;">
-          <span>칸 ×</span>
-          <input type="number" id="map-grid-h" value="20" min="1" max="100" style="width:60px; padding:4px; text-align:center;">
-          <span>칸</span>
-          <span style="font-size:0.75rem; color:var(--ink-muted); margin-left:auto;">(1칸 = 50px)</span>
+      <!-- Tab 1: Current Map Settings -->
+      <div id="map-subview-apply">
+        <div class="drop-zone" id="map-drop-zone" onclick="document.getElementById('map-file-input').click()">
+          🗺️ 새 지도 이미지 업로드 (드래그&드롭)
+          <input type="file" id="map-file-input" accept="image/*" style="display:none;" onchange="handleMapFileSelect(event)">
+        </div>
+        <div class="form-group">
+          <label>또는 이미지 URL 입력</label>
+          <input type="text" id="map-url-input" placeholder="https://example.com/map.jpg">
+        </div>
+
+        <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin:8px 0; border:1px solid #d4b88b;">
+          <label style="font-weight:bold; font-size:0.8rem; color:var(--wood-dark); display:block; margin-bottom:4px;">
+            📏 지도 격자 크기 맞춤 (가로 × 세로 칸수)
+          </label>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="number" id="map-grid-w" value="30" min="1" max="100" style="width:60px; padding:4px; text-align:center;">
+            <span>칸 ×</span>
+            <input type="number" id="map-grid-h" value="20" min="1" max="100" style="width:60px; padding:4px; text-align:center;">
+            <span>칸</span>
+            <span style="font-size:0.75rem; color:var(--ink-muted); margin-left:auto;">(1칸 = 50px)</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>맵 이름 (도감 저장 시 사용)</label>
+          <input type="text" id="map-save-name" placeholder="예: 고블린 동굴 지하 1층">
+        </div>
+
+        <div style="display:flex; gap:6px;">
+          <button class="btn-create" onclick="applyMapSettings(false)">전장 맵만 적용</button>
+          <button class="btn-create" onclick="applyMapSettings(true)" style="background:var(--green);">전장 적용 + 맵 도감 저장</button>
+        </div>
+
+        <div style="margin-top:12px; padding-top:8px; border-top:1px solid var(--parchment-border);">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold;">
+            <input type="checkbox" id="chk-grid-ontop" checked onchange="toggleGridOnTop(this.checked)">
+            <span>격자 무늬를 지도 위에 띄우기 (Grid Overlay)</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:6px;">
+            <input type="checkbox" id="chk-grid-visible" checked onchange="toggleGridVisible(this.checked)">
+            <span>격자선 표시 (끄면 그리드 숨김)</span>
+          </label>
         </div>
       </div>
 
-      <button class="btn-create" onclick="applyMapSettings()">지도 배경 및 크기 적용</button>
-
-      <div style="margin-top:12px; padding-top:8px; border-top:1px solid var(--parchment-border);">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold;">
-          <input type="checkbox" id="chk-grid-ontop" checked onchange="toggleGridOnTop(this.checked)">
-          <span>격자 무늬를 지도 위에 띄우기 (Grid Overlay)</span>
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:6px;">
-          <input type="checkbox" id="chk-grid-visible" checked onchange="toggleGridVisible(this.checked)">
-          <span>격자선 표시 (끄면 그리드 숨김)</span>
-        </label>
+      <!-- Tab 2: Map Compendium -->
+      <div id="map-subview-compendium" style="display:none;">
+        <strong style="color:var(--wood-dark); font-size:0.82rem; display:block; margin-bottom:4px;">📜 사전 저장된 맵 목록 (클릭 즉시 전장 반영):</strong>
+        <div class="map-compendium-grid" id="map-compendium-container"></div>
       </div>
     </div>
   </div>
@@ -1190,21 +1204,27 @@
   </div>
 
   <script>
+    // --- Global State ---
     let myRealName = '';
     let myNickname = '모험가';
     let myBoundCharId = 'char_1';
     let isSpectator = false;
-    let selectedTokenId = 'char_1'; // Currently selected token on the board
-
-    let connectedUsers = [
-      { nickname: 'GM', realName: '마스터', role: 'gm', boundCharId: null, charName: '마스터 (전체 제어)' },
-      { nickname: '모험가', realName: '홍길동', role: 'player', boundCharId: 'char_1', charName: '김점순' }
-    ];
+    let selectedTokenId = 'char_1';
+    let currentRole = 'player';
+    let selectedCharIndex = 0;
+    let uploadedTokenDataUrl = null;
 
     let showPlayerGuide = false;
     let isFogActive = false;
     let fogBrushMode = 'none';
     let drawToolMode = 'none';
+
+    // PeerJS & Cross-tab Sync State
+    let peer = null;
+    let peerConnections = [];
+    let isHostGM = false;
+    let currentRoomId = '';
+    const localBroadcast = new BroadcastChannel('dungeon_world_vtt_channel');
 
     const STATUS_CONDITIONS = [
       { key: 'stun', name: '기절', icon: '💫', color: '#ffb300' },
@@ -1215,6 +1235,10 @@
       { key: 'dazed', name: '얼떨떨', icon: '😵', color: '#ab47bc' },
       { key: 'panic', name: '당황', icon: '😱', color: '#e91e63' },
       { key: 'scar', name: '흉터', icon: '🩹', color: '#f44336' }
+    ];
+
+    let connectedUsers = [
+      { nickname: 'GM', realName: '마스터', role: 'gm', boundCharId: null, charName: '마스터 (전체 제어)' }
     ];
 
     let characters = [
@@ -1282,6 +1306,31 @@
       ]
     };
 
+    // Pre-saved Map Compendium Library
+    let mapCompendium = [
+      {
+        id: 'map_cave',
+        name: '고블린 은신처 지하 동굴',
+        src: 'https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=1600&q=80',
+        gridW: 30,
+        gridH: 20
+      },
+      {
+        id: 'map_forest',
+        name: '안개 낀 고대 수림 (Forest)',
+        src: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80',
+        gridW: 32,
+        gridH: 24
+      },
+      {
+        id: 'map_tavern',
+        name: '황금빛 모험가 주점 (Tavern)',
+        src: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1600&q=80',
+        gridW: 24,
+        gridH: 18
+      }
+    ];
+
     let tokens = [
       { id: 'char_1', name: '김점순', type: 'player', owner: '모험가', x: 750, y: 750, size: 60, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage, conditions: [] },
       { id: 'char_2', name: '녹티엘', type: 'player', owner: 'GM', x: 830, y: 750, size: 60, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage, conditions: [] },
@@ -1294,9 +1343,136 @@
     ];
 
     let customSfxList = [];
-    let currentRole = 'player';
-    let selectedCharIndex = 0;
-    let uploadedTokenDataUrl = null;
+
+    // --- WebRTC / Local Multi-client Sync System ---
+    function initNetworkSync(roomIdInput) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomFromUrl = urlParams.get('room');
+      currentRoomId = roomIdInput || roomFromUrl || (currentRole === 'gm' ? 'DW_' + Math.random().toString(36).substring(2, 8).toUpperCase() : '');
+
+      try {
+        peer = new Peer(currentRole === 'gm' && currentRoomId ? currentRoomId : undefined, { debug: 1 });
+
+        peer.on('open', (id) => {
+          if (currentRole === 'gm' && !currentRoomId) currentRoomId = id;
+          if (currentRole !== 'gm' && currentRoomId) {
+            connectToGmPeer(currentRoomId);
+          }
+        });
+
+        peer.on('connection', (conn) => {
+          peerConnections.push(conn);
+          conn.on('data', (data) => handleNetworkMessage(data));
+          conn.on('open', () => {
+            // GM sends full initial session state to new joiner
+            if (currentRole === 'gm') {
+              conn.send({
+                type: 'FULL_SYNC',
+                payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive }
+              });
+            }
+          });
+        });
+      } catch (err) {
+        console.warn('P2P connection error; running cross-tab sync mode', err);
+      }
+
+      // Cross-tab broadcast listener (for multiple tabs on same browser/device)
+      localBroadcast.onmessage = (event) => {
+        handleNetworkMessage(event.data);
+      };
+    }
+
+    function connectToGmPeer(targetRoomId) {
+      if (!peer) return;
+      const conn = peer.connect(targetRoomId);
+      peerConnections.push(conn);
+      conn.on('open', () => {
+        broadcastNetworkMessage({
+          type: 'USER_JOIN',
+          payload: {
+            nickname: myNickname,
+            realName: myRealName,
+            role: currentRole === 'gm' ? 'gm' : (isSpectator ? 'spectator' : 'player'),
+            boundCharId: myBoundCharId,
+            charName: getCharacterName(myBoundCharId)
+          }
+        });
+      });
+      conn.on('data', (data) => handleNetworkMessage(data));
+    }
+
+    function broadcastNetworkMessage(msg) {
+      // 1. Send via WebRTC peers
+      peerConnections.forEach(conn => {
+        if (conn && conn.open) conn.send(msg);
+      });
+      // 2. Send via local broadcast channel
+      localBroadcast.postMessage(msg);
+    }
+
+    function handleNetworkMessage(msg) {
+      if (!msg || !msg.type) return;
+
+      if (msg.type === 'FULL_SYNC') {
+        tokens = msg.payload.tokens || tokens;
+        characters = msg.payload.characters || characters;
+        connectedUsers = msg.payload.connectedUsers || connectedUsers;
+        handoutsLibrary = msg.payload.handoutsLibrary || handoutsLibrary;
+        isFogActive = msg.payload.isFogActive || false;
+        renderUsersTable();
+        renderTokens();
+        renderSheet();
+        redrawFog();
+      } else if (msg.type === 'USER_JOIN') {
+        const u = msg.payload;
+        const exists = connectedUsers.findIndex(x => x.nickname === u.nickname);
+        if (exists !== -1) connectedUsers[exists] = u;
+        else connectedUsers.push(u);
+        renderUsersTable();
+        populateOwnerDropdowns();
+        appendChatMessage(`👋 [${u.nickname} (${u.realName})]님이 접속했습니다.`);
+      } else if (msg.type === 'TOKEN_MOVE') {
+        const t = tokens.find(tok => tok.id === msg.payload.id);
+        if (t) {
+          t.x = msg.payload.x;
+          t.y = msg.payload.y;
+          const el = document.getElementById(`vtt-tok-${t.id}`);
+          if (el) {
+            el.style.left = `${t.x}px`;
+            el.style.top = `${t.y}px`;
+          }
+          if (isFogActive) {
+            updatePlayerExploredHistory();
+            redrawFog();
+          }
+        }
+      } else if (msg.type === 'TOKEN_UPDATE') {
+        tokens = msg.payload.tokens;
+        renderTokens();
+      } else if (msg.type === 'MAP_CHANGE') {
+        applyMapPreset(msg.payload, false);
+      } else if (msg.type === 'CHAT_MSG') {
+        appendChatMessage(msg.payload.html, msg.payload.type);
+      } else if (msg.type === 'PING') {
+        triggerPingVisual(msg.payload.x, msg.payload.y, msg.payload.nickname);
+      }
+    }
+
+    function copyRoomShareLink() {
+      const url = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
+      navigator.clipboard.writeText(url).then(() => {
+        alert(`초대 링크가 복사되었습니다!\n방 코드: ${currentRoomId}\n${url}`);
+      }).catch(() => {
+        prompt('초대 링크 복사:', url);
+      });
+    }
+
+    function getCharacterName(charId) {
+      if (isSpectator) return '관전 중';
+      const c = characters.find(item => item.id === charId);
+      return c ? c.name : '미배정';
+    }
 
     // --- Entry Modal Options (including GM role) ---
     function renderEntryModalOptions() {
@@ -1304,13 +1480,11 @@
       if (!sel) return;
       sel.innerHTML = '';
 
-      // Option 1: Game Master Role
       const optGm = document.createElement('option');
       optGm.value = 'ROLE_GM';
       optGm.innerText = '👑 게임 마스터 (GM)로 입장';
       sel.appendChild(optGm);
 
-      // Player characters
       characters.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
@@ -1351,6 +1525,8 @@
       const nickInput = document.getElementById('entry-nickname');
       const realVal = realInput ? realInput.value.trim() : '';
       const nickVal = nickInput ? nickInput.value.trim() : '';
+      const roomInput = document.getElementById('entry-room-id');
+      const roomVal = roomInput ? roomInput.value.trim() : '';
 
       myRealName = realVal || '익명 참가자';
       myNickname = nickVal || '모험가';
@@ -1433,6 +1609,8 @@
       const modal = document.getElementById('welcome-modal');
       if (modal) modal.style.display = 'none';
 
+      initNetworkSync(roomVal);
+
       populateOwnerDropdowns();
       renderSheetTabs();
       renderSheet();
@@ -1441,10 +1619,11 @@
       renderHandoutsLibrary();
       renderHandoutRecipientsCheckboxes();
       renderUsersTable();
+      renderMapCompendium();
       populateGmTargetTokenDropdown();
       updatePlayerExploredHistory();
       redrawFog();
-      appendChatMessage(`🎉 [${myNickname} (${myRealName})]님이 세션에 입장하셨습니다. (역할: ${currentRole === 'gm' ? '👑 GM' : (isSpectator ? '👁️ 관전자' : '🛡️ ' + (bChar ? bChar.name : '없음'))})`);
+      appendChatMessage(`🎉 [${myNickname} (${myRealName})]님이 세션에 입장하셨습니다.`);
     }
 
     function populateOwnerDropdowns() {
@@ -1508,13 +1687,10 @@
           const noteTime = now + (idx * 0.055);
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, noteTime);
-          
           gain.gain.setValueAtTime(0.18, noteTime);
           gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.35);
-          
           osc.connect(gain);
           gain.connect(ctx.destination);
-          
           osc.start(noteTime);
           osc.stop(noteTime + 0.38);
         });
@@ -1522,17 +1698,20 @@
     }
 
     function triggerPing(worldX, worldY) {
-      playPingSound();
+      triggerPingVisual(worldX, worldY, myNickname);
+      broadcastNetworkMessage({ type: 'PING', payload: { x: worldX, y: worldY, nickname: myNickname } });
+    }
 
+    function triggerPingVisual(worldX, worldY, sender) {
+      playPingSound();
       const world = document.getElementById('vtt-world');
       const ping = document.createElement('div');
       ping.className = 'ping-circle';
       ping.style.left = `${worldX}px`;
       ping.style.top = `${worldY}px`;
       world.appendChild(ping);
-
       setTimeout(() => { ping.remove(); }, 1300);
-      appendChatMessage(`📍 [${myNickname}]님이 위치를 핑했습니다.`);
+      appendChatMessage(`📍 [${sender}]님이 위치를 핑했습니다.`);
     }
 
     // --- GM Condition Applier Functions ---
@@ -1598,6 +1777,7 @@
 
       renderTokens();
       renderGmConditionApplierButtons();
+      broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
       appendChatMessage(`⚠️ [GM] <strong>${tok.name}</strong> 토큰의 상태이상 [${condName}] ${isAdded ? '부여' : '해제'}`);
     }
 
@@ -1612,11 +1792,8 @@
       const btnErase = document.getElementById('btn-erase-mode');
       const vp = document.getElementById('vtt-viewport');
 
-      if (drawToolMode === mode) {
-        drawToolMode = 'none';
-      } else {
-        drawToolMode = mode;
-      }
+      if (drawToolMode === mode) drawToolMode = 'none';
+      else drawToolMode = mode;
 
       const isActive = drawToolMode !== 'none';
       drawCanvas.style.pointerEvents = isActive ? 'auto' : 'none';
@@ -1672,17 +1849,15 @@
       appendChatMessage('🗑️ 스케치 펜 드로잉이 전체 지워졌습니다.');
     }
 
-    // --- Fog of War, Exploration History & Active Vision ---
+    // --- High-Performance Fog of War Engine ---
     const fogCanvas = document.getElementById('fog-canvas');
     const fogCtx = fogCanvas.getContext('2d');
 
-    // 1. GM Master Mask Canvas (Opaque black fog, erased manually by GM brush)
     const fogMaskCanvas = document.createElement('canvas');
     fogMaskCanvas.width = 5000;
     fogMaskCanvas.height = 5000;
     const fogMaskCtx = fogMaskCanvas.getContext('2d');
 
-    // 2. Exploration History Canvas (Tracks wherever player tokens have traveled)
     const fogExploredCanvas = document.createElement('canvas');
     fogExploredCanvas.width = 5000;
     fogExploredCanvas.height = 5000;
@@ -1691,13 +1866,12 @@
     function resetFullFog() {
       fogMaskCtx.fillStyle = 'rgba(0, 0, 0, 1)';
       fogMaskCtx.fillRect(0, 0, 5000, 5000);
-
       fogExploredCtx.clearRect(0, 0, 5000, 5000);
 
       updatePlayerExploredHistory();
       redrawFog();
       renderTokens();
-      appendChatMessage('🌫️ 전장의 안개가 전체 초기화(복원)되었습니다.');
+      appendChatMessage('🌫️ 전장의 안개가 전체 초기화되었습니다.');
     }
 
     function toggleFogOfWar(enabled) {
@@ -1707,7 +1881,7 @@
       updatePlayerExploredHistory();
       redrawFog();
       renderTokens();
-      appendChatMessage(enabled ? '🌫️ 전장의 안개가 활성화되었습니다. (실시간 시야 외 음영 및 토큰 은폐)' : '☀️ 전장의 안개가 꺼졌습니다. (모든 전장과 토큰이 공개됩니다)');
+      broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
     }
 
     function setFogBrushMode(mode) {
@@ -1766,7 +1940,6 @@
       return basePx + (bonusGrids * 50);
     }
 
-    // Permanently carve out traveled areas onto the exploration history canvas
     function updatePlayerExploredHistory() {
       const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
       const myChar = characters.find(c => c.id === myBoundCharId);
@@ -1784,7 +1957,6 @@
       }
     }
 
-    // Redraw complete fog: Unknown (100% black) vs Previously Explored (60% darkened shadow) vs Current Active Vision (clear 0%)
     function redrawFog() {
       fogCtx.clearRect(0, 0, 5000, 5000);
       if (!isFogActive) return;
@@ -1795,15 +1967,12 @@
         fogCtx.drawImage(fogMaskCanvas, 0, 0);
         fogCtx.restore();
       } else {
-        // Step 1: Draw unrevealed GM fog (100% black)
         fogCtx.save();
         fogCtx.drawImage(fogMaskCanvas, 0, 0);
 
-        // Step 2: Invert previously explored player areas to semi-transparent darkened fog (alpha ~0.62)
         fogCtx.globalCompositeOperation = 'destination-out';
         fogCtx.drawImage(fogExploredCanvas, 0, 0);
 
-        // Re-overlay semi-dark shadow over explored areas
         fogCtx.globalCompositeOperation = 'source-over';
         fogCtx.save();
         fogCtx.globalAlpha = 0.62;
@@ -1813,7 +1982,6 @@
         fogCtx.fill();
         fogCtx.restore();
 
-        // Step 3: Fully clear current real-time active vision (100% bright, 0% fog)
         const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
         const myChar = characters.find(c => c.id === myBoundCharId);
 
@@ -1844,44 +2012,10 @@
       renderTokens();
     }
 
-    function playDiceSound() {
-      try {
-        const ctx = getAudioContext();
-        const now = ctx.currentTime;
-        for (let i = 0; i < 7; i++) {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          const clackTime = now + (i * 0.09) + (Math.random() * 0.04);
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(320 + Math.random() * 450, clackTime);
-          osc.frequency.exponentialRampToValueAtTime(100, clackTime + 0.05);
-          gain.gain.setValueAtTime(0.35, clackTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, clackTime + 0.05);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(clackTime);
-          osc.stop(clackTime + 0.06);
-        }
-        const finalTime = now + 0.72;
-        const subOsc = ctx.createOscillator();
-        const subGain = ctx.createGain();
-        subOsc.type = 'sine';
-        subOsc.frequency.setValueAtTime(180, finalTime);
-        subOsc.frequency.exponentialRampToValueAtTime(45, finalTime + 0.12);
-        subGain.gain.setValueAtTime(0.5, finalTime);
-        subGain.gain.exponentialRampToValueAtTime(0.01, finalTime + 0.12);
-        subOsc.connect(subGain);
-        subGain.connect(ctx.destination);
-        subOsc.start(finalTime);
-        subOsc.stop(finalTime + 0.14);
-      } catch (err) {}
-    }
-
     function playBuiltinSfx(type) {
       try {
         const ctx = getAudioContext();
         const now = ctx.currentTime;
-
         if (type === 'sword') {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -2141,9 +2275,7 @@
       updateWorldTransform();
     }, { passive: false });
 
-    // Panning is strictly triggered by Middle Mouse Button (Wheel Click: button 1)
     viewport.addEventListener('mousedown', (e) => {
-      // Shift + Left Click: Tabletop Ping with Chime Sound
       if (e.shiftKey && e.button === 0) {
         const rect = viewport.getBoundingClientRect();
         const worldX = (e.clientX - rect.left - panX) / zoomLevel;
@@ -2152,7 +2284,7 @@
         return;
       }
 
-      if (e.button === 1) { // Middle click (wheel button)
+      if (e.button === 1) {
         e.preventDefault();
         isPanning = true;
         panStartX = e.clientX - panX;
@@ -2176,7 +2308,7 @@
     });
 
     viewport.addEventListener('auxclick', (e) => {
-      if (e.button === 1) e.preventDefault(); // Prevent autoscroll icon on wheel click
+      if (e.button === 1) e.preventDefault();
     });
 
     viewport.addEventListener('contextmenu', e => e.preventDefault());
@@ -2235,7 +2367,6 @@
       document.getElementById('btn-toggle-compendium').style.display = isGm ? 'flex' : 'none';
       document.getElementById('btn-toggle-gm-toolbox').style.display = isGm ? 'flex' : 'none';
       document.getElementById('btn-toggle-sfx').style.display = isGm ? 'flex' : 'none';
-      document.getElementById('btn-toggle-users').style.display = isGm ? 'flex' : 'none';
       document.getElementById('handout-create-section').style.display = isGm ? 'block' : 'none';
 
       renderSheetTabs();
@@ -2273,6 +2404,7 @@
         selectedCharIndex = characters.length - 1;
         renderSheetTabs();
         renderSheet();
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
         appendChatMessage(`🛡️ 새 캐릭터 [${name} (${job})] 시트가 등록되었습니다.`);
       };
       bar.appendChild(addBtn);
@@ -2330,6 +2462,7 @@
         renderTokens();
         populateGmTargetTokenDropdown();
         redrawFog();
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
         appendChatMessage(`🗑️ [${c.name}] 캐릭터 시트가 삭제되었습니다.`);
       }
     }
@@ -2360,13 +2493,10 @@
 
       container.innerHTML = `
         <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
-          <div style="position:relative; text-align:center;" title="이미지를 클릭하거나 드래그하여 파일 변경">
+          <div style="position:relative; text-align:center;" title="이미지를 클릭하여 파일 변경">
             <img src="${c.tokenImage}" class="sheet-avatar-drop" id="sheet-avatar-img"
-                 onclick="document.getElementById('sheet-avatar-file').click()"
-                 ondragover="event.preventDefault(); this.style.borderColor='var(--red)';"
-                 ondragleave="this.style.borderColor='var(--brass)';"
-                 ondrop="handleSheetAvatarDrop(event)">
-            <div style="font-size:0.65rem; color:var(--ink-muted); margin-top:2px;">클릭/드롭 변경</div>
+                 onclick="document.getElementById('sheet-avatar-file').click()">
+            <div style="font-size:0.65rem; color:var(--ink-muted); margin-top:2px;">클릭 변경</div>
           </div>
 
           <div style="flex:1;">
@@ -2453,25 +2583,21 @@
       renderSheet(); updatePlayerExploredHistory(); redrawFog(); renderTokens();
     }
     function handleSheetAvatarUpload(e) {
-      if (e.target.files.length > 0) applyAvatarFile(e.target.files[0]);
-    }
-    function handleSheetAvatarDrop(e) {
-      e.preventDefault(); e.target.style.borderColor = 'var(--brass)';
-      if (e.dataTransfer.files.length > 0) applyAvatarFile(e.dataTransfer.files[0]);
-    }
-    function applyAvatarFile(file) {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const c = characters[selectedCharIndex];
-        if (c) {
-          c.tokenImage = ev.target.result;
-          const tok = tokens.find(t => t.id === c.id);
-          if (tok) tok.image = c.tokenImage;
-          renderSheet(); renderTokens();
-          appendChatMessage(`📷 [${c.name}] 캐릭터 이미지가 변경되었습니다.`);
-        }
-      };
-      reader.readAsDataURL(file);
+      if (e.target.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const c = characters[selectedCharIndex];
+          if (c) {
+            c.tokenImage = ev.target.result;
+            const tok = tokens.find(t => t.id === c.id);
+            if (tok) tok.image = c.tokenImage;
+            renderSheet(); renderTokens();
+            broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
+            appendChatMessage(`📷 [${c.name}] 캐릭터 이미지가 변경되었습니다.`);
+          }
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
     }
 
     function updateCharStatField(charIdx, statKey, val) {
@@ -2510,6 +2636,7 @@
       const t = tokens.find(tok => tok.id === characters[charIdx].id);
       if (t) t.hp = num;
       renderTokens();
+      broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
     }
 
     function renderCompendium() {
@@ -2554,7 +2681,6 @@
       if (confirm(`정말로 도감에서 [${target.name}] 토큰을 삭제하시겠습니까?`)) {
         tokenCompendium[category].splice(index, 1);
         renderCompendium();
-        appendChatMessage(`🗑️ 도감에서 [${target.name}]이(가) 삭제되었습니다.`);
       }
     }
 
@@ -2584,16 +2710,15 @@
       });
       renderTokens();
       populateGmTargetTokenDropdown();
-      appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 전장에 소환되었습니다. (크기: ${tokenSize}px)`);
+      broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
+      appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 전장에 소환되었습니다.`);
     }
 
-    // --- Token Selection & Range Guide Logic ---
     function selectTokenById(tokId) {
       selectedTokenId = tokId;
       const t = tokens.find(tok => tok.id === tokId);
       if (!t) return;
 
-      // If token belongs to a player character, sync character sheet window
       const charIdx = characters.findIndex(c => c.id === tokId || c.name === t.name);
       if (charIdx !== -1) {
         selectedCharIndex = charIdx;
@@ -2601,17 +2726,15 @@
         renderSheet();
       }
 
-      // If GM, sync target dropdown in GM toolbox
       const gmSelect = document.getElementById('gm-target-token-select');
       if (gmSelect && tokens.some(tok => tok.id === tokId)) {
         gmSelect.value = tokId;
         renderGmConditionApplierButtons();
       }
-
       renderTokens();
     }
 
-    // --- Token Rendering with Dynamic Size, Selection, and Active Vision / GM Erase check ---
+    // --- High-Performance Lag-Free Token Dragging Logic ---
     function renderTokens() {
       const layer = document.getElementById('tokens-layer');
       layer.innerHTML = '';
@@ -2629,12 +2752,6 @@
         const tokSize = tok.size || 60;
         const tokCenterOffset = tokSize / 2;
 
-        // Vision Visibility Logic:
-        // Visible if:
-        // 1) Current role is GM
-        // 2) It is the player's own bound token
-        // 3) Token center falls within player's live vision radius
-        // 4) Area has been manually erased/uncovered by GM brush
         let isVisibleInFog = true;
         if (isFogActive && currentRole !== 'gm') {
           if (isSpectator) {
@@ -2648,11 +2765,9 @@
               inPlayerVision = dist <= visionRadius;
             }
 
-            // Check if GM unmasked this coordinate on fogMaskCanvas
             let inGmUncoveredZone = false;
             try {
               const pixelData = fogMaskCtx.getImageData(Math.floor(tok.x + tokCenterOffset), Math.floor(tok.y + tokCenterOffset), 1, 1).data;
-              // If pixel alpha is 0 on GM mask, it was manually cleared by GM eraser
               inGmUncoveredZone = (pixelData[3] === 0);
             } catch (err) {}
 
@@ -2660,7 +2775,6 @@
           }
         }
 
-        // Show reach guide on the selected token if guide is toggled ON
         const showRings = showPlayerGuide && isCurrentlySelected;
 
         el.className = `vtt-token ${canControl ? '' : 'locked'} ${!isVisibleInFog ? 'hidden-by-fog' : ''} ${isCurrentlySelected ? 'selected-token' : ''}`;
@@ -2719,14 +2833,13 @@
           <button class="token-del-btn" onclick="removeToken('${tok.id}')" title="토큰 제거">×</button>
         `;
 
-        // Click to select token and focus sheet/guide
         el.addEventListener('click', (e) => {
           if (e.target.closest('.token-bubble') || e.target.closest('.token-del-btn') || e.target.closest('.condition-badge')) return;
           selectTokenById(tok.id);
         });
 
         if (canControl) {
-          attachTokenDraggable(el, tok);
+          attachSmoothTokenDraggable(el, tok);
         } else {
           el.addEventListener('mousedown', (e) => {
             if (e.button === 0 && !e.target.closest('.token-bubble')) {
@@ -2738,10 +2851,12 @@
       });
     }
 
-    function attachTokenDraggable(element, tokenObj) {
+    // Smooth Dragging with Throttled Fog Updates via requestAnimationFrame
+    function attachSmoothTokenDraggable(element, tokenObj) {
       let isDragging = false;
       let startMouseX, startMouseY;
       let initialTokenX, initialTokenY;
+      let animFrameId = null;
 
       element.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
@@ -2762,13 +2877,20 @@
           const dy = (moveEvent.clientY - startMouseY) / zoomLevel;
           tokenObj.x = Math.round(initialTokenX + dx);
           tokenObj.y = Math.round(initialTokenY + dy);
+
+          // Fast direct DOM update (Lag-free)
           element.style.left = `${tokenObj.x}px`;
           element.style.top = `${tokenObj.y}px`;
 
-          if (isFogActive && (tokenObj.id === myBoundCharId || tokenObj.owner === myNickname)) {
-            updatePlayerExploredHistory();
-            redrawFog();
-            renderTokens();
+          // Throttle fog update using requestAnimationFrame
+          if (!animFrameId) {
+            animFrameId = requestAnimationFrame(() => {
+              if (isFogActive && (tokenObj.id === myBoundCharId || tokenObj.owner === myNickname)) {
+                updatePlayerExploredHistory();
+                redrawFog();
+              }
+              animFrameId = null;
+            });
           }
         }
 
@@ -2777,11 +2899,20 @@
           element.style.zIndex = 50;
           window.removeEventListener('mousemove', onMouseMove);
           window.removeEventListener('mouseup', onMouseUp);
+
+          if (animFrameId) {
+            cancelAnimationFrame(animFrameId);
+            animFrameId = null;
+          }
+
           if (isFogActive) {
             updatePlayerExploredHistory();
             redrawFog();
             renderTokens();
           }
+
+          // Broadcast final coordinates to other players
+          broadcastNetworkMessage({ type: 'TOKEN_MOVE', payload: { id: tokenObj.id, x: tokenObj.x, y: tokenObj.y } });
         }
 
         window.addEventListener('mousemove', onMouseMove);
@@ -2799,6 +2930,7 @@
       renderTokens();
       populateGmTargetTokenDropdown();
       redrawFog();
+      broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
       if (tok) appendChatMessage(`🗑️ [${tok.name}] 토큰이 전장에서 제거되었습니다.`);
     }
 
@@ -2898,6 +3030,7 @@
       renderSheet();
       renderTokens();
       renderGmConditionApplierButtons();
+      broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
     }
 
     let currentSpawnerTab = 'monster';
@@ -2984,11 +3117,13 @@
       renderTokens();
       populateGmTargetTokenDropdown();
       redrawFog();
+      broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
       uploadedTokenDataUrl = null;
       document.getElementById('token-image-preview-wrap').style.display = 'none';
       appendChatMessage(`⚔️ [${name}] 토큰이 전장에 배치되었습니다. (크기: ${sizeVal}px / 조종 권한: ${owner})`);
     }
 
+    // --- Map Compendium & Background System ---
     let pendingMapImageSrc = null;
     const mapDropZone = document.getElementById('map-drop-zone');
     mapDropZone.addEventListener('dragover', e => { e.preventDefault(); mapDropZone.classList.add('dragover'); });
@@ -3000,7 +3135,7 @@
         const reader = new FileReader();
         reader.onload = ev => {
           pendingMapImageSrc = ev.target.result;
-          alert('이미지가 선택되었습니다. 가로/세로 격자 칸수를 확인 후 [지도 배경 및 크기 적용]을 누르세요.');
+          alert('이미지가 선택되었습니다. 가로/세로 칸수 입력 후 적용하세요.');
         };
         reader.readAsDataURL(file);
       }
@@ -3012,30 +3147,88 @@
         const reader = new FileReader();
         reader.onload = ev => {
           pendingMapImageSrc = ev.target.result;
-          alert('이미지가 선택되었습니다. 가로/세로 격자 칸수를 확인 후 [지도 배경 및 크기 적용]을 누르세요.');
+          alert('이미지가 선택되었습니다. 가로/세로 칸수 입력 후 적용하세요.');
         };
         reader.readAsDataURL(file);
       }
     }
 
-    function applyMapSettings() {
+    function switchMapWindowTab(tab) {
+      document.getElementById('tab-map-apply').classList.toggle('active', tab === 'apply');
+      document.getElementById('tab-map-compendium').classList.toggle('active', tab === 'compendium');
+      document.getElementById('map-subview-apply').style.display = tab === 'apply' ? 'block' : 'none';
+      document.getElementById('map-subview-compendium').style.display = tab === 'compendium' ? 'block' : 'none';
+      if (tab === 'compendium') renderMapCompendium();
+    }
+
+    function applyMapSettings(saveToCompendium = false) {
       const urlInput = document.getElementById('map-url-input').value.trim();
-      const imgSrc = pendingMapImageSrc || urlInput;
+      const imgSrc = pendingMapImageSrc || urlInput || document.getElementById('map-image').src;
       const gridW = parseInt(document.getElementById('map-grid-w').value, 10) || 30;
       const gridH = parseInt(document.getElementById('map-grid-h').value, 10) || 20;
+      const saveName = document.getElementById('map-save-name').value.trim() || `맵 ${mapCompendium.length + 1}`;
 
-      const targetWidth = gridW * 50;
-      const targetHeight = gridH * 50;
+      const mapData = { name: saveName, src: imgSrc, gridW, gridH };
+      applyMapPreset(mapData, true);
+
+      if (saveToCompendium) {
+        mapCompendium.push({ id: 'map_' + Date.now(), ...mapData });
+        renderMapCompendium();
+        appendChatMessage(`🗺️ [${saveName}] 지도가 맵 도감에 등록되었습니다.`);
+      }
+    }
+
+    function applyMapPreset(mapData, shouldBroadcast = true) {
+      const targetWidth = mapData.gridW * 50;
+      const targetHeight = mapData.gridH * 50;
       const imgEl = document.getElementById('map-image');
       const layerEl = document.getElementById('map-background-layer');
 
-      if (imgSrc) imgEl.src = imgSrc;
+      if (mapData.src) imgEl.src = mapData.src;
       imgEl.style.width = `${targetWidth}px`;
       imgEl.style.height = `${targetHeight}px`;
       layerEl.style.width = `${targetWidth}px`;
       layerEl.style.height = `${targetHeight}px`;
 
-      appendChatMessage(`🗺️ 지도가 ${gridW}×${gridH} 칸(${targetWidth}×${targetHeight}px) 크기에 맞춰 조정되었습니다.`);
+      document.getElementById('map-grid-w').value = mapData.gridW;
+      document.getElementById('map-grid-h').value = mapData.gridH;
+
+      appendChatMessage(`🗺️ 배경 지도가 [${mapData.name || '새 지도'}] (${mapData.gridW}×${mapData.gridH} 칸)으로 교체되었습니다.`);
+
+      if (shouldBroadcast) {
+        broadcastNetworkMessage({ type: 'MAP_CHANGE', payload: mapData });
+      }
+    }
+
+    function renderMapCompendium() {
+      const container = document.getElementById('map-compendium-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      mapCompendium.forEach((m, idx) => {
+        const card = document.createElement('div');
+        card.className = 'map-compendium-card';
+        card.innerHTML = `
+          <button class="compendium-del-btn" onclick="deleteMapCompendiumItem(${idx})" title="삭제">×</button>
+          <img src="${m.src}" class="map-compendium-thumb" onerror="this.src='https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=300&q=80'">
+          <strong style="font-size:0.75rem; color:var(--wood-dark); margin-top:2px;">${m.name}</strong>
+          <span style="font-size:0.68rem; color:var(--ink-muted);">${m.gridW} × ${m.gridH} 칸 (${m.gridW*50}×${m.gridH*50}px)</span>
+          <button class="compendium-spawn-btn" style="margin-top:4px;" onclick="applyMapCompendiumItem(${idx})">맵으로 즉시 적용</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function applyMapCompendiumItem(idx) {
+      const item = mapCompendium[idx];
+      if (item) applyMapPreset(item, true);
+    }
+
+    function deleteMapCompendiumItem(idx) {
+      if (confirm(`[${mapCompendium[idx].name}] 맵을 도감에서 삭제하시겠습니까?`)) {
+        mapCompendium.splice(idx, 1);
+        renderMapCompendium();
+      }
     }
 
     // --- Handouts and Multiple Recipients Sharing ---
@@ -3080,7 +3273,7 @@
         return;
       }
 
-      visibleHandouts.forEach((h, idx) => {
+      visibleHandouts.forEach((h) => {
         const card = document.createElement('div');
         card.className = 'handout-item-card';
         const recipText = h.recipients && h.recipients.includes('ALL') ? '전체 공개' : `수신: ${(h.recipients || []).join(', ')}`;
@@ -3119,7 +3312,8 @@
         handoutsLibrary.push(newH);
         renderHandoutsLibrary();
         showHandoutModal(newH.title, newH.text, newH.image);
-        appendChatMessage(`📜 새로운 단서 [${newH.title}]이(가) 등록되었습니다. (공유 대상: ${recipients.includes('ALL') ? '전체' : recipients.join(', ')})`);
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
+        appendChatMessage(`📜 새로운 단서 [${newH.title}]이(가) 등록되었습니다.`);
       }
 
       if (fileInput.files.length > 0) {
@@ -3140,6 +3334,7 @@
       if (confirm(`정말로 이 단서를 삭제하시겠습니까?`)) {
         handoutsLibrary = handoutsLibrary.filter(x => x.id !== id);
         renderHandoutsLibrary();
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
       }
     }
 
@@ -3161,13 +3356,9 @@
 
     function exportSessionData() {
       const sessionData = {
-        version: '1.4',
+        version: '1.5',
         timestamp: new Date().toISOString(),
-        characters: characters,
-        tokens: tokens,
-        tokenCompendium: tokenCompendium,
-        handoutsLibrary: handoutsLibrary,
-        connectedUsers: connectedUsers,
+        characters, tokens, tokenCompendium, mapCompendium, handoutsLibrary, connectedUsers,
         mapSettings: {
           src: document.getElementById('map-image').src,
           gridW: document.getElementById('map-grid-w').value,
@@ -3193,25 +3384,21 @@
             if (data.characters) characters = data.characters;
             if (data.tokens) tokens = data.tokens;
             if (data.tokenCompendium) tokenCompendium = data.tokenCompendium;
+            if (data.mapCompendium) mapCompendium = data.mapCompendium;
             if (data.handoutsLibrary) handoutsLibrary = data.handoutsLibrary;
             if (data.connectedUsers) connectedUsers = data.connectedUsers;
             if (data.mapSettings) {
-              document.getElementById('map-image').src = data.mapSettings.src;
-              document.getElementById('map-grid-w').value = data.mapSettings.gridW;
-              document.getElementById('map-grid-h').value = data.mapSettings.gridH;
-              applyMapSettings();
+              applyMapPreset({ src: data.mapSettings.src, gridW: parseInt(data.mapSettings.gridW,10), gridH: parseInt(data.mapSettings.gridH,10) }, true);
             }
             renderSheetTabs();
             renderSheet();
             renderCompendium();
             renderTokens();
             renderHandoutsLibrary();
-            renderHandoutRecipientsCheckboxes();
+            renderMapCompendium();
             renderUsersTable();
-            populateGmTargetTokenDropdown();
-            updatePlayerExploredHistory();
             redrawFog();
-            appendChatMessage(`📂 세션 백업 파일 [${file.name}]을 성공적으로 복원했습니다!`);
+            appendChatMessage(`📂 세션 백업 파일 [${file.name}]을 복원했습니다!`);
           } catch (err) {
             alert('유효하지 않은 백업 파일입니다: ' + err.message);
           }
@@ -3223,8 +3410,6 @@
     let diceInterval = null;
 
     function rollDiceSequence(diceArray, label) {
-      playDiceSound();
-
       const tray = document.getElementById('window-dice-tray');
       const resultEl = document.getElementById('window-dice-result');
       tray.innerHTML = '';
@@ -3241,7 +3426,6 @@
       let elapsed = 0;
       const intervalMs = 70;
       const totalDuration = 750;
-      const isDramatic = Math.random() < 0.35;
 
       if (diceInterval) clearInterval(diceInterval);
 
@@ -3253,16 +3437,7 @@
 
         if (elapsed >= totalDuration) {
           clearInterval(diceInterval);
-          if (isDramatic) {
-            resultEl.innerText = '운명의 순간...';
-            diceElements.forEach(d => {
-              d.el.classList.remove('rolling');
-              d.el.classList.add('dramatic');
-            });
-            setTimeout(() => { finalizeWindowRoll(diceElements, label); }, 220);
-          } else {
-            finalizeWindowRoll(diceElements, label);
-          }
+          finalizeWindowRoll(diceElements, label);
         }
       }, intervalMs);
     }
@@ -3270,7 +3445,7 @@
     function finalizeWindowRoll(diceElements, label) {
       const results = diceElements.map(d => {
         const val = Math.floor(Math.random() * d.sides) + 1;
-        d.el.classList.remove('rolling', 'dramatic');
+        d.el.classList.remove('rolling');
         d.el.innerText = val;
         return val;
       });
@@ -3288,7 +3463,9 @@
       resultEl.innerHTML = `[${results.join(', ')}] = <strong>총합 ${total}</strong>${outcomeTag}`;
 
       addDiceLog(label, results, total, outcomeTag);
-      appendChatMessage(`🎲 <strong>[${myNickname}]</strong> ${label} 굴림: [${results.join(', ')}] = <strong>${total}</strong>${outcomeTag}`, 'dice');
+      const chatHtml = `🎲 <strong>[${myNickname}]</strong> ${label} 굴림: [${results.join(', ')}] = <strong>${total}</strong>${outcomeTag}`;
+      appendChatMessage(chatHtml, 'dice');
+      broadcastNetworkMessage({ type: 'CHAT_MSG', payload: { html: chatHtml, type: 'dice' } });
     }
 
     function addDiceLog(label, results, total, outcomeTag = '') {
@@ -3317,7 +3494,9 @@
       if (!text) return;
 
       const senderTag = currentRole === 'gm' ? `👑 GM (${myNickname})` : (isSpectator ? `👁️ 관전자 (${myNickname})` : `🛡️ ${myNickname}`);
-      appendChatMessage(`<strong>${senderTag}:</strong> ${text}`);
+      const chatHtml = `<strong>${senderTag}:</strong> ${text}`;
+      appendChatMessage(chatHtml);
+      broadcastNetworkMessage({ type: 'CHAT_MSG', payload: { html: chatHtml, type: '' } });
       input.value = '';
     }
 
@@ -3341,6 +3520,7 @@
       renderHandoutsLibrary();
       renderHandoutRecipientsCheckboxes();
       renderUsersTable();
+      renderMapCompendium();
       populateGmTargetTokenDropdown();
       renderCustomSfxList();
       resetFullFog();
