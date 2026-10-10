@@ -834,6 +834,10 @@
     </div>
 
     <div class="header-right">
+      <div id="header-save-indicator" style="font-size:0.72rem; color:#ffdfa9; display:flex; align-items:center; gap:4px; background:#2a1607; border:1px solid #8b5a2b; padding:2px 8px; border-radius:12px;" title="브라우저 영구 저장소(IndexedDB) 자동 저장 상태">
+        <span style="color:#81c784;">💾 자동 저장 활성</span>
+      </div>
+      <button class="menu-btn" onclick="saveFullSessionState(true)" style="padding:2px 7px; font-size:0.72rem;" title="현재 전장 상태(맵/토큰/오브젝트/BGM) 즉시 저장">💾 즉시 저장</button>
       <div class="room-badge">
         <span>방:</span>
         <strong id="header-room-display">연결 대기</strong>
@@ -1304,9 +1308,13 @@
       <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; border:1px solid #caa372;">
         <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">💾 세션 데이터 백업 및 저장</strong>
         <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:6px;">현재 시트, 토큰, 3구역 맵, 오브젝트 데이터를 JSON 파일로 보관합니다.</p>
+        <div style="display:flex; gap:6px; margin-bottom:6px;">
+          <button class="btn-create" onclick="saveFullSessionState(true)" style="flex:1; background:#2e7d32;">💾 브라우저에 즉시 저장</button>
+          <button class="btn-create" onclick="exportSessionData()" style="flex:1; background:var(--blue);">📥 백업 파일 다운로드 (.json)</button>
+        </div>
         <div style="display:flex; gap:6px;">
-          <button class="btn-create" onclick="exportSessionData()" style="flex:1; background:var(--blue);">📥 세션 내보내기</button>
-          <button class="btn-create" onclick="document.getElementById('import-file-input').click()" style="flex:1; background:var(--brass); color:#2b1d0c;">📤 세션 불러오기</button>
+          <button class="btn-create" onclick="document.getElementById('import-file-input').click()" style="flex:1; background:var(--brass); color:#2b1d0c;">📤 백업 파일 복원 (.json)</button>
+          <button class="btn-create" onclick="resetSessionToDefault()" style="flex:1; background:#c62828;" title="저장된 데이터를 모두 지우고 최초 기본 세팅으로 리셋">🔄 최초 상태로 초기화</button>
           <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importSessionData(event)">
         </div>
       </div>
@@ -1614,6 +1622,159 @@
   </div>
 
   <script>
+    // =========================================================================
+    // --- PERSISTENT BROWSER DATABASE ENGINE (IndexedDB) ---
+    // Supports 100MB+ for Large Map Backgrounds, Uploaded Audio & Token States
+    // =========================================================================
+    const DB_NAME = 'DungeonWorldVTT_DB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'vtt_session_store';
+
+    function openVttDatabase() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) {
+          console.warn('IndexedDB is not available; falling back to localStorage.');
+          resolve(null);
+          return;
+        }
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME);
+          }
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => {
+          console.error('IndexedDB open error:', e);
+          resolve(null);
+        };
+      });
+    }
+
+    async function saveToDatabase(key, val) {
+      try {
+        const db = await openVttDatabase();
+        if (!db) {
+          try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch(e) { return false; }
+        }
+        return new Promise((resolve) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          store.put(val, key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        });
+      } catch (err) {
+        console.error('saveToDatabase error:', err);
+        return false;
+      }
+    }
+
+    async function loadFromDatabase(key) {
+      try {
+        const db = await openVttDatabase();
+        if (!db) {
+          const str = localStorage.getItem(key);
+          return str ? JSON.parse(str) : null;
+        }
+        return new Promise((resolve) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.get(key);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (err) {
+        console.error('loadFromDatabase error:', err);
+        return null;
+      }
+    }
+
+    let autoSaveDebounceTimer = null;
+
+    function scheduleAutoSave() {
+      if (autoSaveDebounceTimer) clearTimeout(autoSaveDebounceTimer);
+      autoSaveDebounceTimer = setTimeout(() => {
+        saveFullSessionState(false);
+      }, 500);
+    }
+
+    async function saveFullSessionState(showToast = true) {
+      const sessionData = {
+        version: '2.5',
+        timestamp: new Date().toISOString(),
+        mapZones,
+        tokens,
+        objects,
+        objectCompendium,
+        tokenCompendium,
+        mapCompendium,
+        bgmPlaylist,
+        currentBgmTrackId,
+        bgmLoopMode,
+        characters,
+        handoutsLibrary,
+        connectedUsers,
+        isFogActive,
+        myRealName,
+        myNickname,
+        myBoundCharId,
+        currentRole
+      };
+
+      const success = await saveToDatabase('active_vtt_session', sessionData);
+      const timeStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const indicator = document.getElementById('header-save-indicator');
+      if (indicator) {
+        indicator.innerHTML = `<span style="color:#81c784;">💾 저장됨</span> <span style="font-size:0.68rem; color:#d4b88b;">(${timeStr})</span>`;
+      }
+      if (showToast) {
+        appendChatMessage(`💾 [세션 저장 완료] 3구역 전장 맵, 모든 토큰/오브젝트 위치, BGM 음원이 브라우저 영구 저장소에 저장되었습니다. (${timeStr})`);
+      }
+      return success;
+    }
+
+    async function loadFullSessionState() {
+      const sessionData = await loadFromDatabase('active_vtt_session');
+      if (!sessionData) return false;
+
+      try {
+        if (sessionData.mapZones && Array.isArray(sessionData.mapZones)) mapZones = sessionData.mapZones;
+        if (sessionData.tokens && Array.isArray(sessionData.tokens)) tokens = sessionData.tokens;
+        if (sessionData.objects && Array.isArray(sessionData.objects)) objects = sessionData.objects;
+        if (sessionData.objectCompendium && Array.isArray(sessionData.objectCompendium)) objectCompendium = sessionData.objectCompendium;
+        if (sessionData.tokenCompendium) tokenCompendium = sessionData.tokenCompendium;
+        if (sessionData.mapCompendium && Array.isArray(sessionData.mapCompendium)) mapCompendium = sessionData.mapCompendium;
+        if (sessionData.bgmPlaylist && Array.isArray(sessionData.bgmPlaylist)) bgmPlaylist = sessionData.bgmPlaylist;
+        if (sessionData.currentBgmTrackId) currentBgmTrackId = sessionData.currentBgmTrackId;
+        if (sessionData.bgmLoopMode) bgmLoopMode = sessionData.bgmLoopMode;
+        if (sessionData.characters && Array.isArray(sessionData.characters)) characters = sessionData.characters;
+        if (sessionData.handoutsLibrary && Array.isArray(sessionData.handoutsLibrary)) handoutsLibrary = sessionData.handoutsLibrary;
+        if (sessionData.connectedUsers && Array.isArray(sessionData.connectedUsers)) connectedUsers = sessionData.connectedUsers;
+        if (sessionData.isFogActive !== undefined) isFogActive = sessionData.isFogActive;
+
+        return true;
+      } catch(err) {
+        console.error('Failed to parse saved session state:', err);
+        return false;
+      }
+    }
+
+    async function resetSessionToDefault() {
+      if (!confirm('정말로 모든 저장 데이터를 삭제하고 전장을 초기 상태로 리셋하시겠습니까?\n(직접 업로드한 이미지와 음원도 초기화되므로 필요시 먼저 백업 파일을 다운로드하세요)')) return;
+      try {
+        const db = await openVttDatabase();
+        if (db) {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).delete('active_vtt_session');
+        }
+        localStorage.removeItem('active_vtt_session');
+      } catch(e) {}
+      alert('세션이 초기화되었습니다. 페이지를 새로고침합니다.');
+      window.location.reload();
+    }
+
     // --- Global State ---
     let myRealName = '';
     let myNickname = '';
@@ -2754,6 +2915,7 @@
       redrawFog();
       renderTokens();
       broadcastNetworkMessage({ type: 'MAP_ZONES_UPDATE', payload: { mapZones } });
+      scheduleAutoSave();
       appendChatMessage(`🗺️ [제 ${editingZoneId}구역: ${zone.name}] 설정이 적용되었습니다. (안개: ${zone.fogEnabled ? 'ON' : 'OFF'})`);
     }
 
@@ -2796,6 +2958,7 @@
       renderZoneCompendium();
       switchZoneEditorTab('comp');
       appendChatMessage(`💾 <strong>[구역 프리셋 저장 완료]</strong> [${presetName}]에 맵 배경, 오브젝트 ${zoneObjects.length}개, 몬스터/NPC ${zoneTokens.length}개가 세트로 저장되었습니다.`);
+      scheduleAutoSave();
     }
 
     function renderZoneCompendium() {
@@ -2906,6 +3069,7 @@
       });
 
       appendChatMessage(`🗺️ <strong>[구역 세팅 복원]</strong> [${preset.name}] 프리셋(맵, 오브젝트 ${objCount}개, 몬스터/NPC ${tokCount}개)이 [제 ${targetZoneId}구역]으로 로드되었습니다!`, 'teleport-msg');
+      scheduleAutoSave();
       jumpToZone(targetZoneId);
     }
 
@@ -3082,6 +3246,7 @@
 
         renderObjects();
         broadcastNetworkMessage({ type: 'OBJECT_UPDATE', payload: { objects } });
+        scheduleAutoSave();
         appendChatMessage(`🌀 [쌍 포탈 생성] [${objA.name}]과 [${objB.name}]이 각각 ${zoneA}구역, ${zoneB}구역에 상호 연결된 한 쌍으로 배치되었습니다.`);
 
         uploadedObjectDataUrl = null;
@@ -3148,6 +3313,7 @@
 
       renderObjects();
       broadcastNetworkMessage({ type: 'OBJECT_UPDATE', payload: { objects } });
+      scheduleAutoSave();
       appendChatMessage(`📦 [${name}] 오브젝트가 제 ${spawnZoneId}구역에 배치되었습니다.`);
 
       uploadedObjectDataUrl = null;
@@ -3289,6 +3455,7 @@
             type: 'OBJECT_MOVE',
             payload: { id: obj.id, x: obj.x, y: obj.y, zoneId: obj.zoneId }
           });
+          scheduleAutoSave();
         }
 
         window.addEventListener('mousemove', onMouseMove);
@@ -3307,6 +3474,7 @@
         objects.splice(idx, 1);
         renderObjects();
         broadcastNetworkMessage({ type: 'OBJECT_UPDATE', payload: { objects } });
+        scheduleAutoSave();
       }
     }
 
@@ -3618,6 +3786,7 @@
       renderTokens();
       renderGmConditionApplierButtons();
       broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
+      scheduleAutoSave();
       appendChatMessage(`⚠️ [GM] <strong>${tok.name}</strong> 토큰의 상태이상 [${condName}] ${isAdded ? '부여' : '해제'}`);
     }
 
@@ -4109,6 +4278,7 @@
             type: 'BGM_UPDATE_CHECKED',
             payload: { trackId, checked }
           });
+          scheduleAutoSave();
         }
       }
     }
@@ -4327,6 +4497,7 @@
 
           // Broadcast to peers using chunked transfer for large audio files
           broadcastLargePayload('BGM_ADD_TRACK', { track: newTrack });
+          scheduleAutoSave();
           appendChatMessage(`🎵 [BGM 업로드 & P2P 전송 완료] [${file.name}] 음원이 플레이리스트에 등록되고 접속자들에게 전송되었습니다.`);
 
           // Start playing
@@ -4395,6 +4566,7 @@
       });
 
       appendChatMessage(`🗑️ [BGM 삭제] [${track.name}] 음원이 플레이리스트에서 영구 삭제되었습니다.`);
+      scheduleAutoSave();
     }
 
     // --- Viewport Zoom & Pan ---
@@ -4936,6 +5108,7 @@
       renderTokens();
       populateGmTargetTokenDropdown();
       broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
+      scheduleAutoSave();
       appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 제 1구역에 소환되었습니다.`);
     }
 
@@ -5147,6 +5320,7 @@
             type: 'TOKEN_MOVE', 
             payload: { id: tokenObj.id, x: tokenObj.x, y: tokenObj.y, zoneId: tokenObj.zoneId } 
           });
+          scheduleAutoSave();
         }
 
         window.addEventListener('mousemove', onMouseMove);
@@ -5166,6 +5340,7 @@
       redrawFog();
       broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
       if (tok) appendChatMessage(`🗑️ [${tok.name}] 토큰이 전장에서 제거되었습니다.`);
+      scheduleAutoSave();
     }
 
     let activeBubbleTokenId = null;
@@ -5354,6 +5529,7 @@
       populateGmTargetTokenDropdown();
       redrawFog();
       broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
+      scheduleAutoSave();
       uploadedTokenDataUrl = null;
       document.getElementById('token-image-preview-wrap').style.display = 'none';
       appendChatMessage(`⚔️ [${name}] 토큰이 제 ${targetZoneId}구역에 배치되었습니다.`);
@@ -5484,9 +5660,21 @@
 
     function exportSessionData() {
       const sessionData = {
-        version: '2.0',
+        version: '2.5',
         timestamp: new Date().toISOString(),
-        characters, tokens, objects, objectCompendium, tokenCompendium, mapZones, mapCompendium, handoutsLibrary, connectedUsers
+        mapZones,
+        tokens,
+        objects,
+        objectCompendium,
+        tokenCompendium,
+        mapCompendium,
+        bgmPlaylist,
+        currentBgmTrackId,
+        bgmLoopMode,
+        characters,
+        handoutsLibrary,
+        connectedUsers,
+        isFogActive
       };
 
       const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
@@ -5494,25 +5682,29 @@
       a.href = URL.createObjectURL(blob);
       a.download = `dungeon_world_session_${new Date().toISOString().slice(0,10)}.json`;
       a.click();
-      appendChatMessage('💾 3구역 전장 및 오브젝트 세션 백업 파일이 다운로드되었습니다.');
+      appendChatMessage('💾 [백업 다운로드] 3구역 맵 배경, 모든 토큰/오브젝트 위치, BGM 플레이리스트 전체 세션 백업 파일이 저장되었습니다.');
     }
 
     function importSessionData(e) {
       if (e.target.files.length > 0) {
         const file = e.target.files[0];
         const reader = new FileReader();
-        reader.onload = ev => {
+        reader.onload = async ev => {
           try {
             const data = JSON.parse(ev.target.result);
-            if (data.characters) characters = data.characters;
+            if (data.mapZones) mapZones = data.mapZones;
             if (data.tokens) tokens = data.tokens;
             if (data.objects) objects = data.objects;
             if (data.objectCompendium) objectCompendium = data.objectCompendium;
             if (data.tokenCompendium) tokenCompendium = data.tokenCompendium;
-            if (data.mapZones) mapZones = data.mapZones;
             if (data.mapCompendium) mapCompendium = data.mapCompendium;
+            if (data.bgmPlaylist) bgmPlaylist = data.bgmPlaylist;
+            if (data.currentBgmTrackId) currentBgmTrackId = data.currentBgmTrackId;
+            if (data.bgmLoopMode) bgmLoopMode = data.bgmLoopMode;
+            if (data.characters) characters = data.characters;
             if (data.handoutsLibrary) handoutsLibrary = data.handoutsLibrary;
             if (data.connectedUsers) connectedUsers = data.connectedUsers;
+            if (data.isFogActive !== undefined) isFogActive = data.isFogActive;
             
             renderSheetTabs();
             renderSheet();
@@ -5523,9 +5715,22 @@
             renderObjectCompendium();
             renderHandoutsLibrary();
             renderZoneCompendium();
+            renderBgmPlaylist();
             renderUsersTable();
+            updateFogCheckboxes();
             redrawFog();
-            appendChatMessage(`📂 세션 백업 파일 [${file.name}]을 복원했습니다!`);
+
+            await saveFullSessionState(false);
+
+            broadcastNetworkMessage({
+              type: 'FULL_SYNC',
+              payload: {
+                tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive,
+                bgmState: { playlist: bgmPlaylist, currentTrackId: currentBgmTrackId, isPlaying: bgmIsPlaying, loopMode: bgmLoopMode }
+              }
+            });
+
+            appendChatMessage(`📂 [백업 파일 복원 완료] [${file.name}] 파일로부터 맵 배경, 토큰, 오브젝트, BGM 데이터가 완벽히 복원되고 브라우저에 저장되었습니다!`);
           } catch (err) {
             alert('유효하지 않은 백업 파일입니다: ' + err.message);
           }
@@ -5636,13 +5841,16 @@
       box.scrollTop = box.scrollHeight;
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const roomParam = urlParams.get('room');
       if (roomParam) {
         const roomInput = document.getElementById('entry-room-id');
         if (roomInput) roomInput.value = roomParam;
       }
+
+      // Restore session data from IndexedDB
+      const hasSavedSession = await loadFullSessionState();
 
       updateWorldTransform();
       renderEntryModalOptions();
@@ -5664,6 +5872,15 @@
       renderCustomSfxList();
       resetFullFog();
       renderBgmPlaylist();
+      updateFogCheckboxes();
+
+      if (hasSavedSession) {
+        const indicator = document.getElementById('header-save-indicator');
+        if (indicator) {
+          indicator.innerHTML = '<span style="color:#81c784;">💾 저장된 세팅 복원 완료</span>';
+        }
+        appendChatMessage('💾 <strong>[세션 자동 복원]</strong> 브라우저 영구 저장소에 저장되어 있던 맵 배경 이미지, 모든 토큰/오브젝트 위치, BGM 목록이 완벽히 복원되었습니다.');
+      }
     });
   </script>
 </body>
