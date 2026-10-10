@@ -33,6 +33,7 @@
       user-select: none;
     }
 
+    /* Top Roll20 Style Menu Header */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -48,20 +49,20 @@
       color: #fdf5ea;
     }
 
-    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .brand-title {
-      font-size: 1.1rem; font-weight: bold; color: #ffdfa9;
+      font-size: 1.05rem; font-weight: bold; color: #ffdfa9;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-      display: flex; align-items: center; gap: 6px;
+      display: flex; align-items: center; gap: 6px; margin-right: 6px;
     }
 
-    .menu-bar { display: flex; gap: 6px; }
+    .menu-bar { display: flex; gap: 5px; }
     .menu-btn {
       background: linear-gradient(to bottom, #8a582c, #5e3512);
       border: 1px solid #ffdfa9; color: #fff8ee;
-      padding: 5px 11px; font-size: 0.82rem; border-radius: 4px;
+      padding: 5px 10px; font-size: 0.82rem; border-radius: 4px;
       cursor: pointer; font-weight: bold;
-      display: flex; align-items: center; gap: 5px; transition: all 0.15s;
+      display: flex; align-items: center; gap: 4px; transition: all 0.15s;
     }
     .menu-btn:hover {
       background: linear-gradient(to bottom, #a36d3c, #73431a);
@@ -100,6 +101,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
 
+    /* VTT Workspace */
     #vtt-viewport {
       position: absolute; top: 48px; left: 0; right: 0; bottom: 0;
       background: #140f0a; overflow: hidden; cursor: default;
@@ -122,7 +124,7 @@
       pointer-events: none;
       z-index: 10;
     }
-    #grid-overlay.on-top { z-index: 45; }
+    #grid-overlay.on-top { z-index: 35; }
     #grid-overlay.hidden { display: none; }
 
     #map-background-layer {
@@ -134,23 +136,73 @@
     }
     #map-image { display: block; pointer-events: none; object-fit: contain; }
 
+    /* Fog of War Layer Canvas */
+    #fog-canvas {
+      position: absolute; top: 0; left: 0;
+      width: 5000px; height: 5000px;
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    #vtt-viewport.fog-brush-active #fog-canvas {
+      pointer-events: auto;
+      cursor: crosshair;
+    }
+
     .vtt-hud {
       position: absolute; bottom: 16px; right: 16px;
       background: rgba(30, 18, 9, 0.85); border: 1px solid var(--wood-light);
       border-radius: 6px; padding: 6px 12px; color: #f7ead9; font-size: 0.8rem;
-      display: flex; align-items: center; gap: 10px; z-index: 500;
+      display: flex; align-items: center; gap: 8px; z-index: 500;
     }
     .vtt-hud button {
       background: #5e3512; border: 1px solid #b3814d; color: white;
       padding: 2px 8px; border-radius: 3px; cursor: pointer; font-weight: bold;
     }
 
+    /* Tokens */
     .vtt-token {
       position: absolute; width: 60px; height: 60px;
       cursor: grab; user-select: none; z-index: 50;
     }
     .vtt-token.locked { cursor: not-allowed !important; filter: brightness(0.85); }
     .vtt-token:active:not(.locked) { cursor: grabbing; z-index: 900 !important; }
+
+    /* Concentric Reach Guide Rings */
+    .reach-guide-container {
+      display: none;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 48;
+    }
+    .reach-guide-container.active { display: block; }
+
+    .reach-ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 2px dashed;
+      pointer-events: none;
+    }
+
+    .reach-ring.close { width: 150px; height: 150px; border-color: #4caf50; background: rgba(76, 175, 80, 0.12); }
+    .reach-ring.reach { width: 250px; height: 250px; border-color: #2196f3; background: rgba(33, 150, 243, 0.10); }
+    .reach-ring.near  { width: 450px; height: 450px; border-color: #ff9800; background: rgba(255, 152, 0, 0.08); }
+    .reach-ring.far   { width: 750px; height: 750px; border-color: #e91e63; background: rgba(233, 30, 99, 0.06); }
+
+    .reach-badge {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translate(-50%, -100%);
+      font-size: 0.65rem;
+      font-weight: bold;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: white;
+    }
 
     .token-bubbles {
       position: absolute; top: -24px; left: 50%;
@@ -211,6 +263,7 @@
     }
     .gm-mode .token-del-btn { display: flex; }
 
+    /* Floating Draggable & Resizable Windows */
     .floating-window {
       position: absolute; background: var(--parchment);
       border: 2px solid var(--wood-medium); border-radius: 8px;
@@ -245,7 +298,8 @@
     #dice-window { top: 60px; right: 20px; width: 340px; height: 460px; }
     #spawner-window { top: 120px; left: 520px; width: 380px; height: 500px; display: none; }
     #compendium-window { top: 100px; left: 250px; width: 540px; height: 500px; display: none; }
-    #map-window { top: 140px; left: 320px; width: 380px; height: 420px; display: none; }
+    #map-window { top: 140px; left: 320px; width: 380px; height: 440px; display: none; }
+    #gm-toolbox-window { top: 160px; left: 400px; width: 360px; height: 460px; display: none; }
 
     .char-tab-bar {
       display: flex; gap: 6px; margin-bottom: 10px;
@@ -391,6 +445,7 @@
       cursor: pointer; display: flex; justify-content: center; align-items: center;
     }
 
+    /* Semi-transparent Resizable Chat Window */
     #chat-window {
       position: absolute; bottom: 20px; left: 20px;
       width: 320px; height: 240px;
@@ -425,6 +480,7 @@
       padding: 4px 10px; font-size: 0.78rem; border-radius: 3px; margin-left: 4px; cursor: pointer;
     }
 
+    /* Draggable BGM Player Window */
     #bgm-dock {
       position: absolute; bottom: 16px; left: 450px;
       background: rgba(40, 24, 12, 0.92); border: 2px solid var(--wood-light);
@@ -452,6 +508,31 @@
       padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; color: #2b1d0c;
     }
 
+    /* Shared Handout Modal Popup */
+    #handout-modal {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75); z-index: 9500;
+      justify-content: center; align-items: center;
+    }
+    .handout-card {
+      background: var(--parchment); border: 4px solid var(--wood-medium);
+      border-radius: 10px; padding: 24px; max-width: 580px; width: 90%;
+      max-height: 80vh; overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      position: relative;
+    }
+    .handout-card h2 {
+      color: var(--wood-dark); border-bottom: 2px solid var(--parchment-border);
+      padding-bottom: 6px; margin-bottom: 14px;
+    }
+    .handout-content {
+      font-size: 0.95rem; line-height: 1.6; color: var(--ink); white-space: pre-wrap;
+    }
+    .handout-img {
+      max-width: 100%; border-radius: 6px; border: 1px solid var(--parchment-border);
+      margin-bottom: 12px; display: block;
+    }
+
     .modal-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.75); z-index: 9999;
@@ -477,7 +558,7 @@
 </head>
 <body class="player-mode">
 
-  <!-- Welcome / Entry Modal for Nickname and Character Binding -->
+  <!-- Welcome / Entry Modal -->
   <div class="modal-overlay" id="welcome-modal">
     <div class="welcome-card">
       <h3 style="color:var(--wood-dark); margin-bottom:8px; border-bottom:1px solid var(--parchment-border); padding-bottom:6px;">
@@ -524,6 +605,7 @@
         <button class="menu-btn active-toggle" id="btn-toggle-dice" onclick="toggleWindow('dice-window')">🎲 주사위 굴림</button>
         <button class="menu-btn" id="btn-toggle-spawner" onclick="toggleWindow('spawner-window')">➕ 토큰 생성기</button>
         <button class="menu-btn" id="btn-toggle-compendium" onclick="toggleWindow('compendium-window')" style="display:none;">📖 토큰 도감 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
+        <button class="menu-btn" id="btn-toggle-gm-toolbox" onclick="toggleWindow('gm-toolbox-window')" style="display:none;">🧰 마스터 도구함 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 맵 배경 설정</button>
       </div>
     </div>
@@ -548,6 +630,10 @@
         <img id="map-image" src="https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=1600&q=80" alt="전술 맵">
       </div>
       <div id="grid-overlay" class="on-top"></div>
+      
+      <!-- Fog of War Canvas Layer -->
+      <canvas id="fog-canvas" width="5000" height="5000"></canvas>
+
       <div id="tokens-layer"></div>
     </div>
 
@@ -556,6 +642,7 @@
       <button onclick="zoomStep(0.15)">➕ 확대</button>
       <button onclick="zoomStep(-0.15)">➖ 축소</button>
       <button onclick="resetZoomPan()">🎯 중앙 초기화</button>
+      <button id="btn-player-guide-toggle" onclick="togglePlayerReachGuide()" style="background:#2e7d32; margin-left:6px;">📏 사거리 가이드 켜기</button>
     </div>
   </div>
 
@@ -694,7 +781,60 @@
     <div class="window-content" id="compendium-content"></div>
   </div>
 
-  <!-- FLOATING WINDOW 5: Map Settings -->
+  <!-- FLOATING WINDOW 5: GM Toolbox -->
+  <div class="floating-window" id="gm-toolbox-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'gm-toolbox-window')">
+      <div class="window-title">🧰 마스터 도구함 (전장의 안개 & 핸드아웃)</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('gm-toolbox-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('gm-toolbox-window')" title="닫기">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <div style="background:#f7eedf; padding:10px; border-radius:6px; margin-bottom:12px; border:1px solid #caa372;">
+        <strong style="color:var(--wood-dark); display:block; margin-bottom:6px;">🌫️ 전장의 안개 (Fog of War)</strong>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:0.85rem;">
+          <input type="checkbox" id="chk-fog-enabled" onchange="toggleFogOfWar(this.checked)">
+          <span>전장의 안개 활성화 (플레이어 시야 제한)</span>
+        </label>
+        
+        <div id="fog-brush-controls" style="margin-top:8px; display:none;">
+          <label style="font-size:0.78rem; font-weight:bold; color:var(--wood-dark);">안개 브러시 도구:</label>
+          <div style="display:flex; gap:6px; margin-top:4px;">
+            <button class="menu-btn" id="btn-fog-brush-off" style="flex:1;" onclick="setFogBrushMode('none')">🖐️ 이동 모드</button>
+            <button class="menu-btn" id="btn-fog-brush-erase" style="flex:1;" onclick="setFogBrushMode('erase')">🧹 안개 지우개</button>
+            <button class="menu-btn" id="btn-fog-brush-paint" style="flex:1;" onclick="setFogBrushMode('paint')">🖌️ 안개 덮기</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:6px; font-size:0.78rem;">
+            <span>브러시 크기:</span>
+            <input type="range" id="fog-brush-size" min="30" max="250" value="100" style="flex:1;">
+            <button onclick="resetFullFog()" style="background:#c62828; color:white; border:none; padding:2px 6px; border-radius:3px; cursor:pointer;">전체 안개 복원</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#f7eedf; padding:10px; border-radius:6px; border:1px solid #caa372;">
+        <strong style="color:var(--wood-dark); display:block; margin-bottom:6px;">📜 간이 메모 / 핸드아웃 공유</strong>
+        <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:6px;">플레이어 화면 정중앙에 팝업될 단서나 편지를 작성해 공유하세요.</p>
+        <div class="form-group">
+          <label>핸드아웃 제목</label>
+          <input type="text" id="handout-title-input" placeholder="예: 낡은 일기장의 쪽지, 비밀 던전 지도">
+        </div>
+        <div class="form-group">
+          <label>내용 (텍스트)</label>
+          <textarea id="handout-text-input" rows="3" placeholder="예: '엘프 마을 동막골 족장의 서명이 적혀 있다...'"></textarea>
+        </div>
+        <div class="form-group">
+          <label>첨부 이미지 (URL 또는 파일)</label>
+          <input type="text" id="handout-img-url" placeholder="https://... 또는 아래 파일 선택">
+          <input type="file" id="handout-file-input" accept="image/*" style="margin-top:4px; font-size:0.75rem;" onchange="handleHandoutFile(event)">
+        </div>
+        <button class="btn-create" onclick="sendSharedHandout()" style="background:var(--brass); color:#2b1d0c;">모든 플레이어에게 공유하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING WINDOW 6: Map Settings -->
   <div class="floating-window" id="map-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'map-window')">
       <div class="window-title">🗺️ 전장 배경 맵 & 격자 맞춤 설정</div>
@@ -756,7 +896,7 @@
     </div>
   </div>
 
-  <!-- Draggable BGM Player Dock -->
+  <!-- Draggable BGM Player Window -->
   <div id="bgm-dock">
     <div class="bgm-header" onmousedown="startDragWindow(event, 'bgm-dock')">
       <span>🎵 BGM 플레이어 & 오디오 관리 (드래그 이동 가능)</span>
@@ -771,6 +911,17 @@
       <button class="bgm-btn" id="bgm-play-btn" onclick="toggleBgmPlayback()">▶ 재생</button>
       <button class="bgm-btn" onclick="openBgmUploadPrompt()">📁 음악 업로드</button>
       <input type="file" id="bgm-file-input" accept="audio/*" style="display:none;" onchange="handleBgmFileSelect(event)">
+    </div>
+  </div>
+
+  <!-- Shared Handout Central Modal Popup -->
+  <div id="handout-modal">
+    <div class="handout-card">
+      <button class="win-btn" style="position:absolute; top:12px; right:12px;" onclick="closeHandoutModal()">×</button>
+      <h2 id="handout-modal-title">단서 발견</h2>
+      <img id="handout-modal-img" class="handout-img" style="display:none;">
+      <div id="handout-modal-body" class="handout-content"></div>
+      <button class="btn-create" onclick="closeHandoutModal()" style="margin-top:16px;">확인 완료</button>
     </div>
   </div>
 
@@ -797,6 +948,11 @@
     let myNickname = '모험가';
     let myBoundCharId = 'char_1';
     let sessionUsers = ['모험가', 'GM'];
+    let showPlayerGuide = false;
+
+    let isFogActive = false;
+    let fogBrushMode = 'none';
+    let uploadedHandoutImgData = null;
 
     let characters = [
       {
@@ -811,6 +967,8 @@
         armor: 1,
         damage: 'd6',
         tokenImage: 'https://api.dicebear.com/7.x/bottts/svg?seed=jeomsoon',
+        visionBase: '몇걸음',
+        visionBonusGrids: 0,
         stats: {
           str: { score: 8, mod: -1, name: '근력 (STR)' },
           dex: { score: 12, mod: 0, name: '민첩 (DEX)' },
@@ -832,6 +990,8 @@
         armor: 1,
         damage: 'd10',
         tokenImage: 'https://api.dicebear.com/7.x/bottts/svg?seed=noctiel',
+        visionBase: '몇걸음',
+        visionBonusGrids: 0,
         stats: {
           str: { score: 12, mod: 0, name: '근력 (STR)' },
           dex: { score: 16, mod: 2, name: '민첩 (DEX)' },
@@ -927,6 +1087,7 @@
       renderSheet();
       renderCompendium();
       renderTokens();
+      redrawFog();
       appendChatMessage(`🎉 [${myNickname}]님이 접속하셨습니다. (조종 캐릭터: ${bChar ? bChar.name : '없음'})`);
     }
 
@@ -950,15 +1111,140 @@
       });
     }
 
+    const fogCanvas = document.getElementById('fog-canvas');
+    const fogCtx = fogCanvas.getContext('2d');
+    const fogMaskCanvas = document.createElement('canvas');
+    fogMaskCanvas.width = 5000;
+    fogMaskCanvas.height = 5000;
+    const fogMaskCtx = fogMaskCanvas.getContext('2d');
+
+    function resetFullFog() {
+      fogMaskCtx.fillStyle = 'rgba(0, 0, 0, 1)';
+      fogMaskCtx.fillRect(0, 0, 5000, 5000);
+      redrawFog();
+      appendChatMessage('🌫️ 전장의 안개가 전체 초기화(복원)되었습니다.');
+    }
+    resetFullFog();
+
+    function toggleFogOfWar(enabled) {
+      isFogActive = enabled;
+      document.getElementById('fog-brush-controls').style.display = enabled ? 'block' : 'none';
+      if (!enabled) setFogBrushMode('none');
+      redrawFog();
+      appendChatMessage(enabled ? '🌫️ 전장의 안개가 켜졌습니다. (플레이어 시야가 제한됩니다)' : '☀️ 전장의 안개가 꺼졌습니다. (전체 전장이 공개됩니다)');
+    }
+
+    function setFogBrushMode(mode) {
+      fogBrushMode = mode;
+      const vp = document.getElementById('vtt-viewport');
+      vp.classList.toggle('fog-brush-active', mode !== 'none');
+
+      document.getElementById('btn-fog-brush-off').style.background = mode === 'none' ? '#edd8bf' : '';
+      document.getElementById('btn-fog-brush-erase').style.background = mode === 'erase' ? '#edd8bf' : '';
+      document.getElementById('btn-fog-brush-paint').style.background = mode === 'paint' ? '#edd8bf' : '';
+    }
+
+    let isBrushingFog = false;
+
+    fogCanvas.addEventListener('mousedown', (e) => {
+      if (!isFogActive || currentRole !== 'gm' || fogBrushMode === 'none') return;
+      isBrushingFog = true;
+      applyFogBrushAt(e);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isBrushingFog) return;
+      applyFogBrushAt(e);
+    });
+
+    window.addEventListener('mouseup', () => {
+      isBrushingFog = false;
+    });
+
+    function applyFogBrushAt(e) {
+      const rect = viewport.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const worldX = (mouseX - panX) / zoomLevel;
+      const worldY = (mouseY - panY) / zoomLevel;
+      const brushRadius = parseInt(document.getElementById('fog-brush-size').value, 10) || 100;
+
+      fogMaskCtx.save();
+      if (fogBrushMode === 'erase') {
+        fogMaskCtx.globalCompositeOperation = 'destination-out';
+        fogMaskCtx.beginPath();
+        fogMaskCtx.arc(worldX, worldY, brushRadius, 0, Math.PI * 2);
+        fogMaskCtx.fill();
+      } else if (fogBrushMode === 'paint') {
+        fogMaskCtx.globalCompositeOperation = 'source-over';
+        fogMaskCtx.fillStyle = 'rgba(0, 0, 0, 1)';
+        fogMaskCtx.beginPath();
+        fogMaskCtx.arc(worldX, worldY, brushRadius, 0, Math.PI * 2);
+        fogMaskCtx.fill();
+      }
+      fogMaskCtx.restore();
+
+      redrawFog();
+    }
+
+    function getDungeonWorldVisionRadius(visionBase, bonusGrids) {
+      let basePx = 250;
+      if (visionBase === '반걸음') basePx = 100;
+      else if (visionBase === '한걸음') basePx = 150;
+      else if (visionBase === '몇걸음') basePx = 250;
+      else if (visionBase === '중거리') basePx = 400;
+
+      return basePx + (bonusGrids * 50);
+    }
+
+    function redrawFog() {
+      fogCtx.clearRect(0, 0, 5000, 5000);
+      if (!isFogActive) return;
+
+      if (currentRole === 'gm') {
+        fogCtx.save();
+        fogCtx.globalAlpha = 0.45;
+        fogCtx.drawImage(fogMaskCanvas, 0, 0);
+        fogCtx.restore();
+      } else {
+        fogCtx.save();
+        fogCtx.drawImage(fogMaskCanvas, 0, 0);
+
+        const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
+        const myChar = characters.find(c => c.id === myBoundCharId);
+
+        if (myTok && myChar) {
+          const radius = getDungeonWorldVisionRadius(myChar.visionBase || '몇걸음', myChar.visionBonusGrids || 0);
+
+          fogCtx.globalCompositeOperation = 'destination-out';
+          const grad = fogCtx.createRadialGradient(myTok.x + 30, myTok.y + 30, radius * 0.7, myTok.x + 30, myTok.y + 30, radius);
+          grad.addColorStop(0, 'rgba(0,0,0,1)');
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+          fogCtx.fillStyle = grad;
+          fogCtx.beginPath();
+          fogCtx.arc(myTok.x + 30, myTok.y + 30, radius, 0, Math.PI * 2);
+          fogCtx.fill();
+        }
+
+        fogCtx.restore();
+      }
+    }
+
+    function togglePlayerReachGuide() {
+      showPlayerGuide = !showPlayerGuide;
+      const btn = document.getElementById('btn-player-guide-toggle');
+      btn.innerText = showPlayerGuide ? '📏 사거리 가이드 끄기' : '📏 사거리 가이드 켜기';
+      btn.style.background = showPlayerGuide ? '#c62828' : '#2e7d32';
+      renderTokens();
+    }
+
     let audioCtx = null;
 
     function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       return audioCtx;
     }
 
@@ -1008,18 +1294,9 @@
     let customAudioElement = null;
 
     const TAVERN_MELODY = [
-      { note: 293.66, dur: 0.25 },
-      { note: 329.63, dur: 0.25 },
-      { note: 369.99, dur: 0.25 },
-      { note: 440.00, dur: 0.50 },
-      { note: 369.99, dur: 0.25 },
-      { note: 440.00, dur: 0.25 },
-      { note: 493.88, dur: 0.50 },
-      { note: 440.00, dur: 0.25 },
-      { note: 369.99, dur: 0.25 },
-      { note: 293.66, dur: 0.50 },
-      { note: 329.63, dur: 0.25 },
-      { note: 369.99, dur: 0.25 },
+      { note: 293.66, dur: 0.25 }, { note: 329.63, dur: 0.25 }, { note: 369.99, dur: 0.25 }, { note: 440.00, dur: 0.50 },
+      { note: 369.99, dur: 0.25 }, { note: 440.00, dur: 0.25 }, { note: 493.88, dur: 0.50 }, { note: 440.00, dur: 0.25 },
+      { note: 369.99, dur: 0.25 }, { note: 293.66, dur: 0.50 }, { note: 329.63, dur: 0.25 }, { note: 369.99, dur: 0.25 },
       { note: 329.63, dur: 0.50 }
     ];
 
@@ -1168,6 +1445,7 @@
     }, { passive: false });
 
     viewport.addEventListener('mousedown', (e) => {
+      if (e.target.closest('#fog-canvas') && isFogActive && currentRole === 'gm' && fogBrushMode !== 'none') return;
       if (e.button === 2 || e.target.id === 'vtt-world' || e.target.id === 'vtt-viewport' || e.target.id === 'grid-overlay' || e.target.id === 'map-background-layer' || e.target.id === 'map-image') {
         isPanning = true;
         panStartX = e.clientX - panX;
@@ -1200,6 +1478,7 @@
         'dice-window': 'btn-toggle-dice',
         'spawner-window': 'btn-toggle-spawner',
         'compendium-window': 'btn-toggle-compendium',
+        'gm-toolbox-window': 'btn-toggle-gm-toolbox',
         'map-window': 'btn-toggle-map'
       };
       if (btnMap[winId]) {
@@ -1236,12 +1515,15 @@
       document.body.className = role === 'gm' ? 'gm-mode' : 'player-mode';
       document.getElementById('role-btn-player').classList.toggle('active', role === 'player');
       document.getElementById('role-btn-gm').classList.toggle('active', role === 'gm');
+
       document.getElementById('btn-toggle-compendium').style.display = role === 'gm' ? 'flex' : 'none';
+      document.getElementById('btn-toggle-gm-toolbox').style.display = role === 'gm' ? 'flex' : 'none';
 
       renderSheetTabs();
       renderSheet();
       renderCompendium();
       renderTokens();
+      redrawFog();
     }
 
     function renderSheetTabs() {
@@ -1286,6 +1568,8 @@
         armor: 1,
         damage: 'd8',
         tokenImage: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`,
+        visionBase: '몇걸음',
+        visionBonusGrids: 0,
         stats: {
           str: { score: 10, mod: 0, name: '근력 (STR)' },
           dex: { score: 10, mod: 0, name: '민첩 (DEX)' },
@@ -1318,6 +1602,7 @@
         renderSheetTabs();
         renderSheet();
         renderTokens();
+        redrawFog();
         appendChatMessage(`🗑️ [${c.name}] 캐릭터 시트가 삭제되었습니다.`);
       }
     }
@@ -1360,15 +1645,16 @@
           <div style="flex:1;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong style="font-size:1.05rem; color:var(--wood-dark);">${c.name} (${c.class})</strong>
-              <div>
-                <span>Lv.${c.level}</span>
-                ${isGm ? `<button onclick="deleteCharacterSheet(${selectedCharIndex})" style="margin-left:8px; background:#c62828; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:0.7rem; cursor:pointer;" title="시트 삭제">시트 삭제</button>` : ''}
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span>Lv.</span>
+                ${isGm ? `<input type="number" class="sheet-input" style="width:40px; padding:2px; text-align:center;" value="${c.level}" onchange="updateCharLevel(${selectedCharIndex}, this.value)">` : `<strong>${c.level}</strong>`}
+                ${isGm ? `<button onclick="deleteCharacterSheet(${selectedCharIndex})" style="margin-left:6px; background:#c62828; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:0.7rem; cursor:pointer;" title="시트 삭제">시트 삭제</button>` : ''}
               </div>
             </div>
             
             <div style="display:flex; gap:10px; margin-top:4px; font-size:0.8rem; align-items:center;">
               <div>
-                <span>💥 피해 주사위: </span>
+                <span>💥 피해: </span>
                 ${isGm ? `<input type="text" class="sheet-input" style="width:60px; padding:2px 4px;" value="${c.damage}" onchange="updateCharDamageField(${selectedCharIndex}, this.value)">` : `<strong>${c.damage}</strong>`}
               </div>
               <div>
@@ -1379,7 +1665,28 @@
           </div>
         </div>
 
-        <div style="background:#f7eedf; padding:8px 12px; border-radius:6px; margin-bottom:10px;">
+        <div style="background:#f4ebd9; border:1px solid #c9a574; border-radius:6px; padding:6px 10px; margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:bold; font-size:0.8rem; color:var(--wood-dark);">👁️ 시야 설정 (Vision):</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              ${isGm ? `
+                <select class="sheet-input" style="padding:2px 6px;" onchange="updateCharVisionBase(${selectedCharIndex}, this.value)">
+                  <option value="반걸음" ${c.visionBase === '반걸음' ? 'selected' : ''}>반걸음 (Close, 2칸)</option>
+                  <option value="한걸음" ${c.visionBase === '한걸음' ? 'selected' : ''}>한걸음 (Reach, 3칸)</option>
+                  <option value="몇걸음" ${c.visionBase === '몇걸음' ? 'selected' : ''}>몇걸음 (Near, 5칸)</option>
+                  <option value="중거리" ${c.visionBase === '중거리' ? 'selected' : ''}>중거리 (Far, 8칸)</option>
+                </select>
+                <span>+ 추가 시야:</span>
+                <input type="number" class="sheet-input" style="width:45px; padding:2px 4px; text-align:center;" value="${c.visionBonusGrids \vert{}\vert{} 0}" min="0" max="20" title="장비나 횃불로 인한 추가 칸수" onchange="updateCharVisionBonus(${selectedCharIndex}, this.value)">
+                <span>칸</span>
+              ` : `
+                <span><strong>${c.visionBase \vert{}\vert{} '몇걸음'}</strong> (+보너스: <strong>${c.visionBonusGrids || 0}</strong>칸)</span>
+              `}
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#f7eedf; padding:8px 12px; border-radius:6px; margin-bottom:8px;">
           <div class="sheet-row">
             <label>❤️ 체력 (HP):</label>
             <div>
@@ -1401,31 +1708,38 @@
         <div class="sheet-stats-grid">
           ${statsHtml}
         </div>
-
-        ${isGm ? `
-          <div style="margin-top:10px; font-size:0.75rem; color:var(--red); font-weight:bold;">
-            * GM 모드: 스탯 수치, 피해 주사위, 장갑을 직접 수정하고 시트를 삭제할 수 있습니다.
-          </div>
-        ` : `
-          <div style="margin-top:10px; font-size:0.75rem; color:var(--ink-muted);">
-            * 플레이어 뷰: 스탯 열람 모드입니다.
-          </div>
-        `}
       `;
     }
 
+    function updateCharLevel(charIdx, val) {
+      const n = parseInt(val, 10);
+      if (!isNaN(n)) characters[charIdx].level = n;
+      renderSheet();
+    }
+
+    function updateCharVisionBase(charIdx, val) {
+      characters[charIdx].visionBase = val;
+      renderSheet();
+      redrawFog();
+      renderTokens();
+    }
+
+    function updateCharVisionBonus(charIdx, val) {
+      const n = parseInt(val, 10) || 0;
+      characters[charIdx].visionBonusGrids = n;
+      renderSheet();
+      redrawFog();
+      renderTokens();
+    }
+
     function handleSheetAvatarUpload(e) {
-      if (e.target.files.length > 0) {
-        applyAvatarFile(e.target.files[0]);
-      }
+      if (e.target.files.length > 0) applyAvatarFile(e.target.files[0]);
     }
 
     function handleSheetAvatarDrop(e) {
       e.preventDefault();
       e.target.style.borderColor = 'var(--brass)';
-      if (e.dataTransfer.files.length > 0) {
-        applyAvatarFile(e.dataTransfer.files[0]);
-      }
+      if (e.dataTransfer.files.length > 0) applyAvatarFile(e.dataTransfer.files[0]);
     }
 
     function applyAvatarFile(file) {
@@ -1567,6 +1881,7 @@
       tokens.forEach(tok => {
         const el = document.createElement('div');
         const canControl = currentRole === 'gm' || tok.owner === myNickname;
+        const isMyBoundChar = tok.id === myBoundCharId || tok.owner === myNickname;
 
         el.className = `vtt-token ${canControl ? '' : 'locked'}`;
         el.id = `vtt-tok-${tok.id}`;
@@ -1574,8 +1889,18 @@
         el.style.top = `${tok.y}px`;
 
         const hpPct = Math.max(0, Math.min(100, Math.round((tok.hp / tok.maxHp) * 100)));
+        const showRings = showPlayerGuide && isMyBoundChar;
 
         el.innerHTML = `
+          <!-- Concentric Reach Guide Rings -->
+          <div class="reach-guide-container ${showRings ? 'active' : ''}">
+            <div class="reach-ring far"><span class="reach-badge" style="background:#e91e63;">중거리 (Far)</span></div>
+            <div class="reach-ring near"><span class="reach-badge" style="background:#ff9800;">몇걸음 (Near)</span></div>
+            <div class="reach-ring reach"><span class="reach-badge" style="background:#2196f3;">한걸음 (Reach)</span></div>
+            <div class="reach-ring close"><span class="reach-badge" style="background:#4caf50;">반걸음 (Close)</span></div>
+          </div>
+
+          <!-- 3 Roll20 Status Bubbles -->
           <div class="token-bubbles">
             <div class="token-bubble bubble-green" data-tooltip="HP: ${tok.hp}/${tok.maxHp}" onclick="openBubbleModal('${tok.id}', 'hp')">
               ${tok.hp}
@@ -1639,6 +1964,10 @@
 
           element.style.left = `${tokenObj.x}px`;
           element.style.top = `${tokenObj.y}px`;
+
+          if (isFogActive && (tokenObj.id === myBoundCharId || tokenObj.owner === myNickname)) {
+            redrawFog();
+          }
         }
 
         function onMouseUp() {
@@ -1646,6 +1975,7 @@
           element.style.zIndex = 50;
           window.removeEventListener('mousemove', onMouseMove);
           window.removeEventListener('mouseup', onMouseUp);
+          redrawFog();
         }
 
         window.addEventListener('mousemove', onMouseMove);
@@ -1661,6 +1991,7 @@
       const tok = tokens.find(t => t.id === tokenId);
       tokens = tokens.filter(t => t.id !== tokenId);
       renderTokens();
+      redrawFog();
       if (tok) appendChatMessage(`🗑️ [${tok.name}] 토큰이 전장에서 제거되었습니다.`);
     }
 
@@ -1762,15 +2093,11 @@
     dropZone.addEventListener('drop', (e) => {
       e.preventDefault();
       dropZone.classList.remove('dragover');
-      if (e.dataTransfer.files.length > 0) {
-        processTokenImageFile(e.dataTransfer.files[0]);
-      }
+      if (e.dataTransfer.files.length > 0) processTokenImageFile(e.dataTransfer.files[0]);
     });
 
     function handleFileSelect(e) {
-      if (e.target.files.length > 0) {
-        processTokenImageFile(e.target.files[0]);
-      }
+      if (e.target.files.length > 0) processTokenImageFile(e.target.files[0]);
     }
 
     function processTokenImageFile(file) {
@@ -1842,6 +2169,7 @@
       }
 
       renderTokens();
+      redrawFog();
       uploadedTokenDataUrl = null;
       document.getElementById('token-image-preview-wrap').style.display = 'none';
       appendChatMessage(`⚔️ [${name}] 토큰이 전장에 배치되었습니다. (조종 권한: ${owner})`);
@@ -1901,6 +2229,47 @@
       layerEl.style.height = `${targetHeight}px`;
 
       appendChatMessage(`🗺️ 지도가 ${gridW}×${gridH} 칸(${targetWidth}×${targetHeight}px) 격자 크기에 맞춰 조정되었습니다.`);
+    }
+
+    function handleHandoutFile(e) {
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = ev => {
+          uploadedHandoutImgData = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function sendSharedHandout() {
+      const title = document.getElementById('handout-title-input').value.trim() || '중요한 단서';
+      const text = document.getElementById('handout-text-input').value.trim();
+      const urlInput = document.getElementById('handout-img-url').value.trim();
+      const img = uploadedHandoutImgData || urlInput;
+
+      showHandoutModal(title, text, img);
+      appendChatMessage(`📜 GM이 모든 플레이어에게 [${title}] 핸드아웃을 공유했습니다!`);
+    }
+
+    function showHandoutModal(title, text, imgSrc) {
+      const modal = document.getElementById('handout-modal');
+      document.getElementById('handout-modal-title').innerText = title;
+      document.getElementById('handout-modal-body').innerText = text;
+
+      const imgEl = document.getElementById('handout-modal-img');
+      if (imgSrc) {
+        imgEl.src = imgSrc;
+        imgEl.style.display = 'block';
+      } else {
+        imgEl.style.display = 'none';
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function closeHandoutModal() {
+      document.getElementById('handout-modal').style.display = 'none';
     }
 
     let diceInterval = null;
@@ -2013,6 +2382,7 @@
       renderSheet();
       renderCompendium();
       renderTokens();
+      redrawFog();
     });
   </script>
 </body>
