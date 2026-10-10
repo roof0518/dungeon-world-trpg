@@ -33,7 +33,6 @@
       user-select: none;
     }
 
-    /* Top Roll20 Style Menu Header */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -49,18 +48,18 @@
       color: #fdf5ea;
     }
 
-    .header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .header-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .brand-title {
       font-size: 1.05rem; font-weight: bold; color: #ffdfa9;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
       display: flex; align-items: center; gap: 6px; margin-right: 6px;
     }
 
-    .menu-bar { display: flex; gap: 5px; }
+    .menu-bar { display: flex; gap: 4px; }
     .menu-btn {
       background: linear-gradient(to bottom, #8a582c, #5e3512);
       border: 1px solid #ffdfa9; color: #fff8ee;
-      padding: 5px 10px; font-size: 0.82rem; border-radius: 4px;
+      padding: 4px 9px; font-size: 0.78rem; border-radius: 4px;
       cursor: pointer; font-weight: bold;
       display: flex; align-items: center; gap: 4px; transition: all 0.15s;
     }
@@ -75,15 +74,9 @@
     .header-right { display: flex; align-items: center; gap: 10px; }
 
     .user-pill {
-      background: #2a1607;
-      border: 1px solid #8b5a2b;
-      padding: 3px 10px;
-      border-radius: 14px;
-      font-size: 0.78rem;
-      color: #ffdfa9;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      background: #2a1607; border: 1px solid #8b5a2b;
+      padding: 3px 10px; border-radius: 14px; font-size: 0.78rem;
+      color: #ffdfa9; display: flex; align-items: center; gap: 6px;
     }
     .user-pill strong { color: #fff; cursor: pointer; text-decoration: underline; }
 
@@ -93,7 +86,7 @@
     }
     .role-toggle button {
       background: transparent; border: none; color: #c9ad90;
-      padding: 4px 12px; font-size: 0.8rem; cursor: pointer;
+      padding: 4px 10px; font-size: 0.78rem; cursor: pointer;
       border-radius: 12px; font-weight: bold;
     }
     .role-toggle button.active {
@@ -101,13 +94,13 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
 
-    /* VTT Workspace */
     #vtt-viewport {
       position: absolute; top: 48px; left: 0; right: 0; bottom: 0;
       background: #140f0a; overflow: hidden; cursor: default;
     }
     #vtt-viewport.panning { cursor: grab; }
     #vtt-viewport.panning:active { cursor: grabbing; }
+    #vtt-viewport.drawing { cursor: crosshair; }
 
     #vtt-world {
       position: absolute; top: 0; left: 0;
@@ -121,32 +114,40 @@
       background-image: 
         linear-gradient(to right, rgba(202, 163, 114, 0.22) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(202, 163, 114, 0.22) 1px, transparent 1px);
-      pointer-events: none;
-      z-index: 10;
+      pointer-events: none; z-index: 10;
     }
     #grid-overlay.on-top { z-index: 35; }
     #grid-overlay.hidden { display: none; }
 
     #map-background-layer {
       position: absolute; top: 500px; left: 500px;
-      pointer-events: none;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-      border: 2px solid var(--parchment-border);
-      z-index: 20;
+      pointer-events: none; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+      border: 2px solid var(--parchment-border); z-index: 20;
     }
     #map-image { display: block; pointer-events: none; object-fit: contain; }
 
-    /* Fog of War Layer Canvas */
-    #fog-canvas {
-      position: absolute; top: 0; left: 0;
-      width: 5000px; height: 5000px;
-      z-index: 40;
-      pointer-events: none;
+    #drawing-canvas {
+      position: absolute; top: 0; left: 0; width: 5000px; height: 5000px;
+      z-index: 38; pointer-events: none;
     }
 
-    #vtt-viewport.fog-brush-active #fog-canvas {
-      pointer-events: auto;
-      cursor: crosshair;
+    #fog-canvas {
+      position: absolute; top: 0; left: 0; width: 5000px; height: 5000px;
+      z-index: 40; pointer-events: none;
+    }
+    #vtt-viewport.fog-brush-active #fog-canvas { pointer-events: auto; cursor: crosshair; }
+
+    .ping-circle {
+      position: absolute; width: 80px; height: 80px; border-radius: 50%;
+      border: 4px solid #ffeb3b; background: rgba(255, 235, 59, 0.25);
+      transform: translate(-50%, -50%); pointer-events: none; z-index: 999;
+      animation: pingWave 1.2s ease-out forwards;
+    }
+
+    @keyframes pingWave {
+      0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; border-width: 6px; }
+      70% { transform: translate(-50%, -50%) scale(1.6); opacity: 0.8; border-width: 3px; }
+      100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; border-width: 1px; }
     }
 
     .vtt-hud {
@@ -160,7 +161,6 @@
       padding: 2px 8px; border-radius: 3px; cursor: pointer; font-weight: bold;
     }
 
-    /* Tokens */
     .vtt-token {
       position: absolute; width: 60px; height: 60px;
       cursor: grab; user-select: none; z-index: 50;
@@ -168,57 +168,55 @@
     .vtt-token.locked { cursor: not-allowed !important; filter: brightness(0.85); }
     .vtt-token:active:not(.locked) { cursor: grabbing; z-index: 900 !important; }
 
-    /* Concentric Reach Guide Rings */
     .reach-guide-container {
-      display: none;
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 48;
+      display: none; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); pointer-events: none; z-index: 48;
     }
     .reach-guide-container.active { display: block; }
-
     .reach-ring {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      border: 2px dashed;
-      pointer-events: none;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      border-radius: 50%; border: 2px dashed; pointer-events: none;
     }
-
     .reach-ring.close { width: 150px; height: 150px; border-color: #4caf50; background: rgba(76, 175, 80, 0.12); }
     .reach-ring.reach { width: 250px; height: 250px; border-color: #2196f3; background: rgba(33, 150, 243, 0.10); }
     .reach-ring.near  { width: 450px; height: 450px; border-color: #ff9800; background: rgba(255, 152, 0, 0.08); }
     .reach-ring.far   { width: 750px; height: 750px; border-color: #e91e63; background: rgba(233, 30, 99, 0.06); }
-
     .reach-badge {
-      position: absolute;
-      top: 0; left: 50%;
-      transform: translate(-50%, -100%);
-      font-size: 0.65rem;
-      font-weight: bold;
-      padding: 1px 4px;
-      border-radius: 3px;
-      color: white;
+      position: absolute; top: 0; left: 50%; transform: translate(-50%, -100%);
+      font-size: 0.65rem; font-weight: bold; padding: 1px 4px; border-radius: 3px; color: white;
+    }
+
+    .token-conditions-bar {
+      position: absolute; top: -42px; left: 50%;
+      transform: translateX(-50%); display: flex; gap: 3px; z-index: 65;
+    }
+    .condition-badge {
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 0.65rem; border: 1px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.6); cursor: pointer; position: relative;
+    }
+    .condition-badge:hover::after {
+      content: attr(data-cond-name);
+      position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.9); color: #fff; padding: 2px 6px;
+      font-size: 0.65rem; white-space: nowrap; border-radius: 3px; pointer-events: none;
     }
 
     .token-bubbles {
-      position: absolute; top: -24px; left: 50%;
+      position: absolute; top: -22px; left: 50%;
       transform: translateX(-50%); display: flex; gap: 4px; z-index: 60;
     }
     .token-bubble {
-      width: 22px; height: 22px; border-radius: 50%;
+      width: 20px; height: 20px; border-radius: 50%;
       display: flex; justify-content: center; align-items: center;
-      font-size: 0.65rem; font-weight: bold; color: white;
+      font-size: 0.62rem; font-weight: bold; color: white;
       border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.6);
       cursor: pointer; position: relative;
     }
     .bubble-green { background: #2e7d32; }
     .bubble-blue { background: #1976d2; }
     .bubble-red { background: #c62828; }
-
     .token-bubble:hover::after {
       content: attr(data-tooltip);
       position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
@@ -247,7 +245,6 @@
       padding: 1px 7px; border-radius: 4px; border: 1px solid #805325;
       white-space: nowrap; pointer-events: none;
     }
-
     .token-owner-badge {
       position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%);
       background: #3b200b; color: #ffdca8; font-size: 0.65rem;
@@ -263,7 +260,6 @@
     }
     .gm-mode .token-del-btn { display: flex; }
 
-    /* Floating Draggable & Resizable Windows */
     .floating-window {
       position: absolute; background: var(--parchment);
       border: 2px solid var(--wood-medium); border-radius: 8px;
@@ -299,7 +295,9 @@
     #spawner-window { top: 120px; left: 520px; width: 380px; height: 500px; display: none; }
     #compendium-window { top: 100px; left: 250px; width: 540px; height: 500px; display: none; }
     #map-window { top: 140px; left: 320px; width: 380px; height: 440px; display: none; }
-    #gm-toolbox-window { top: 160px; left: 400px; width: 360px; height: 460px; display: none; }
+    #gm-toolbox-window { top: 120px; left: 360px; width: 400px; height: 520px; display: none; }
+    #handouts-box-window { top: 140px; left: 420px; width: 420px; height: 480px; display: none; }
+    #draw-tools-window { top: 60px; left: 520px; width: 300px; height: 260px; display: none; }
 
     .char-tab-bar {
       display: flex; gap: 6px; margin-bottom: 10px;
@@ -445,7 +443,13 @@
       cursor: pointer; display: flex; justify-content: center; align-items: center;
     }
 
-    /* Semi-transparent Resizable Chat Window */
+    .handout-item-card {
+      background: #f7eedf; border: 1px solid #caa372;
+      border-radius: 6px; padding: 8px; margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .handout-item-card strong { color: var(--wood-dark); font-size: 0.85rem; }
+
     #chat-window {
       position: absolute; bottom: 20px; left: 20px;
       width: 320px; height: 240px;
@@ -480,7 +484,6 @@
       padding: 4px 10px; font-size: 0.78rem; border-radius: 3px; margin-left: 4px; cursor: pointer;
     }
 
-    /* Draggable BGM Player Window */
     #bgm-dock {
       position: absolute; bottom: 16px; left: 450px;
       background: rgba(40, 24, 12, 0.92); border: 2px solid var(--wood-light);
@@ -508,7 +511,6 @@
       padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; color: #2b1d0c;
     }
 
-    /* Shared Handout Modal Popup */
     #handout-modal {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.75); z-index: 9500;
@@ -552,8 +554,23 @@
     .bubble-modal.active { display: flex; }
     .bubble-card {
       background: var(--parchment); border: 3px solid var(--wood-medium);
-      border-radius: 8px; padding: 18px; width: 320px;
+      border-radius: 8px; padding: 18px; width: 340px;
     }
+
+    .conditions-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 6px; margin-top: 6px; font-size: 0.8rem;
+    }
+    .condition-check-label {
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+    }
+
+    .gm-cheat-item {
+      background: #fbf5ea; border: 1px solid #d4b689; border-radius: 4px;
+      margin-bottom: 6px; padding: 6px 8px;
+    }
+    .gm-cheat-item strong { color: var(--wood-dark); font-size: 0.82rem; }
+    .gm-cheat-item p { font-size: 0.76rem; color: var(--ink-muted); margin-top: 2px; }
   </style>
 </head>
 <body class="player-mode">
@@ -602,10 +619,12 @@
       <div class="brand-title"><span>🎲</span> 던전월드 모험의 전당</div>
       <div class="menu-bar">
         <button class="menu-btn active-toggle" id="btn-toggle-sheet" onclick="toggleWindow('sheet-window')">📜 캐릭터 시트</button>
-        <button class="menu-btn active-toggle" id="btn-toggle-dice" onclick="toggleWindow('dice-window')">🎲 주사위 굴림</button>
+        <button class="menu-btn active-toggle" id="btn-toggle-dice" onclick="toggleWindow('dice-window')">🎲 주사위 롤러</button>
         <button class="menu-btn" id="btn-toggle-spawner" onclick="toggleWindow('spawner-window')">➕ 토큰 생성기</button>
         <button class="menu-btn" id="btn-toggle-compendium" onclick="toggleWindow('compendium-window')" style="display:none;">📖 토큰 도감 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-gm-toolbox" onclick="toggleWindow('gm-toolbox-window')" style="display:none;">🧰 마스터 도구함 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
+        <button class="menu-btn" id="btn-toggle-handouts-box" onclick="toggleWindow('handouts-box-window')">📁 단서 보관함</button>
+        <button class="menu-btn" id="btn-toggle-draw" onclick="toggleWindow('draw-tools-window')">✏️ 스케치 펜</button>
         <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 맵 배경 설정</button>
       </div>
     </div>
@@ -631,6 +650,9 @@
       </div>
       <div id="grid-overlay" class="on-top"></div>
       
+      <!-- Drawing Canvas Layer -->
+      <canvas id="drawing-canvas" width="5000" height="5000"></canvas>
+
       <!-- Fog of War Canvas Layer -->
       <canvas id="fog-canvas" width="5000" height="5000"></canvas>
 
@@ -642,7 +664,8 @@
       <button onclick="zoomStep(0.15)">➕ 확대</button>
       <button onclick="zoomStep(-0.15)">➖ 축소</button>
       <button onclick="resetZoomPan()">🎯 중앙 초기화</button>
-      <button id="btn-player-guide-toggle" onclick="togglePlayerReachGuide()" style="background:#2e7d32; margin-left:6px;">📏 사거리 가이드 켜기</button>
+      <button id="btn-player-guide-toggle" onclick="togglePlayerReachGuide()" style="background:#2e7d32; margin-left:4px;">📏 사거리 가이드 켜기</button>
+      <span style="font-size:0.72rem; color:#deb887; margin-left:6px;">※ Shift+클릭: 탁자 핑</span>
     </div>
   </div>
 
@@ -784,57 +807,126 @@
   <!-- FLOATING WINDOW 5: GM Toolbox -->
   <div class="floating-window" id="gm-toolbox-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'gm-toolbox-window')">
-      <div class="window-title">🧰 마스터 도구함 (전장의 안개 & 핸드아웃)</div>
+      <div class="window-title">🧰 마스터 도구함 (안개 / 컨닝페이퍼 / 백업)</div>
       <div class="window-actions">
         <button class="win-btn" onclick="minimizeWindow('gm-toolbox-window')" title="최소화">_</button>
         <button class="win-btn" onclick="toggleWindow('gm-toolbox-window')" title="닫기">×</button>
       </div>
     </div>
     <div class="window-content">
-      <div style="background:#f7eedf; padding:10px; border-radius:6px; margin-bottom:12px; border:1px solid #caa372;">
-        <strong style="color:var(--wood-dark); display:block; margin-bottom:6px;">🌫️ 전장의 안개 (Fog of War)</strong>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:0.85rem;">
+      <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
+        <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">🌫️ 전장의 안개 (Fog of War)</strong>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:0.8rem;">
           <input type="checkbox" id="chk-fog-enabled" onchange="toggleFogOfWar(this.checked)">
           <span>전장의 안개 활성화 (플레이어 시야 제한)</span>
         </label>
         
-        <div id="fog-brush-controls" style="margin-top:8px; display:none;">
-          <label style="font-size:0.78rem; font-weight:bold; color:var(--wood-dark);">안개 브러시 도구:</label>
-          <div style="display:flex; gap:6px; margin-top:4px;">
+        <div id="fog-brush-controls" style="margin-top:6px; display:none;">
+          <label style="font-size:0.75rem; font-weight:bold; color:var(--wood-dark);">안개 브러시 도구:</label>
+          <div style="display:flex; gap:4px; margin-top:3px;">
             <button class="menu-btn" id="btn-fog-brush-off" style="flex:1;" onclick="setFogBrushMode('none')">🖐️ 이동 모드</button>
             <button class="menu-btn" id="btn-fog-brush-erase" style="flex:1;" onclick="setFogBrushMode('erase')">🧹 안개 지우개</button>
             <button class="menu-btn" id="btn-fog-brush-paint" style="flex:1;" onclick="setFogBrushMode('paint')">🖌️ 안개 덮기</button>
           </div>
-          <div style="display:flex; align-items:center; gap:8px; margin-top:6px; font-size:0.78rem;">
-            <span>브러시 크기:</span>
+          <div style="display:flex; align-items:center; gap:6px; margin-top:5px; font-size:0.75rem;">
+            <span>크기:</span>
             <input type="range" id="fog-brush-size" min="30" max="250" value="100" style="flex:1;">
-            <button onclick="resetFullFog()" style="background:#c62828; color:white; border:none; padding:2px 6px; border-radius:3px; cursor:pointer;">전체 안개 복원</button>
+            <button onclick="resetFullFog()" style="background:#c62828; color:white; border:none; padding:2px 5px; border-radius:3px; cursor:pointer;">전체 복원</button>
           </div>
         </div>
       </div>
 
-      <div style="background:#f7eedf; padding:10px; border-radius:6px; border:1px solid #caa372;">
-        <strong style="color:var(--wood-dark); display:block; margin-bottom:6px;">📜 간이 메모 / 핸드아웃 공유</strong>
-        <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:6px;">플레이어 화면 정중앙에 팝업될 단서나 편지를 작성해 공유하세요.</p>
-        <div class="form-group">
-          <label>핸드아웃 제목</label>
-          <input type="text" id="handout-title-input" placeholder="예: 낡은 일기장의 쪽지, 비밀 던전 지도">
+      <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
+        <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">📖 던전월드 마스터 액션 (컨닝페이퍼)</strong>
+        <div style="max-height:140px; overflow-y:auto; padding-right:4px;">
+          <div class="gm-cheat-item">
+            <strong>1. 다가오는 위험의 징조를 보여준다</strong>
+            <p>천장이 삐걱거리거나 적들의 발소리가 가까워진다.</p>
+          </div>
+          <div class="gm-cheat-item">
+            <strong>2. 악영향이나 대가를 요구한다</strong>
+            <p>목표를 이루되 무기가 끼이거나 귀중품을 떨어뜨린다.</p>
+          </div>
+          <div class="gm-cheat-item">
+            <strong>3. 자원을 소모시킨다</strong>
+            <p>식량, 탄약, 내구도, 횃불 등이 줄어든다.</p>
+          </div>
+          <div class="gm-cheat-item">
+            <strong>4. 피해를 입힌다</strong>
+            <p>적의 피해 주사위를 굴려 HP를 깎는다.</p>
+          </div>
+          <div class="gm-cheat-item">
+            <strong>5. 적의 능력을 발현한다</strong>
+            <p>몬스터 고유의 본능이나 기습 마법을 발동한다.</p>
+          </div>
+          <div class="gm-cheat-item">
+            <strong>6. 누군가를 곤경에 빠뜨린다</strong>
+            <p>파티원을 고립시키거나 절벽 끝으로 몰아넣는다.</p>
+          </div>
         </div>
-        <div class="form-group">
-          <label>내용 (텍스트)</label>
-          <textarea id="handout-text-input" rows="3" placeholder="예: '엘프 마을 동막골 족장의 서명이 적혀 있다...'"></textarea>
+      </div>
+
+      <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; border:1px solid #caa372;">
+        <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">💾 세션 데이터 백업 및 저장</strong>
+        <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:6px;">현재 시트, 토큰, 도감, 지도를 JSON 파일로 보관합니다.</p>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-create" onclick="exportSessionData()" style="flex:1; background:var(--blue);">📥 세션 내보내기</button>
+          <button class="btn-create" onclick="document.getElementById('import-file-input').click()" style="flex:1; background:var(--brass); color:#2b1d0c;">📤 세션 불러오기</button>
+          <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importSessionData(event)">
         </div>
-        <div class="form-group">
-          <label>첨부 이미지 (URL 또는 파일)</label>
-          <input type="text" id="handout-img-url" placeholder="https://... 또는 아래 파일 선택">
-          <input type="file" id="handout-file-input" accept="image/*" style="margin-top:4px; font-size:0.75rem;" onchange="handleHandoutFile(event)">
-        </div>
-        <button class="btn-create" onclick="sendSharedHandout()" style="background:var(--brass); color:#2b1d0c;">모든 플레이어에게 공유하기</button>
       </div>
     </div>
   </div>
 
-  <!-- FLOATING WINDOW 6: Map Settings -->
+  <!-- FLOATING WINDOW 6: Handout Library Box -->
+  <div class="floating-window" id="handouts-box-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'handouts-box-window')">
+      <div class="window-title">📁 단서 및 핸드아웃 보관함</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('handouts-box-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('handouts-box-window')" title="닫기">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <div style="background:#f7eedf; padding:8px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
+        <strong style="color:var(--wood-dark); font-size:0.8rem; display:block; margin-bottom:4px;">➕ 새 단서 / 메모 추가</strong>
+        <div class="form-group"><label>제목</label><input type="text" id="lib-handout-title" placeholder="예: 낡은 일기장 쪽지"></div>
+        <div class="form-group"><label>내용</label><textarea id="lib-handout-text" rows="2" placeholder="단서 텍스트 입력..."></textarea></div>
+        <div class="form-group"><label>이미지 첨부</label><input type="file" id="lib-handout-file" accept="image/*" style="font-size:0.75rem;"></div>
+        <button class="btn-create" onclick="addHandoutToLibrary()">보관함에 저장 및 팝업 공유</button>
+      </div>
+      <strong style="color:var(--wood-dark); font-size:0.8rem; display:block; margin-bottom:6px;">📜 보관된 단서 목록:</strong>
+      <div id="handout-library-list"></div>
+    </div>
+  </div>
+
+  <!-- FLOATING WINDOW 7: Sketch / Drawing Tools -->
+  <div class="floating-window" id="draw-tools-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'draw-tools-window')">
+      <div class="window-title">✏️ 간이 스케치 & 펜 도구</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('draw-tools-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('draw-tools-window')" title="닫기">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <div style="display:flex; gap:6px; margin-bottom:8px;">
+        <button class="menu-btn" id="btn-draw-mode" style="flex:1;" onclick="toggleDrawMode()">✏️ 그리기 ON/OFF</button>
+        <button class="menu-btn" style="flex:1; background:#c62828;" onclick="clearDrawCanvas()">🗑️ 전체 지우기</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:0.8rem;">
+        <label>펜 색상:</label>
+        <input type="color" id="draw-color" value="#ffeb3b" style="cursor:pointer; width:36px; height:24px; border:none;">
+        <label style="margin-left:auto;">굵기:</label>
+        <input type="range" id="draw-width" min="2" max="20" value="4" style="width:80px;">
+      </div>
+      <p style="font-size:0.72rem; color:var(--ink-muted);">
+        * 마스터와 플레이어 모두 맵 위에 화살표, X 표시, 경로를 낙서하고 의사소통할 수 있습니다.
+      </p>
+    </div>
+  </div>
+
+  <!-- FLOATING WINDOW 8: Map Settings -->
   <div class="floating-window" id="map-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'map-window')">
       <div class="window-title">🗺️ 전장 배경 맵 & 격자 맞춤 설정</div>
@@ -925,18 +1017,25 @@
     </div>
   </div>
 
-  <!-- Bubble Edit Modal -->
+  <!-- Bubble Edit & Status Condition Modal -->
   <div class="bubble-modal" id="bubble-edit-modal">
     <div class="bubble-card">
-      <h3 id="bubble-modal-title" style="margin-bottom:10px; font-size:1rem; color:var(--wood-dark);">상태값 편집</h3>
+      <h3 id="bubble-modal-title" style="margin-bottom:8px; font-size:1rem; color:var(--wood-dark);">토큰 상태 편집</h3>
       <div class="form-group">
         <label id="bubble-field-label" style="font-weight:bold;"></label>
-        <input type="text" id="bubble-field-input" style="font-size:1.1rem; padding:6px;">
+        <input type="text" id="bubble-field-input" style="font-size:1.05rem; padding:5px;">
       </div>
+
       <div class="form-group" id="bubble-owner-group" style="display:none;">
         <label>토큰 조종 권한 (플레이어 닉네임)</label>
         <select id="bubble-owner-select"></select>
       </div>
+
+      <div style="background:#f7eedf; padding:8px; border-radius:6px; margin-top:8px; border:1px solid #caa372;">
+        <label style="font-weight:bold; font-size:0.8rem; color:var(--wood-dark); display:block;">⚠️ 상태이상 (Condition Badges):</label>
+        <div class="conditions-grid" id="token-conditions-checkboxes"></div>
+      </div>
+
       <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:12px;">
         <button onclick="closeBubbleModal()" style="padding:5px 12px; background:#ebd8c0; border:1px solid #c9a574; border-radius:4px; cursor:pointer;">취소</button>
         <button id="bubble-save-btn" onclick="saveBubbleModal()" style="padding:5px 14px; background:var(--wood-medium); color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">저장</button>
@@ -952,7 +1051,18 @@
 
     let isFogActive = false;
     let fogBrushMode = 'none';
-    let uploadedHandoutImgData = null;
+    let isDrawingActive = false;
+
+    const STATUS_CONDITIONS = [
+      { key: 'stun', name: '기절', icon: '💫', color: '#ffb300' },
+      { key: 'poison', name: '중독', icon: '🧪', color: '#4caf50' },
+      { key: 'lethargy', name: '무기력', icon: '💤', color: '#78909c' },
+      { key: 'spasm', name: '경련', icon: '⚡', color: '#00bcd4' },
+      { key: 'debility', name: '쇠약', icon: '🥀', color: '#8d6e63' },
+      { key: 'dazed', name: '얼떨떨', icon: '😵', color: '#ab47bc' },
+      { key: 'panic', name: '당황', icon: '😱', color: '#e91e63' },
+      { key: 'scar', name: '흉터', icon: '🩹', color: '#f44336' }
+    ];
 
     let characters = [
       {
@@ -1013,43 +1123,57 @@
         { name: '최나리', hp: 10, damage: 'd4', armor: 0, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=nari', info: '약초꾼 견습생' }
       ],
       monster: [
-        { name: '고블린 정찰병', hp: 6, damage: 'd6', armor: 1, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', info: '서식지: 동굴 / 전리품: 조잡한 단검' },
-        { name: '흑마법사 발토', hp: 16, damage: 'd8+2', armor: 0, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=wizard', info: '특징: 암흑 마법 연쇄 영창' }
+        { name: '고블린 정찰병', hp: 6, damage: 'd6', armor: 1, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', info: '서식지: 동굴 / 전리품: 단검' },
+        { name: '흑마법사 발토', hp: 16, damage: 'd8+2', armor: 0, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=wizard', info: '특징: 암흑 마법 연쇄' }
       ]
     };
 
     let tokens = [
-      { id: 'char_1', name: '김점순', type: 'player', owner: '모험가', x: 750, y: 750, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage },
-      { id: 'char_2', name: '녹티엘', type: 'player', owner: 'GM', x: 830, y: 750, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage },
-      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', owner: 'GM', x: 1050, y: 720, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin' },
-      { id: 'npc_1', name: '김팽덕', type: 'npc', owner: 'GM', x: 670, y: 750, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok' }
+      { id: 'char_1', name: '김점순', type: 'player', owner: '모험가', x: 750, y: 750, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage, conditions: [] },
+      { id: 'char_2', name: '녹티엘', type: 'player', owner: 'GM', x: 830, y: 750, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage, conditions: [] },
+      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', owner: 'GM', x: 1050, y: 720, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', conditions: [] },
+      { id: 'npc_1', name: '김팽덕', type: 'npc', owner: 'GM', x: 670, y: 750, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok', conditions: [] }
+    ];
+
+    let handoutsLibrary = [
+      { id: 'h_1', title: '동막골 족장의 쪽지', text: '500년 만에 바깥세상으로 떠난 점순아, 부디 몸조심하거라. 인간들은 믿을 게 못 된다.', image: '' }
     ];
 
     let currentRole = 'player';
     let selectedCharIndex = 0;
     let uploadedTokenDataUrl = null;
 
-    document.getElementById('entry-char-select').addEventListener('change', function() {
-      document.getElementById('new-char-entry-fields').style.display = this.value === 'NEW' ? 'block' : 'none';
+    document.addEventListener('DOMContentLoaded', () => {
+      const charSelect = document.getElementById('entry-char-select');
+      if (charSelect) {
+        charSelect.addEventListener('change', function() {
+          const newFields = document.getElementById('new-char-entry-fields');
+          if (newFields) newFields.style.display = this.value === 'NEW' ? 'block' : 'none';
+        });
+      }
     });
 
     function reopenEntryModal() {
-      document.getElementById('welcome-modal').style.display = 'flex';
+      const modal = document.getElementById('welcome-modal');
+      if (modal) modal.style.display = 'flex';
     }
 
     function finishEntry() {
-      const nickInput = document.getElementById('entry-nickname').value.trim();
-      if (!nickInput) {
-        alert('닉네임을 입력해 주세요!');
-        return;
-      }
-      myNickname = nickInput;
+      const nickInput = document.getElementById('entry-nickname');
+      const nickVal = nickInput ? nickInput.value.trim() : '';
+
+      myNickname = nickVal || '모험가';
       if (!sessionUsers.includes(myNickname)) sessionUsers.push(myNickname);
 
-      const selVal = document.getElementById('entry-char-select').value;
+      const sel = document.getElementById('entry-char-select');
+      const selVal = sel ? sel.value : 'char_1';
+
       if (selVal === 'NEW') {
-        const cName = document.getElementById('entry-new-char-name').value.trim() || '신규 모험가';
-        const cClass = document.getElementById('entry-new-char-class').value.trim() || '모험가';
+        const nameInput = document.getElementById('entry-new-char-name');
+        const classInput = document.getElementById('entry-new-char-class');
+        const cName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : '신규 모험가';
+        const cClass = (classInput && classInput.value.trim()) ? classInput.value.trim() : '모험가';
+
         const newChar = createCharacterObj(cName, cClass);
         characters.push(newChar);
         myBoundCharId = newChar.id;
@@ -1066,7 +1190,8 @@
           maxHp: newChar.maxHp,
           armor: newChar.armor,
           damage: newChar.damage,
-          image: newChar.tokenImage
+          image: newChar.tokenImage,
+          conditions: []
         });
       } else {
         myBoundCharId = selVal;
@@ -1080,13 +1205,15 @@
       const bChar = characters.find(c => c.id === myBoundCharId);
       document.getElementById('header-bound-char').innerText = bChar ? `[${bChar.name}]` : '';
 
-      document.getElementById('welcome-modal').style.display = 'none';
+      const modal = document.getElementById('welcome-modal');
+      if (modal) modal.style.display = 'none';
 
       populateOwnerDropdowns();
       renderSheetTabs();
       renderSheet();
       renderCompendium();
       renderTokens();
+      renderHandoutsLibrary();
       redrawFog();
       appendChatMessage(`🎉 [${myNickname}]님이 접속하셨습니다. (조종 캐릭터: ${bChar ? bChar.name : '없음'})`);
     }
@@ -1109,6 +1236,68 @@
           s.appendChild(opt);
         });
       });
+    }
+
+    function triggerPing(worldX, worldY) {
+      const world = document.getElementById('vtt-world');
+      const ping = document.createElement('div');
+      ping.className = 'ping-circle';
+      ping.style.left = `${worldX}px`;
+      ping.style.top = `${worldY}px`;
+      world.appendChild(ping);
+
+      setTimeout(() => { ping.remove(); }, 1300);
+      appendChatMessage(`📍 [${myNickname}]님이 위치를 핑했습니다.`);
+    }
+
+    const drawCanvas = document.getElementById('drawing-canvas');
+    const drawCtx = drawCanvas.getContext('2d');
+    let isDrawing = false;
+    let lastDrawX, lastDrawY;
+
+    function toggleDrawMode() {
+      isDrawingActive = !isDrawingActive;
+      const btn = document.getElementById('btn-draw-mode');
+      const vp = document.getElementById('vtt-viewport');
+      drawCanvas.style.pointerEvents = isDrawingActive ? 'auto' : 'none';
+      vp.classList.toggle('drawing', isDrawingActive);
+      btn.style.background = isDrawingActive ? '#edd8bf' : '';
+      btn.innerText = isDrawingActive ? '✏️ 그리기 활성화됨' : '✏️ 그리기 ON/OFF';
+    }
+
+    drawCanvas.addEventListener('mousedown', (e) => {
+      if (!isDrawingActive) return;
+      isDrawing = true;
+      const rect = viewport.getBoundingClientRect();
+      lastDrawX = (e.clientX - rect.left - panX) / zoomLevel;
+      lastDrawY = (e.clientY - rect.top - panY) / zoomLevel;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDrawing || !isDrawingActive) return;
+      const rect = viewport.getBoundingClientRect();
+      const curX = (e.clientX - rect.left - panX) / zoomLevel;
+      const curY = (e.clientY - rect.top - panY) / zoomLevel;
+
+      drawCtx.strokeStyle = document.getElementById('draw-color').value;
+      drawCtx.lineWidth = parseInt(document.getElementById('draw-width').value, 10);
+      drawCtx.lineCap = 'round';
+      drawCtx.lineJoin = 'round';
+
+      drawCtx.beginPath();
+      drawCtx.moveTo(lastDrawX, lastDrawY);
+      drawCtx.lineTo(curX, curY);
+      drawCtx.stroke();
+
+      lastDrawX = curX;
+      lastDrawY = curY;
+    });
+
+    window.addEventListener('mouseup', () => { isDrawing = false; });
+
+    function clearDrawCanvas() {
+      drawCtx.clearRect(0, 0, 5000, 5000);
+      appendChatMessage('🗑️ 스케치 펜 드로잉이 지워졌습니다.');
     }
 
     const fogCanvas = document.getElementById('fog-canvas');
@@ -1138,34 +1327,27 @@
       fogBrushMode = mode;
       const vp = document.getElementById('vtt-viewport');
       vp.classList.toggle('fog-brush-active', mode !== 'none');
-
       document.getElementById('btn-fog-brush-off').style.background = mode === 'none' ? '#edd8bf' : '';
       document.getElementById('btn-fog-brush-erase').style.background = mode === 'erase' ? '#edd8bf' : '';
       document.getElementById('btn-fog-brush-paint').style.background = mode === 'paint' ? '#edd8bf' : '';
     }
 
     let isBrushingFog = false;
-
     fogCanvas.addEventListener('mousedown', (e) => {
       if (!isFogActive || currentRole !== 'gm' || fogBrushMode === 'none') return;
       isBrushingFog = true;
       applyFogBrushAt(e);
     });
-
     window.addEventListener('mousemove', (e) => {
       if (!isBrushingFog) return;
       applyFogBrushAt(e);
     });
-
-    window.addEventListener('mouseup', () => {
-      isBrushingFog = false;
-    });
+    window.addEventListener('mouseup', () => { isBrushingFog = false; });
 
     function applyFogBrushAt(e) {
       const rect = viewport.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-
       const worldX = (mouseX - panX) / zoomLevel;
       const worldY = (mouseY - panY) / zoomLevel;
       const brushRadius = parseInt(document.getElementById('fog-brush-size').value, 10) || 100;
@@ -1184,7 +1366,6 @@
         fogMaskCtx.fill();
       }
       fogMaskCtx.restore();
-
       redrawFog();
     }
 
@@ -1194,7 +1375,6 @@
       else if (visionBase === '한걸음') basePx = 150;
       else if (visionBase === '몇걸음') basePx = 250;
       else if (visionBase === '중거리') basePx = 400;
-
       return basePx + (bonusGrids * 50);
     }
 
@@ -1216,7 +1396,6 @@
 
         if (myTok && myChar) {
           const radius = getDungeonWorldVisionRadius(myChar.visionBase || '몇걸음', myChar.visionBonusGrids || 0);
-
           fogCtx.globalCompositeOperation = 'destination-out';
           const grad = fogCtx.createRadialGradient(myTok.x + 30, myTok.y + 30, radius * 0.7, myTok.x + 30, myTok.y + 30, radius);
           grad.addColorStop(0, 'rgba(0,0,0,1)');
@@ -1227,7 +1406,6 @@
           fogCtx.arc(myTok.x + 30, myTok.y + 30, radius, 0, Math.PI * 2);
           fogCtx.fill();
         }
-
         fogCtx.restore();
       }
     }
@@ -1240,8 +1418,8 @@
       renderTokens();
     }
 
+    // --- Audio Synthesis ---
     let audioCtx = null;
-
     function getAudioContext() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -1256,37 +1434,29 @@
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           const clackTime = now + (i * 0.09) + (Math.random() * 0.04);
-
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(320 + Math.random() * 450, clackTime);
           osc.frequency.exponentialRampToValueAtTime(100, clackTime + 0.05);
-
           gain.gain.setValueAtTime(0.35, clackTime);
           gain.gain.exponentialRampToValueAtTime(0.01, clackTime + 0.05);
-
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.start(clackTime);
           osc.stop(clackTime + 0.06);
         }
-
         const finalTime = now + 0.72;
         const subOsc = ctx.createOscillator();
         const subGain = ctx.createGain();
         subOsc.type = 'sine';
         subOsc.frequency.setValueAtTime(180, finalTime);
         subOsc.frequency.exponentialRampToValueAtTime(45, finalTime + 0.12);
-
         subGain.gain.setValueAtTime(0.5, finalTime);
         subGain.gain.exponentialRampToValueAtTime(0.01, finalTime + 0.12);
-
         subOsc.connect(subGain);
         subGain.connect(ctx.destination);
         subOsc.start(finalTime);
         subOsc.stop(finalTime + 0.14);
-      } catch (err) {
-        console.warn('Audio not available:', err);
-      }
+      } catch (err) {}
     }
 
     let bgmIsPlaying = false;
@@ -1299,29 +1469,22 @@
       { note: 369.99, dur: 0.25 }, { note: 293.66, dur: 0.50 }, { note: 329.63, dur: 0.25 }, { note: 369.99, dur: 0.25 },
       { note: 329.63, dur: 0.50 }
     ];
-
     let noteIdx = 0;
 
     function playSynthTavernStep() {
       if (!bgmIsPlaying) return;
       const ctx = getAudioContext();
       const item = TAVERN_MELODY[noteIdx % TAVERN_MELODY.length];
-
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(item.note, ctx.currentTime);
-
       gain.gain.setValueAtTime(0.2, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + item.dur * 1.2);
-
       osc.connect(gain);
       gain.connect(ctx.destination);
-
       osc.start();
       osc.stop(ctx.currentTime + item.dur * 1.3);
-
       noteIdx++;
       bgmTimer = setTimeout(playSynthTavernStep, item.dur * 1000);
     }
@@ -1329,7 +1492,6 @@
     function toggleBgmPlayback() {
       const btn = document.getElementById('bgm-play-btn');
       const select = document.getElementById('bgm-select').value;
-
       if (bgmIsPlaying) {
         bgmIsPlaying = false;
         if (bgmTimer) clearTimeout(bgmTimer);
@@ -1366,9 +1528,7 @@
       }
     }
 
-    function openBgmUploadPrompt() {
-      document.getElementById('bgm-file-input').click();
-    }
+    function openBgmUploadPrompt() { document.getElementById('bgm-file-input').click(); }
 
     function handleBgmFileSelect(e) {
       if (e.target.files.length > 0) {
@@ -1384,20 +1544,15 @@
         opt.innerText = `📁 ${file.name}`;
         sel.appendChild(opt);
         sel.value = opt.value;
-
         if (bgmIsPlaying) customAudioElement.play();
         alert(`음악 [${file.name}]이 BGM 목록에 추가되었습니다!`);
       }
     }
 
-    function toggleGridOnTop(isOnTop) {
-      document.getElementById('grid-overlay').classList.toggle('on-top', isOnTop);
-    }
+    function toggleGridOnTop(isOnTop) { document.getElementById('grid-overlay').classList.toggle('on-top', isOnTop); }
+    function toggleGridVisible(isVisible) { document.getElementById('grid-overlay').classList.toggle('hidden', !isVisible); }
 
-    function toggleGridVisible(isVisible) {
-      document.getElementById('grid-overlay').classList.toggle('hidden', !isVisible);
-    }
-
+    // --- Viewport Zoom & Pan ---
     let zoomLevel = 1.0;
     let panX = -450;
     let panY = -450;
@@ -1420,9 +1575,7 @@
     }
 
     function resetZoomPan() {
-      zoomLevel = 1.0;
-      panX = -450;
-      panY = -450;
+      zoomLevel = 1.0; panX = -450; panY = -450;
       updateWorldTransform();
     }
 
@@ -1432,20 +1585,28 @@
       e.preventDefault();
       const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
       const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomLevel * zoomFactor));
-
       const rect = viewport.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
       panX = mouseX - (mouseX - panX) * (newZoom / zoomLevel);
       panY = mouseY - (mouseY - panY) * (newZoom / zoomLevel);
-
       zoomLevel = Math.round(newZoom * 100) / 100;
       updateWorldTransform();
     }, { passive: false });
 
     viewport.addEventListener('mousedown', (e) => {
+      if (e.shiftKey && e.button === 0) {
+        const rect = viewport.getBoundingClientRect();
+        const worldX = (e.clientX - rect.left - panX) / zoomLevel;
+        const worldY = (e.clientY - rect.top - panY) / zoomLevel;
+        triggerPing(worldX, worldY);
+        return;
+      }
+
+      if (isDrawingActive) return;
       if (e.target.closest('#fog-canvas') && isFogActive && currentRole === 'gm' && fogBrushMode !== 'none') return;
+
       if (e.button === 2 || e.target.id === 'vtt-world' || e.target.id === 'vtt-viewport' || e.target.id === 'grid-overlay' || e.target.id === 'map-background-layer' || e.target.id === 'map-image') {
         isPanning = true;
         panStartX = e.clientX - panX;
@@ -1479,6 +1640,8 @@
         'spawner-window': 'btn-toggle-spawner',
         'compendium-window': 'btn-toggle-compendium',
         'gm-toolbox-window': 'btn-toggle-gm-toolbox',
+        'handouts-box-window': 'btn-toggle-handouts-box',
+        'draw-tools-window': 'btn-toggle-draw',
         'map-window': 'btn-toggle-map'
       };
       if (btnMap[winId]) {
@@ -1486,9 +1649,7 @@
       }
     }
 
-    function minimizeWindow(winId) {
-      document.getElementById(winId).classList.toggle('minimized');
-    }
+    function minimizeWindow(winId) { document.getElementById(winId).classList.toggle('minimized'); }
 
     function startDragWindow(e, winId) {
       const win = document.getElementById(winId);
@@ -1526,6 +1687,7 @@
       redrawFog();
     }
 
+    // --- Character Sheet Logic ---
     function renderSheetTabs() {
       const bar = document.getElementById('char-tab-list');
       bar.innerHTML = '';
@@ -1667,7 +1829,7 @@
 
         <div style="background:#f4ebd9; border:1px solid #c9a574; border-radius:6px; padding:6px 10px; margin-bottom:8px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:bold; font-size:0.8rem; color:var(--wood-dark);">👁️ 시야 설정 (Vision):</span>
+            <span style="font-weight:bold; font-size:0.8rem; color:var(--wood-dark);">👁️ 시야 설정:</span>
             <div style="display:flex; align-items:center; gap:6px;">
               ${isGm ? `
                 <select class="sheet-input" style="padding:2px 6px;" onchange="updateCharVisionBase(${selectedCharIndex}, this.value)">
@@ -1676,11 +1838,11 @@
                   <option value="몇걸음" ${c.visionBase === '몇걸음' ? 'selected' : ''}>몇걸음 (Near, 5칸)</option>
                   <option value="중거리" ${c.visionBase === '중거리' ? 'selected' : ''}>중거리 (Far, 8칸)</option>
                 </select>
-                <span>+ 추가 시야:</span>
-                <input type="number" class="sheet-input" style="width:45px; padding:2px 4px; text-align:center;" value="${c.visionBonusGrids \vert{}\vert{} 0}" min="0" max="20" title="장비나 횃불로 인한 추가 칸수" onchange="updateCharVisionBonus(${selectedCharIndex}, this.value)">
+                <span>+ 추가:</span>
+                <input type="number" class="sheet-input" style="width:42px; padding:2px 4px; text-align:center;" value="${c.visionBonusGrids || 0}" min="0" max="20" onchange="updateCharVisionBonus(${selectedCharIndex}, this.value)">
                 <span>칸</span>
               ` : `
-                <span><strong>${c.visionBase \vert{}\vert{} '몇걸음'}</strong> (+보너스: <strong>${c.visionBonusGrids || 0}</strong>칸)</span>
+                <span><strong>${c.visionBase || '몇걸음'}</strong> (+보너스: <strong>${c.visionBonusGrids || 0}</strong>칸)</span>
               `}
             </div>
           </div>
@@ -1716,32 +1878,22 @@
       if (!isNaN(n)) characters[charIdx].level = n;
       renderSheet();
     }
-
     function updateCharVisionBase(charIdx, val) {
       characters[charIdx].visionBase = val;
-      renderSheet();
-      redrawFog();
-      renderTokens();
+      renderSheet(); redrawFog(); renderTokens();
     }
-
     function updateCharVisionBonus(charIdx, val) {
       const n = parseInt(val, 10) || 0;
       characters[charIdx].visionBonusGrids = n;
-      renderSheet();
-      redrawFog();
-      renderTokens();
+      renderSheet(); redrawFog(); renderTokens();
     }
-
     function handleSheetAvatarUpload(e) {
       if (e.target.files.length > 0) applyAvatarFile(e.target.files[0]);
     }
-
     function handleSheetAvatarDrop(e) {
-      e.preventDefault();
-      e.target.style.borderColor = 'var(--brass)';
+      e.preventDefault(); e.target.style.borderColor = 'var(--brass)';
       if (e.dataTransfer.files.length > 0) applyAvatarFile(e.dataTransfer.files[0]);
     }
-
     function applyAvatarFile(file) {
       const reader = new FileReader();
       reader.onload = ev => {
@@ -1750,8 +1902,7 @@
           c.tokenImage = ev.target.result;
           const tok = tokens.find(t => t.id === c.id);
           if (tok) tok.image = c.tokenImage;
-          renderSheet();
-          renderTokens();
+          renderSheet(); renderTokens();
           appendChatMessage(`📷 [${c.name}] 캐릭터 이미지가 변경되었습니다.`);
         }
       };
@@ -1763,7 +1914,6 @@
       if (isNaN(num)) return;
       const c = characters[charIdx];
       c.stats[statKey].score = num;
-
       let mod = 0;
       if (num <= 3) mod = -3;
       else if (num <= 5) mod = -2;
@@ -1775,14 +1925,12 @@
       c.stats[statKey].mod = mod;
       renderSheet();
     }
-
     function updateCharDamageField(charIdx, val) {
       characters[charIdx].damage = val;
       const tok = tokens.find(t => t.id === characters[charIdx].id);
       if (tok) tok.damage = val;
       renderTokens();
     }
-
     function updateCharArmorField(charIdx, val) {
       const n = parseInt(val, 10) || 0;
       characters[charIdx].armor = n;
@@ -1790,7 +1938,6 @@
       if (tok) tok.armor = n;
       renderTokens();
     }
-
     function updateCharHpField(charIdx, val) {
       const num = parseInt(val, 10);
       if (isNaN(num)) return;
@@ -1803,7 +1950,6 @@
     function renderCompendium() {
       const wrap = document.getElementById('compendium-content');
       wrap.innerHTML = '';
-
       const categories = [
         { key: 'monster', title: '👹 몬스터 도감' },
         { key: 'npc', title: '👤 NPC 도감' },
@@ -1814,7 +1960,6 @@
         const sec = document.createElement('div');
         sec.className = 'compendium-category';
         sec.innerHTML = `<h4>${cat.title}</h4>`;
-
         const grid = document.createElement('div');
         grid.className = 'compendium-grid';
 
@@ -1833,7 +1978,6 @@
           `;
           grid.appendChild(card);
         });
-
         sec.appendChild(grid);
         wrap.appendChild(sec);
       });
@@ -1867,9 +2011,9 @@
         maxHp: item.hp,
         armor: item.armor,
         damage: item.damage,
-        image: item.image
+        image: item.image,
+        conditions: []
       });
-
       renderTokens();
       appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 전장에 소환되었습니다.`);
     }
@@ -1891,8 +2035,19 @@
         const hpPct = Math.max(0, Math.min(100, Math.round((tok.hp / tok.maxHp) * 100)));
         const showRings = showPlayerGuide && isMyBoundChar;
 
+        let conditionsHtml = '';
+        if (tok.conditions && tok.conditions.length > 0) {
+          conditionsHtml = '<div class="token-conditions-bar">';
+          tok.conditions.forEach(condKey => {
+            const def = STATUS_CONDITIONS.find(c => c.key === condKey);
+            if (def) {
+              conditionsHtml += `<div class="condition-badge" style="background:${def.color}" data-cond-name="${def.name}">${def.icon}</div>`;
+            }
+          });
+          conditionsHtml += '</div>';
+        }
+
         el.innerHTML = `
-          <!-- Concentric Reach Guide Rings -->
           <div class="reach-guide-container ${showRings ? 'active' : ''}">
             <div class="reach-ring far"><span class="reach-badge" style="background:#e91e63;">중거리 (Far)</span></div>
             <div class="reach-ring near"><span class="reach-badge" style="background:#ff9800;">몇걸음 (Near)</span></div>
@@ -1900,7 +2055,8 @@
             <div class="reach-ring close"><span class="reach-badge" style="background:#4caf50;">반걸음 (Close)</span></div>
           </div>
 
-          <!-- 3 Roll20 Status Bubbles -->
+          ${conditionsHtml}
+
           <div class="token-bubbles">
             <div class="token-bubble bubble-green" data-tooltip="HP: ${tok.hp}/${tok.maxHp}" onclick="openBubbleModal('${tok.id}', 'hp')">
               ${tok.hp}
@@ -1933,7 +2089,6 @@
             appendChatMessage(`🚫 [${tok.name}] 토큰은 조종 권한(${tok.owner || 'GM'})이 없습니다.`);
           });
         }
-
         layer.appendChild(el);
       });
     }
@@ -1944,7 +2099,7 @@
       let initialTokenX, initialTokenY;
 
       element.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.token-bubble') || e.target.closest('.token-del-btn')) return;
+        if (e.target.closest('.token-bubble') || e.target.closest('.token-del-btn') || e.target.closest('.condition-badge')) return;
         isDragging = true;
         startMouseX = e.clientX;
         startMouseY = e.clientY;
@@ -1958,10 +2113,8 @@
           if (!isDragging) return;
           const dx = (moveEvent.clientX - startMouseX) / zoomLevel;
           const dy = (moveEvent.clientY - startMouseY) / zoomLevel;
-
           tokenObj.x = Math.round(initialTokenX + dx);
           tokenObj.y = Math.round(initialTokenY + dy);
-
           element.style.left = `${tokenObj.x}px`;
           element.style.top = `${tokenObj.y}px`;
 
@@ -2011,6 +2164,7 @@
       const saveBtn = document.getElementById('bubble-save-btn');
       const ownerGrp = document.getElementById('bubble-owner-group');
       const ownerSel = document.getElementById('bubble-owner-select');
+      const condGrid = document.getElementById('token-conditions-checkboxes');
 
       const isGm = currentRole === 'gm';
 
@@ -2028,6 +2182,18 @@
         input.value = tok.damage;
       }
 
+      condGrid.innerHTML = '';
+      STATUS_CONDITIONS.forEach(cond => {
+        const isChecked = tok.conditions && tok.conditions.includes(cond.key);
+        const l = document.createElement('label');
+        l.className = 'condition-check-label';
+        l.innerHTML = `
+          <input type="checkbox" value="${cond.key}" ${isChecked ? 'checked' : ''} ${!isGm ? 'disabled' : ''}>
+          <span>${cond.icon} ${cond.name}</span>
+        `;
+        condGrid.appendChild(l);
+      });
+
       if (isGm) {
         ownerGrp.style.display = 'block';
         ownerSel.value = tok.owner || 'GM';
@@ -2043,9 +2209,7 @@
       modal.classList.add('active');
     }
 
-    function closeBubbleModal() {
-      document.getElementById('bubble-edit-modal').classList.remove('active');
-    }
+    function closeBubbleModal() { document.getElementById('bubble-edit-modal').classList.remove('active'); }
 
     function saveBubbleModal() {
       if (currentRole !== 'gm') return;
@@ -2070,6 +2234,12 @@
         tok.damage = val;
       }
 
+      const checkedConds = [];
+      document.querySelectorAll('#token-conditions-checkboxes input:checked').forEach(chk => {
+        checkedConds.push(chk.value);
+      });
+      tok.conditions = checkedConds;
+
       closeBubbleModal();
       renderSheet();
       renderTokens();
@@ -2081,7 +2251,6 @@
       currentSpawnerTab = tab;
       document.querySelectorAll('.spawner-tab-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
-
       document.getElementById('spawner-form-monster').style.display = tab === 'monster' ? 'block' : 'none';
       document.getElementById('spawner-form-npc').style.display = tab === 'npc' ? 'block' : 'none';
       document.getElementById('spawner-form-player').style.display = tab === 'player' ? 'block' : 'none';
@@ -2091,8 +2260,7 @@
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
     dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
+      e.preventDefault(); dropZone.classList.remove('dragover');
       if (e.dataTransfer.files.length > 0) processTokenImageFile(e.dataTransfer.files[0]);
     });
 
@@ -2137,34 +2305,21 @@
 
       const img = uploadedTokenDataUrl || defaultImg;
       const owner = document.getElementById('spawn-owner-select').value || 'GM';
-
       const viewRect = viewport.getBoundingClientRect();
       const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - 30;
       const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - 30;
 
       tokens.push({
         id: `${type}_${Date.now()}`,
-        name: name,
-        type: type,
-        owner: owner,
+        name: name, type: type, owner: owner,
         x: spawnX + (Math.random() * 40 - 20),
         y: spawnY + (Math.random() * 40 - 20),
-        hp: hp,
-        maxHp: hp,
-        armor: armor,
-        damage: dmg,
-        image: img
+        hp: hp, maxHp: hp, armor: armor, damage: dmg,
+        image: img, conditions: []
       });
 
       if (saveToCompendium) {
-        tokenCompendium[type].push({
-          name: name,
-          hp: hp,
-          damage: dmg,
-          armor: armor,
-          image: img,
-          info: info
-        });
+        tokenCompendium[type].push({ name, hp, damage: dmg, armor, image: img, info });
         renderCompendium();
       }
 
@@ -2176,13 +2331,11 @@
     }
 
     let pendingMapImageSrc = null;
-
     const mapDropZone = document.getElementById('map-drop-zone');
     mapDropZone.addEventListener('dragover', e => { e.preventDefault(); mapDropZone.classList.add('dragover'); });
     mapDropZone.addEventListener('dragleave', () => mapDropZone.classList.remove('dragover'));
     mapDropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      mapDropZone.classList.remove('dragover');
+      e.preventDefault(); mapDropZone.classList.remove('dragover');
       if (e.dataTransfer.files.length > 0) {
         const file = e.dataTransfer.files[0];
         const reader = new FileReader();
@@ -2209,54 +2362,83 @@
     function applyMapSettings() {
       const urlInput = document.getElementById('map-url-input').value.trim();
       const imgSrc = pendingMapImageSrc || urlInput;
-
       const gridW = parseInt(document.getElementById('map-grid-w').value, 10) || 30;
       const gridH = parseInt(document.getElementById('map-grid-h').value, 10) || 20;
 
       const targetWidth = gridW * 50;
       const targetHeight = gridH * 50;
-
       const imgEl = document.getElementById('map-image');
       const layerEl = document.getElementById('map-background-layer');
 
-      if (imgSrc) {
-        imgEl.src = imgSrc;
-      }
-
+      if (imgSrc) imgEl.src = imgSrc;
       imgEl.style.width = `${targetWidth}px`;
       imgEl.style.height = `${targetHeight}px`;
       layerEl.style.width = `${targetWidth}px`;
       layerEl.style.height = `${targetHeight}px`;
 
-      appendChatMessage(`🗺️ 지도가 ${gridW}×${gridH} 칸(${targetWidth}×${targetHeight}px) 격자 크기에 맞춰 조정되었습니다.`);
+      appendChatMessage(`🗺️ 지도가 ${gridW}×${gridH} 칸(${targetWidth}×${targetHeight}px) 크기에 맞춰 조정되었습니다.`);
     }
 
-    function handleHandoutFile(e) {
-      if (e.target.files.length > 0) {
-        const file = e.target.files[0];
+    function renderHandoutsLibrary() {
+      const list = document.getElementById('handout-library-list');
+      if (!list) return;
+      list.innerHTML = '';
+
+      handoutsLibrary.forEach((h, idx) => {
+        const card = document.createElement('div');
+        card.className = 'handout-item-card';
+        card.innerHTML = `
+          <div>
+            <strong>${h.title}</strong>
+            <div style="font-size:0.72rem; color:var(--ink-muted);">${h.text ? h.text.substring(0, 26) + '...' : '(텍스트 없음)'}</div>
+          </div>
+          <div style="display:flex; gap:4px;">
+            <button class="win-btn" style="width:auto; padding:2px 8px;" onclick="viewHandout(${idx})">열람</button>
+            <button class="win-btn" style="background:#c62828;" onclick="deleteHandout(${idx})">×</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function addHandoutToLibrary() {
+      const title = document.getElementById('lib-handout-title').value.trim() || '새로운 단서';
+      const text = document.getElementById('lib-handout-text').value.trim();
+      const fileInput = document.getElementById('lib-handout-file');
+
+      function saveHandout(imgData) {
+        const newH = { id: 'h_' + Date.now(), title, text, image: imgData };
+        handoutsLibrary.push(newH);
+        renderHandoutsLibrary();
+        showHandoutModal(newH.title, newH.text, newH.image);
+        appendChatMessage(`📜 새로운 단서 [${newH.title}]이(가) 보관함에 추가되고 공유되었습니다.`);
+      }
+
+      if (fileInput.files.length > 0) {
         const reader = new FileReader();
-        reader.onload = ev => {
-          uploadedHandoutImgData = ev.target.result;
-        };
-        reader.readAsDataURL(file);
+        reader.onload = ev => saveHandout(ev.target.result);
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        saveHandout('');
       }
     }
 
-    function sendSharedHandout() {
-      const title = document.getElementById('handout-title-input').value.trim() || '중요한 단서';
-      const text = document.getElementById('handout-text-input').value.trim();
-      const urlInput = document.getElementById('handout-img-url').value.trim();
-      const img = uploadedHandoutImgData || urlInput;
+    function viewHandout(idx) {
+      const h = handoutsLibrary[idx];
+      if (h) showHandoutModal(h.title, h.text, h.image);
+    }
 
-      showHandoutModal(title, text, img);
-      appendChatMessage(`📜 GM이 모든 플레이어에게 [${title}] 핸드아웃을 공유했습니다!`);
+    function deleteHandout(idx) {
+      if (confirm(`정말로 [${handoutsLibrary[idx].title}] 단서를 삭제하시겠습니까?`)) {
+        handoutsLibrary.splice(idx, 1);
+        renderHandoutsLibrary();
+      }
     }
 
     function showHandoutModal(title, text, imgSrc) {
       const modal = document.getElementById('handout-modal');
       document.getElementById('handout-modal-title').innerText = title;
       document.getElementById('handout-modal-body').innerText = text;
-
       const imgEl = document.getElementById('handout-modal-img');
       if (imgSrc) {
         imgEl.src = imgSrc;
@@ -2264,12 +2446,64 @@
       } else {
         imgEl.style.display = 'none';
       }
-
       modal.style.display = 'flex';
     }
 
-    function closeHandoutModal() {
-      document.getElementById('handout-modal').style.display = 'none';
+    function closeHandoutModal() { document.getElementById('handout-modal').style.display = 'none'; }
+
+    function exportSessionData() {
+      const sessionData = {
+        version: '1.0',
+        timestamp: new Date().toISOString(),
+        characters: characters,
+        tokens: tokens,
+        tokenCompendium: tokenCompendium,
+        handoutsLibrary: handoutsLibrary,
+        mapSettings: {
+          src: document.getElementById('map-image').src,
+          gridW: document.getElementById('map-grid-w').value,
+          gridH: document.getElementById('map-grid-h').value
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `dungeon_world_session_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      appendChatMessage('💾 세션 데이터 백업 파일이 다운로드되었습니다.');
+    }
+
+    function importSessionData(e) {
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            if (data.characters) characters = data.characters;
+            if (data.tokens) tokens = data.tokens;
+            if (data.tokenCompendium) tokenCompendium = data.tokenCompendium;
+            if (data.handoutsLibrary) handoutsLibrary = data.handoutsLibrary;
+            if (data.mapSettings) {
+              document.getElementById('map-image').src = data.mapSettings.src;
+              document.getElementById('map-grid-w').value = data.mapSettings.gridW;
+              document.getElementById('map-grid-h').value = data.mapSettings.gridH;
+              applyMapSettings();
+            }
+            renderSheetTabs();
+            renderSheet();
+            renderCompendium();
+            renderTokens();
+            renderHandoutsLibrary();
+            redrawFog();
+            appendChatMessage(`📂 세션 백업 파일 [${file.name}]을 성공적으로 복원했습니다!`);
+          } catch (err) {
+            alert('유효하지 않은 백업 파일입니다: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      }
     }
 
     let diceInterval = null;
@@ -2382,6 +2616,7 @@
       renderSheet();
       renderCompendium();
       renderTokens();
+      renderHandoutsLibrary();
       redrawFog();
     });
   </script>
