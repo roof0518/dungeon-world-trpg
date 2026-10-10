@@ -829,7 +829,7 @@
         <button class="menu-btn" id="btn-toggle-users" onclick="toggleWindow('users-window')">👥 접속자 명단</button>
         <button class="menu-btn" id="btn-toggle-handouts-box" onclick="toggleWindow('handouts-box-window')">📁 단서 보관함</button>
         <button class="menu-btn" id="btn-toggle-draw" onclick="toggleWindow('draw-tools-window')">✏️ 스케치 펜</button>
-        <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 3구역 맵 배경 설정</button>
+        <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 3구역 맵 & 맵 도감</button>
       </div>
     </div>
 
@@ -1207,7 +1207,13 @@
         <button class="win-btn" onclick="toggleWindow('compendium-window')" title="닫기">×</button>
       </div>
     </div>
-    <div class="window-content" id="compendium-content"></div>
+    <div class="window-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; background:#edd8bf; padding:4px 8px; border-radius:4px; margin-bottom:8px; font-size:0.75rem; border:1px solid #caa372;">
+        <span>🗺️ 맵 전체 세팅(배경+오브젝트+토큰)을 확인/로드하시려면?</span>
+        <button class="win-btn" style="width:auto; padding:2px 8px; background:var(--green);" onclick="toggleWindow('map-window'); switchZoneEditorTab('comp');">🗺️ 맵 도감 열기</button>
+      </div>
+      <div id="compendium-content"></div>
+    </div>
   </div>
 
   <!-- FLOATING WINDOW 5: GM Toolbox -->
@@ -1498,11 +1504,25 @@
           </div>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
-          <div style="display:flex; gap:6px;">
-            <button class="btn-create" onclick="applyCurrentZoneSettings()" style="flex:1;">현재 구역 설정 적용</button>
-            <button class="btn-create" onclick="saveCurrentZonePresetToCompendium()" style="flex:1; background:var(--green); font-size:0.78rem;" title="맵 배경뿐 아니라 이 구역의 모든 오브젝트, 포탈, 몬스터 토큰을 통째로 프리셋으로 도감에 저장">💾 전체 세팅 도감 저장</button>
+        <!-- Direct Preset Save Box -->
+        <div style="background:#e8f5e9; border:1px solid #81c784; border-radius:6px; padding:8px 10px; margin-top:8px;">
+          <strong style="color:#1b5e20; font-size:0.8rem; display:block; margin-bottom:4px;">
+            💾 구역 전체 세팅 (맵 배경 + 모든 토큰 + 오브젝트) 도감 저장
+          </strong>
+          <p style="font-size:0.72rem; color:#2e7d32; margin-bottom:6px;">
+            현재 구역의 맵 이미지와 함께 배치된 모든 토큰과 오브젝트를 상대 좌표와 함께 프리셋으로 묶어 맵 도감에 등록합니다.
+          </p>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input type="text" id="zone-preset-name-input" placeholder="프리셋 이름 (비워두면 기본 이름 지정)" style="flex:1; padding:5px 8px; font-size:0.78rem; border:1px solid #81c784; border-radius:4px;">
+            <button class="btn-create" onclick="saveCurrentZonePresetToCompendium()" style="width:auto; padding:6px 14px; background:#2e7d32; font-size:0.78rem; white-space:nowrap;">
+              💾 도감에 저장하기
+            </button>
           </div>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="btn-create" onclick="applyCurrentZoneSettings()" style="flex:1;">현재 구역 기본 설정 적용</button>
+          <button class="btn-create" onclick="switchZoneEditorTab('comp')" style="flex:1; background:#5e3512;">📖 저장된 맵 도감 확인하기</button>
         </div>
       </div>
 
@@ -2925,19 +2945,33 @@
       if (!zone) return;
 
       const defaultName = `${zone.name || ('제 ' + editingZoneId + '구역')} 프리셋`;
-      const presetName = prompt('저장할 구역 전체 세팅 프리셋 이름을 입력하세요:', defaultName);
-      if (!presetName) return;
+      const nameInput = document.getElementById('zone-preset-name-input');
+      let presetName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : '';
+      if (!presetName) {
+        presetName = defaultName;
+      }
 
-      // Extract all objects in this zone with relative coordinates
-      const zoneObjects = objects.filter(o => o.zoneId === zone.id).map(o => ({
+      const b = getZoneBounds(zone.id);
+      function isInsideThisZone(x, y) {
+        return (x >= b.minX - 60 && x <= b.maxX + 60 && y >= b.minY - 60 && y <= b.maxY + 60);
+      }
+
+      // Extract all objects in this zone: match by zoneId OR coordinate bounds!
+      const zoneObjects = objects.filter(o => {
+        return (o.zoneId == zone.id) || isInsideThisZone(o.x, o.y);
+      }).map(o => ({
         ...o,
+        zoneId: zone.id,
         relX: o.x - zone.x,
         relY: o.y - zone.y
       }));
 
-      // Extract all monster/NPC tokens in this zone (excluding player bound character)
-      const zoneTokens = tokens.filter(t => t.zoneId === zone.id && t.type !== 'player' && t.id !== myBoundCharId).map(t => ({
+      // Extract ALL tokens in this zone: match by zoneId OR coordinate bounds! (Save all tokens in the zone)
+      const zoneTokens = tokens.filter(t => {
+        return (t.zoneId == zone.id) || isInsideThisZone(t.x, t.y);
+      }).map(t => ({
         ...t,
+        zoneId: zone.id,
         relX: t.x - zone.x,
         relY: t.y - zone.y
       }));
@@ -2954,10 +2988,16 @@
         tokens: JSON.parse(JSON.stringify(zoneTokens))
       };
 
-      mapCompendium.push(newPreset);
+      // Add to the front of mapCompendium so the newly saved preset appears at the very top!
+      mapCompendium.unshift(newPreset);
       renderZoneCompendium();
       switchZoneEditorTab('comp');
-      appendChatMessage(`💾 <strong>[구역 프리셋 저장 완료]</strong> [${presetName}]에 맵 배경, 오브젝트 ${zoneObjects.length}개, 몬스터/NPC ${zoneTokens.length}개가 세트로 저장되었습니다.`);
+
+      if (nameInput) nameInput.value = '';
+
+      const confirmMsg = `💾 [맵 도감 등록 완료] '${presetName}'이(가) 맵 도감에 등록되었습니다!\n\n- 저장된 오브젝트: ${zoneObjects.length}개\n- 저장된 토큰: ${zoneTokens.length}개\n- 안개 상태: ${newPreset.fogEnabled ? 'ON' : 'OFF'}\n\n'📖 맵 도감' 목록의 맨 위에서 확인하실 수 있습니다.`;
+      alert(confirmMsg);
+      appendChatMessage(`💾 <strong>[맵 도감 등록 완료]</strong> [${presetName}] 프리셋(맵 배경, 오브젝트 ${zoneObjects.length}개, 토큰 ${zoneTokens.length}개)이 맵 도감에 등록되었습니다.`);
       scheduleAutoSave();
     }
 
