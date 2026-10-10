@@ -1,1 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>던전월드 도우미</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    #result {
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🗡️ 던전월드 모험가 길드</h1>
+  <p>던전월드 TRPG 플레이를 돕기 위한 웹 도구입니다.</p>
 
+  <div class="card">
+    <h2>기본 판정 주사위 굴리기 (2d6)</h2>
+    <p>수정치 없이 2d6을 굴려 성공/부분 성공/실패 여부를 확인합니다.</p>
+    <button onclick="roll2d6()">주사위 굴리기</button>
+    <div id="result">주사위를 굴려보세요!</div>
+  </div>
+
+  <script>
+    function roll2d6() {
+      const d1 = Math.floor(Math.random() * 6) + 1;
+      const d2 = Math.floor(Math.random() * 6) + 1;
+      const total = d1 + d2;
+      
+      let message = `결과: [${d1}, ${d2}] = 총합 ${total}점 → `;
+      if (total >= 10) {
+        message += "대성공 (10+)";
+      } else if (total >= 7) {
+        message += "부분 성공 / 대가 발생 (7~9)";
+      } else {
+        message += "실패 / GM 액션 발동 (6 이하)";
+      }
+      
+      document.getElementById('result').innerText = message;
+    }
+  </script>
+</body>
+</html>
