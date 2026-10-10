@@ -560,6 +560,47 @@
       padding: 4px 10px; font-size: 0.78rem; border-radius: 3px; margin-left: 4px; cursor: pointer;
     }
 
+        .bgm-playlist-container {
+      max-height: 170px;
+      overflow-y: auto;
+      border: 1px solid var(--parchment-border);
+      border-radius: 6px;
+      background: #fdf8ee;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .bgm-playlist-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      background: #fff;
+      border: 1px solid #ebd9c3;
+      font-size: 0.74rem;
+      transition: background 0.15s;
+    }
+    .bgm-playlist-row:hover {
+      background: #fdf3e3;
+    }
+    .bgm-playlist-row.active-track {
+      background: #eedbc2;
+      border-color: #b3814d;
+      font-weight: bold;
+    }
+    .bgm-badge-synth {
+      background: #e1bee7; color: #4a148c; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem; font-weight: bold;
+    }
+    .bgm-badge-upload {
+      background: #c8e6c9; color: #1b5e20; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem; font-weight: bold;
+    }
+    .bgm-badge-url {
+      background: #bbdefb; color: #0d47a1; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem; font-weight: bold;
+    }
+
     #bgm-dock {
       position: absolute; bottom: 16px; left: 450px;
       background: rgba(40, 24, 12, 0.92); border: 2px solid var(--wood-light);
@@ -1469,40 +1510,61 @@
   </div>
 
   <!-- FLOATING WINDOW: BGM Audio Player -->
-  <div id="bgm-dock" class="floating-window" style="top:auto; bottom:24px; left:480px; width:450px; height:auto; display:none; flex-direction:column; z-index:1100;">
+  <div id="bgm-dock" class="floating-window" style="top:auto; bottom:24px; left:460px; width:480px; height:auto; display:none; flex-direction:column; z-index:1100;">
     <div class="window-header" onmousedown="startDragWindow(event, 'bgm-dock')">
-      <div class="window-title">🎵 BGM 오디오 플레이어 (무한 루프)</div>
+      <div class="window-title">🎵 BGM 오디오 플레이어 & 실시간 동기화 플레이리스트</div>
       <div class="window-actions">
         <button class="win-btn" onclick="minimizeWindow('bgm-dock')" title="최소화">_</button>
         <button class="win-btn" onclick="toggleWindow('bgm-dock')" title="닫기">×</button>
       </div>
     </div>
-    <div class="window-content" style="padding:10px 14px; display:flex; flex-direction:column; gap:8px;">
-      <div style="display:flex; gap:6px; align-items:center; width:100%;">
-        <label style="font-size:0.78rem; color:var(--wood-dark); font-weight:bold; white-space:nowrap;">곡 선택:</label>
-        <select id="bgm-select" class="bgm-select" style="flex:1;" onchange="changeBgmTrack(this.value)">
-          <option value="synth_tavern">🏰 중세 판타지 여관 (신디사이저 멜로디)</option>
-          <option value="fantasy_forest">🌲 평온한 요정의 숲 (신디사이저 앰비언트)</option>
-          <option value="dungeon_ambience">⚔️ 어두운 던전의 심연 (다크 앰비언트 드론)</option>
-          <option value="custom_url">🔗 웹 음악 파일 URL 직접 입력...</option>
-        </select>
-      </div>
-
-      <div style="display:flex; gap:6px; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap;">
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button id="bgm-play-btn" class="menu-btn" onclick="toggleBgmPlayback()" style="min-width:70px; justify-content:center;">▶ 재생</button>
-          <button class="menu-btn" onclick="openBgmUploadPrompt()" style="background:#5e3512;">📁 음원 파일 업로드</button>
-          <input type="file" id="bgm-file-input" accept="audio/*" style="display:none;" onchange="handleBgmFileSelect(event)">
+    <div class="window-content" style="padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+      <!-- Now Playing & Volume Banner -->
+      <div style="background:#281607; border:1px solid #8b5a2b; border-radius:6px; padding:6px 10px; display:flex; justify-content:space-between; align-items:center; color:#ffdfa9;">
+        <div style="display:flex; align-items:center; gap:6px; overflow:hidden; flex:1;">
+          <span id="bgm-icon-pulse" style="font-size:1.15rem;">🎵</span>
+          <div style="overflow:hidden; flex:1;">
+            <div id="bgm-now-playing" style="font-size:0.78rem; font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; color:#fff;">현재 재생: 정지됨</div>
+            <div id="bgm-sync-status" style="font-size:0.68rem; color:#caa372;">🌐 P2P 실시간 BGM 동기화 준비 완료</div>
+          </div>
         </div>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <span style="font-size:0.75rem; color:var(--wood-dark); font-weight:bold;">🔊 볼륨:</span>
-          <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.05" value="0.5" style="width:80px;" oninput="changeBgmVolume(this.value)">
+        <div style="display:flex; align-items:center; gap:4px; margin-left:8px;">
+          <span style="font-size:0.72rem; color:#ffdfa9;">내 볼륨:</span>
+          <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.05" value="0.5" style="width:70px;" oninput="changeBgmVolume(this.value)">
         </div>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.73rem; color:var(--ink-muted); border-top:1px dashed var(--parchment-border); padding-top:6px;">
-        <span id="bgm-now-playing" style="font-weight:bold; color:var(--wood-dark);">현재 재생: 정지됨</span>
-        <span style="color:#2e7d32; font-weight:bold; display:flex; align-items:center; gap:2px;">🔁 무한 반복 재생 활성화됨</span>
+      <!-- Playback Controls & Mode -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+        <div style="display:flex; gap:4px; align-items:center;">
+          <button id="bgm-prev-btn" class="win-btn" style="width:auto; padding:3px 8px;" onclick="playPrevCheckedTrack()" title="이전 선택곡">⏮</button>
+          <button id="bgm-play-btn" class="menu-btn" style="min-width:70px; justify-content:center;" onclick="toggleBgmPlayback()">▶ 재생</button>
+          <button id="bgm-next-btn" class="win-btn" style="width:auto; padding:3px 8px;" onclick="playNextCheckedTrack()" title="다음 선택곡">⏭</button>
+        </div>
+
+        <div style="display:flex; gap:6px; align-items:center;">
+          <label style="font-size:0.75rem; color:var(--wood-dark); font-weight:bold;">반복 모드:</label>
+          <select id="bgm-loop-mode-select" class="bgm-select" style="font-size:0.75rem; padding:2px 4px;" onchange="changeBgmLoopMode(this.value)">
+            <option value="playlist" selected>🔁 선택된 곡 순환 반복</option>
+            <option value="single">🔂 현재 곡 1곡 무한 반복</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Add Music Bar (GM Tools) -->
+      <div id="bgm-gm-actions" style="display:flex; gap:6px; background:#f7eedf; padding:6px; border-radius:6px; border:1px solid #caa372;">
+        <button class="menu-btn" style="flex:1; justify-content:center; background:#5e3512; font-size:0.73rem;" onclick="openBgmUploadPrompt()" title="내 컴퓨터의 MP3/WAV/OGG 파일을 업로드하여 모든 참가자에게 전송">📁 음원 파일 업로드 & P2P 전송</button>
+        <button class="menu-btn" style="flex:1; justify-content:center; background:#4a2c11; font-size:0.73rem;" onclick="promptAddWebBgmUrl()" title="웹 음악 스트리밍 URL 직접 등록">🔗 웹 음원 URL 추가</button>
+        <input type="file" id="bgm-file-input" accept="audio/*" style="display:none;" onchange="handleBgmFileSelect(event)">
+      </div>
+
+      <!-- Playlist Container -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:0.75rem;">
+          <strong style="color:var(--wood-dark);">📋 BGM 플레이리스트 (<span id="bgm-playlist-count">0</span>곡)</strong>
+          <span style="font-size:0.68rem; color:var(--ink-muted);">체크된 곡만 순환 반복에 포함됩니다</span>
+        </div>
+        <div id="bgm-playlist-items" class="bgm-playlist-container"></div>
       </div>
     </div>
   </div>
@@ -1563,6 +1625,15 @@
     let uploadedBgmTracks = {};
     let currentBgmVolume = 0.5;
     let currentSynthType = 'tavern';
+    let currentBgmTrackId = 'synth_tavern';
+    let bgmLoopMode = 'playlist';
+    let synthLoopTimer = null;
+    let chunkedTransferBuffers = {};
+    let bgmPlaylist = [
+      { id: 'synth_tavern', name: '🏰 중세 판타지 여관', type: 'synth', synthKey: 'tavern', checked: true },
+      { id: 'fantasy_forest', name: '🌲 평온한 요정의 숲', type: 'synth', synthKey: 'forest', checked: true },
+      { id: 'dungeon_ambience', name: '⚔️ 어두운 던전의 심연', type: 'synth', synthKey: 'dungeon', checked: true }
+    ];
     let selectedCharIndex = 0;
     let uploadedTokenDataUrl = null;
     let uploadedObjectDataUrl = null;
@@ -1938,7 +2009,7 @@
         if (currentRole === 'gm') {
           conn.send({
             type: 'FULL_SYNC',
-            payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive }
+            payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive, bgmState: { playlist: bgmPlaylist, currentTrackId: currentBgmTrackId, isPlaying: bgmIsPlaying, loopMode: bgmLoopMode } }
           });
         }
       });
@@ -1986,8 +2057,97 @@
       localBroadcast.postMessage(msg);
     }
 
+    function broadcastLargePayload(type, dataObj) {
+      const jsonStr = JSON.stringify(dataObj);
+      const CHUNK_SIZE = 55000;
+      if (jsonStr.length <= CHUNK_SIZE) {
+        broadcastNetworkMessage({ type, payload: dataObj });
+      } else {
+        const totalChunks = Math.ceil(jsonStr.length / CHUNK_SIZE);
+        const transferId = 'xfer_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        for (let i = 0; i < totalChunks; i++) {
+          const chunkData = jsonStr.substring(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+          broadcastNetworkMessage({
+            type: 'CHUNKED_TRANSFER',
+            transferId,
+            chunkIndex: i,
+            totalChunks,
+            targetType: type,
+            chunk: chunkData
+          });
+        }
+      }
+    }
+
     function handleNetworkMessage(msg, isLocalBroadcast = false) {
       if (!msg || !msg.type) return;
+
+      if (msg.type === 'CHUNKED_TRANSFER') {
+        const { transferId, chunkIndex, totalChunks, targetType, chunk } = msg;
+        if (!chunkedTransferBuffers[transferId]) {
+          chunkedTransferBuffers[transferId] = { chunks: [], total: totalChunks, received: 0, targetType };
+        }
+        const buf = chunkedTransferBuffers[transferId];
+        buf.chunks[chunkIndex] = chunk;
+        buf.received++;
+        if (buf.received >= buf.total) {
+          const fullJson = buf.chunks.join('');
+          delete chunkedTransferBuffers[transferId];
+          try {
+            const parsed = JSON.parse(fullJson);
+            handleNetworkMessage({ type: targetType, payload: parsed }, isLocalBroadcast);
+          } catch(e) {
+            console.error('Failed to parse reassembled chunked payload', e);
+          }
+        }
+        return;
+      }
+
+      if (msg.type === 'BGM_PLAY_TRACK') {
+        bgmLoopMode = msg.payload.loopMode || bgmLoopMode;
+        const modeSel = document.getElementById('bgm-loop-mode-select');
+        if (modeSel) modeSel.value = bgmLoopMode;
+        playTrackById(msg.payload.trackId, false);
+        return;
+      } else if (msg.type === 'BGM_PAUSE') {
+        pauseBgmPlayback(false);
+        return;
+      } else if (msg.type === 'BGM_STOP') {
+        stopBgmPlayback(false);
+        return;
+      } else if (msg.type === 'BGM_ADD_TRACK') {
+        const tr = msg.payload.track;
+        if (tr && !bgmPlaylist.some(t => t.id === tr.id)) {
+          bgmPlaylist.push(tr);
+          renderBgmPlaylist();
+          appendChatMessage(`🎵 [BGM 동기화] 마스터가 새로운 음원 [${tr.name}]을(를) 공유했습니다.`);
+        }
+        return;
+      } else if (msg.type === 'BGM_DELETE_TRACK') {
+        const trId = msg.payload.trackId;
+        const tr = bgmPlaylist.find(t => t.id === trId);
+        if (tr) {
+          if (bgmIsPlaying && currentBgmTrackId === trId) {
+            stopBgmPlayback(false);
+          }
+          bgmPlaylist = bgmPlaylist.filter(t => t.id !== trId);
+          renderBgmPlaylist();
+          appendChatMessage(`🗑️ [BGM 동기화] [${tr.name}] 음원이 삭제되었습니다.`);
+        }
+        return;
+      } else if (msg.type === 'BGM_UPDATE_CHECKED') {
+        const tr = bgmPlaylist.find(t => t.id === msg.payload.trackId);
+        if (tr) {
+          tr.checked = msg.payload.checked;
+          renderBgmPlaylist();
+        }
+        return;
+      } else if (msg.type === 'BGM_LOOP_MODE') {
+        bgmLoopMode = msg.payload.loopMode;
+        const modeSel = document.getElementById('bgm-loop-mode-select');
+        if (modeSel) modeSel.value = bgmLoopMode;
+        return;
+      }
 
       if (msg.type === 'FULL_SYNC') {
         tokens = msg.payload.tokens || tokens;
@@ -2006,6 +2166,16 @@
         renderSheetTabs();
         renderSheet();
         redrawFog();
+        if (msg.payload.bgmState) {
+          bgmPlaylist = msg.payload.bgmState.playlist || bgmPlaylist;
+          bgmLoopMode = msg.payload.bgmState.loopMode || bgmLoopMode;
+          const modeSel = document.getElementById('bgm-loop-mode-select');
+          if (modeSel) modeSel.value = bgmLoopMode;
+          renderBgmPlaylist();
+          if (msg.payload.bgmState.isPlaying && msg.payload.bgmState.currentTrackId) {
+            playTrackById(msg.payload.bgmState.currentTrackId, false);
+          }
+        }
       } else if (msg.type === 'USER_JOIN') {
         const u = msg.payload;
         const exists = connectedUsers.findIndex(x => x.nickname === u.nickname);
@@ -2727,11 +2897,12 @@
       renderObjects();
       renderTokens();
       populateGmTargetTokenDropdown();
+      renderBgmPlaylist();
       redrawFog();
 
       broadcastNetworkMessage({
         type: 'FULL_SYNC',
-        payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive }
+        payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive, bgmState: { playlist: bgmPlaylist, currentTrackId: currentBgmTrackId, isPlaying: bgmIsPlaying, loopMode: bgmLoopMode } }
       });
 
       appendChatMessage(`🗺️ <strong>[구역 세팅 복원]</strong> [${preset.name}] 프리셋(맵, 오브젝트 ${objCount}개, 몬스터/NPC ${tokCount}개)이 [제 ${targetZoneId}구역]으로 로드되었습니다!`, 'teleport-msg');
@@ -3579,7 +3750,7 @@
 
       broadcastNetworkMessage({
         type: 'FULL_SYNC',
-        payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive }
+        payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive, bgmState: { playlist: bgmPlaylist, currentTrackId: currentBgmTrackId, isPlaying: bgmIsPlaying, loopMode: bgmLoopMode } }
       });
       appendChatMessage(`🌫️ 전장의 안개가 전체 구역 일괄 ${enabled ? '켜짐' : '꺼짐'} 상태로 전환되었습니다.`);
     }
@@ -3858,10 +4029,11 @@
       renderCustomSfxList();
     }
 
-    // --- BGM Audio Station (Endless Loop & Upload Support) ---
+    // --- BGM Audio Station (Real-time P2P Sync, Playlist Loop & Delete Support) ---
     let bgmIsPlaying = false;
     let bgmTimer = null;
     let customAudioElement = null;
+    let synthLoopCycleCount = 0;
 
     const TAVERN_MELODY = [
       { note: 293.66, dur: 0.25 }, { note: 329.63, dur: 0.25 }, { note: 369.99, dur: 0.25 }, { note: 440.00, dur: 0.50 },
@@ -3877,6 +4049,83 @@
       { note: 146.83, dur: 0.6 }, { note: 138.59, dur: 0.6 }, { note: 146.83, dur: 0.8 }, { note: 110.00, dur: 1.2 }
     ];
     let noteIdx = 0;
+
+    function renderBgmPlaylist() {
+      const container = document.getElementById('bgm-playlist-items');
+      const countEl = document.getElementById('bgm-playlist-count');
+      if (countEl) countEl.innerText = bgmPlaylist.length;
+      if (!container) return;
+      container.innerHTML = '';
+
+      const isGm = (currentRole === 'gm');
+      const gmActions = document.getElementById('bgm-gm-actions');
+      if (gmActions) gmActions.style.display = isGm ? 'flex' : 'none';
+
+      bgmPlaylist.forEach((t, idx) => {
+        const row = document.createElement('div');
+        const isCurrent = (t.id === currentBgmTrackId);
+        row.className = `bgm-playlist-row ${isCurrent ? 'active-track' : ''}`;
+
+        let badgeHtml = '';
+        if (t.type === 'synth') badgeHtml = '<span class="bgm-badge-synth">신디</span>';
+        else if (t.type === 'upload') badgeHtml = '<span class="bgm-badge-upload">업로드</span>';
+        else badgeHtml = '<span class="bgm-badge-url">웹URL</span>';
+
+        const playingIcon = (isCurrent && bgmIsPlaying) ? '🔊' : '🎵';
+
+        row.innerHTML = `
+          <div style="display:flex; align-items:center; gap:6px; overflow:hidden; flex:1;">
+            <input type="checkbox" ${t.checked ? 'checked' : ''} 
+                   ${!isGm ? 'disabled' : ''} 
+                   onchange="toggleTrackInPlaylist('${t.id}', this.checked)" 
+                   title="반복 재생 대상에 포함">
+            <span style="font-size:0.85rem;">${playingIcon}</span>
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:210px;" title="${t.name}">
+              ${t.name}
+            </span>
+            ${badgeHtml}
+          </div>
+          <div style="display:flex; gap:4px; align-items:center;">
+            <button class="win-btn" style="width:auto; padding:2px 7px; font-size:0.7rem;" 
+                    onclick="playTrackById('${t.id}', true)" title="이 곡 즉시 재생">
+              ${isCurrent && bgmIsPlaying ? '재생중' : '▶'}
+            </button>
+            ${(isGm && (t.type === 'upload' || t.type === 'url')) ? `
+              <button class="win-btn" style="background:#c62828; padding:2px 6px; font-size:0.7rem;" 
+                      onclick="deleteTrackFromPlaylist('${t.id}')" title="음원 삭제">🗑️</button>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function toggleTrackInPlaylist(trackId, checked) {
+      const tr = bgmPlaylist.find(t => t.id === trackId);
+      if (tr) {
+        tr.checked = checked;
+        if (currentRole === 'gm') {
+          broadcastNetworkMessage({
+            type: 'BGM_UPDATE_CHECKED',
+            payload: { trackId, checked }
+          });
+        }
+      }
+    }
+
+    function changeBgmLoopMode(mode) {
+      bgmLoopMode = mode;
+      if (customAudioElement) {
+        customAudioElement.loop = (mode === 'single');
+      }
+      if (currentRole === 'gm') {
+        broadcastNetworkMessage({
+          type: 'BGM_LOOP_MODE',
+          payload: { loopMode: mode }
+        });
+        appendChatMessage(`🔁 [BGM 설정] 반복 모드가 '${mode === 'single' ? '현재 곡 1곡 무한 반복' : '선택된 곡 순환 반복'}'으로 변경되었습니다.`);
+      }
+    }
 
     function playSynthStep() {
       if (!bgmIsPlaying) return;
@@ -3897,87 +4146,148 @@
       osc.start();
       osc.stop(ctx.currentTime + item.dur * 1.3);
       noteIdx++;
+
+      if (noteIdx % melody.length === 0) {
+        synthLoopCycleCount++;
+        // If in playlist loop mode and finished 4 cycles (~20 seconds), move to next track!
+        if (bgmLoopMode === 'playlist' && synthLoopCycleCount >= 4) {
+          synthLoopCycleCount = 0;
+          onTrackEnded();
+          return;
+        }
+      }
+
       bgmTimer = setTimeout(playSynthStep, item.dur * 1000);
     }
 
-    function toggleBgmPlayback() {
-      const btn = document.getElementById('bgm-play-btn');
-      const select = document.getElementById('bgm-select').value;
-      const nowPlayingEl = document.getElementById('bgm-now-playing');
-
-      if (bgmIsPlaying) {
-        bgmIsPlaying = false;
-        if (bgmTimer) clearTimeout(bgmTimer);
-        if (customAudioElement) customAudioElement.pause();
-        if (btn) btn.innerText = '▶ 재생';
-        if (nowPlayingEl) nowPlayingEl.innerText = '현재 재생: 일시정지됨';
-      } else {
-        bgmIsPlaying = true;
-        if (btn) btn.innerText = '⏸ 일시정지';
-        if (select.startsWith('uploaded_') || select === 'custom_url') {
-          if (customAudioElement) {
-            customAudioElement.loop = true;
-            customAudioElement.volume = currentBgmVolume;
-            customAudioElement.play().catch(e => console.log('Audio autoplay blocked', e));
-            if (nowPlayingEl) nowPlayingEl.innerText = `현재 재생: 음원 파일 (무한 루프)`;
-          } else {
-            changeBgmTrack(select);
-          }
-        } else {
-          getAudioContext();
-          noteIdx = 0;
-          playSynthStep();
-          if (nowPlayingEl) {
-            const trackNames = { synth_tavern: '중세 판타지 여관', fantasy_forest: '평온한 요정의 숲', dungeon_ambience: '어두운 던전의 심연' };
-            nowPlayingEl.innerText = `현재 재생: ${trackNames[select] || '신디사이저 테마'} (무한 루프)`;
-          }
-        }
-      }
-    }
-
-    function changeBgmTrack(val) {
+    function playTrackById(trackId, isGmInitiated = false) {
       if (customAudioElement) {
         customAudioElement.pause();
         customAudioElement = null;
       }
       if (bgmTimer) clearTimeout(bgmTimer);
 
+      const track = bgmPlaylist.find(t => t.id === trackId);
+      if (!track) return;
+
+      currentBgmTrackId = trackId;
+      bgmIsPlaying = true;
+      synthLoopCycleCount = 0;
+
+      const btn = document.getElementById('bgm-play-btn');
+      if (btn) btn.innerText = '⏸ 일시정지';
       const nowPlayingEl = document.getElementById('bgm-now-playing');
+      if (nowPlayingEl) nowPlayingEl.innerText = `현재 재생: ${track.name}`;
 
-      if (val.startsWith('uploaded_')) {
-        const track = uploadedBgmTracks[val];
-        if (track) {
-          customAudioElement = new Audio(track.url);
-          customAudioElement.loop = true; // 무한 반복 재생 보장
-          customAudioElement.volume = currentBgmVolume;
-          if (bgmIsPlaying) {
-            customAudioElement.play().catch(e => console.log('Audio play failed', e));
-          }
-          if (nowPlayingEl) nowPlayingEl.innerText = `현재 재생: ${track.name} (무한 루프)`;
-        }
-      } else if (val === 'custom_url') {
-        const url = prompt('음악 파일 URL (mp3/ogg 등)을 입력하세요:');
-        if (url) {
-          customAudioElement = new Audio(url);
-          customAudioElement.loop = true; // 무한 반복 재생 보장
-          customAudioElement.volume = currentBgmVolume;
-          if (bgmIsPlaying) {
-            customAudioElement.play().catch(e => console.log('Audio play failed', e));
-          }
-          if (nowPlayingEl) nowPlayingEl.innerText = `현재 재생: 웹 스트리밍 음원 (무한 루프)`;
-        } else {
-          document.getElementById('bgm-select').value = 'synth_tavern';
-          changeBgmTrack('synth_tavern');
-        }
-      } else {
-        if (val === 'fantasy_forest') currentSynthType = 'forest';
-        else if (val === 'dungeon_ambience') currentSynthType = 'dungeon';
-        else currentSynthType = 'tavern';
+      const syncStatusEl = document.getElementById('bgm-sync-status');
+      if (syncStatusEl) syncStatusEl.innerText = `🌐 P2P 동기화 재생 중 (${bgmLoopMode === 'single' ? '1곡 무한 반복' : '선택곡 순환'})`;
 
+      if (track.type === 'synth') {
+        currentSynthType = track.synthKey || 'tavern';
+        getAudioContext();
         noteIdx = 0;
-        const trackNames = { synth_tavern: '중세 판타지 여관', fantasy_forest: '평온한 요정의 숲', dungeon_ambience: '어두운 던전의 심연' };
-        if (nowPlayingEl) nowPlayingEl.innerText = `현재 재생: ${trackNames[val] || '테마곡'} (무한 루프)`;
-        if (bgmIsPlaying) playSynthStep();
+        playSynthStep();
+      } else {
+        const audioSrc = track.dataUrl || track.url;
+        customAudioElement = new Audio(audioSrc);
+        customAudioElement.volume = currentBgmVolume;
+        customAudioElement.loop = (bgmLoopMode === 'single');
+        customAudioElement.onended = () => { onTrackEnded(); };
+        customAudioElement.play().catch(e => {
+          console.warn('Audio play request blocked by browser policy:', e);
+          if (nowPlayingEl) nowPlayingEl.innerText += ' (화면을 클릭하면 소리가 재생됩니다)';
+        });
+      }
+
+      renderBgmPlaylist();
+
+      if (isGmInitiated && currentRole === 'gm') {
+        broadcastNetworkMessage({
+          type: 'BGM_PLAY_TRACK',
+          payload: { trackId: track.id, loopMode: bgmLoopMode }
+        });
+        appendChatMessage(`🎵 [BGM 재생] 마스터가 [${track.name}] 음원을 재생했습니다.`);
+      }
+    }
+
+    function onTrackEnded() {
+      if (bgmLoopMode === 'single') {
+        playTrackById(currentBgmTrackId, currentRole === 'gm');
+      } else {
+        playNextCheckedTrack();
+      }
+    }
+
+    function playNextCheckedTrack() {
+      const checkedTracks = bgmPlaylist.filter(t => t.checked);
+      if (checkedTracks.length === 0) {
+        stopBgmPlayback(currentRole === 'gm');
+        return;
+      }
+      const currIdx = checkedTracks.findIndex(t => t.id === currentBgmTrackId);
+      const nextIdx = (currIdx + 1) % checkedTracks.length;
+      playTrackById(checkedTracks[nextIdx].id, currentRole === 'gm');
+    }
+
+    function playPrevCheckedTrack() {
+      const checkedTracks = bgmPlaylist.filter(t => t.checked);
+      if (checkedTracks.length === 0) {
+        stopBgmPlayback(currentRole === 'gm');
+        return;
+      }
+      const currIdx = checkedTracks.findIndex(t => t.id === currentBgmTrackId);
+      const prevIdx = (currIdx - 1 + checkedTracks.length) % checkedTracks.length;
+      playTrackById(checkedTracks[prevIdx].id, currentRole === 'gm');
+    }
+
+    function toggleBgmPlayback() {
+      if (bgmIsPlaying) {
+        pauseBgmPlayback(currentRole === 'gm');
+      } else {
+        // Start current track or first checked track
+        const trackToPlay = bgmPlaylist.find(t => t.id === currentBgmTrackId && t.checked) || 
+                            bgmPlaylist.find(t => t.checked) || 
+                            bgmPlaylist[0];
+        if (trackToPlay) {
+          playTrackById(trackToPlay.id, currentRole === 'gm');
+        }
+      }
+    }
+
+    function pauseBgmPlayback(isGmInitiated = false) {
+      bgmIsPlaying = false;
+      if (bgmTimer) clearTimeout(bgmTimer);
+      if (customAudioElement) customAudioElement.pause();
+
+      const btn = document.getElementById('bgm-play-btn');
+      if (btn) btn.innerText = '▶ 재생';
+      const nowPlayingEl = document.getElementById('bgm-now-playing');
+      if (nowPlayingEl) nowPlayingEl.innerText = '현재 재생: 일시정지됨';
+
+      renderBgmPlaylist();
+
+      if (isGmInitiated && currentRole === 'gm') {
+        broadcastNetworkMessage({ type: 'BGM_PAUSE', payload: {} });
+        appendChatMessage('⏸️ [BGM 일시정지] 마스터가 BGM 재생을 일시정지했습니다.');
+      }
+    }
+
+    function stopBgmPlayback(isGmInitiated = false) {
+      bgmIsPlaying = false;
+      if (bgmTimer) clearTimeout(bgmTimer);
+      if (customAudioElement) {
+        customAudioElement.pause();
+        customAudioElement = null;
+      }
+      const btn = document.getElementById('bgm-play-btn');
+      if (btn) btn.innerText = '▶ 재생';
+      const nowPlayingEl = document.getElementById('bgm-now-playing');
+      if (nowPlayingEl) nowPlayingEl.innerText = '현재 재생: 정지됨';
+
+      renderBgmPlaylist();
+
+      if (isGmInitiated && currentRole === 'gm') {
+        broadcastNetworkMessage({ type: 'BGM_STOP', payload: {} });
       }
     }
 
@@ -3989,6 +4299,10 @@
     }
 
     function openBgmUploadPrompt() {
+      if (currentRole !== 'gm') {
+        alert('음원 업로드는 게임 마스터만 가능합니다.');
+        return;
+      }
       const fileInput = document.getElementById('bgm-file-input');
       if (fileInput) fileInput.click();
     }
@@ -3996,20 +4310,91 @@
     function handleBgmFileSelect(e) {
       if (e.target.files.length > 0) {
         const file = e.target.files[0];
-        const url = URL.createObjectURL(file);
-        const trackId = 'uploaded_' + Date.now();
-        uploadedBgmTracks[trackId] = { url, name: file.name };
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const dataUrl = ev.target.result;
+          const trackId = 'upload_' + Date.now();
+          const newTrack = {
+            id: trackId,
+            name: file.name,
+            type: 'upload',
+            dataUrl: dataUrl,
+            checked: true
+          };
 
-        const sel = document.getElementById('bgm-select');
-        const opt = document.createElement('option');
-        opt.value = trackId;
-        opt.innerText = `📁 ${file.name} (업로드 음원)`;
-        sel.appendChild(opt);
-        sel.value = trackId;
+          bgmPlaylist.push(newTrack);
+          renderBgmPlaylist();
 
-        changeBgmTrack(trackId);
-        appendChatMessage(`🎵 [BGM 업로드 완료] [${file.name}] 곡이 등록되어 선택하신 BGM이 무한 반복 재생됩니다.`);
+          // Broadcast to peers using chunked transfer for large audio files
+          broadcastLargePayload('BGM_ADD_TRACK', { track: newTrack });
+          appendChatMessage(`🎵 [BGM 업로드 & P2P 전송 완료] [${file.name}] 음원이 플레이리스트에 등록되고 접속자들에게 전송되었습니다.`);
+
+          // Start playing
+          playTrackById(trackId, true);
+        };
+        reader.readAsDataURL(file);
       }
+    }
+
+    function promptAddWebBgmUrl() {
+      if (currentRole !== 'gm') {
+        alert('웹 음원 추가는 게임 마스터만 가능합니다.');
+        return;
+      }
+      const url = prompt('음악 파일 스트리밍 URL (예: https://example.com/theme.mp3)을 입력하세요:');
+      if (!url) return;
+      const name = prompt('음악 제목을 입력하세요:', '웹 스트리밍 BGM') || '웹 스트리밍 BGM';
+
+      const trackId = 'url_' + Date.now();
+      const newTrack = {
+        id: trackId,
+        name: name,
+        type: 'url',
+        url: url,
+        checked: true
+      };
+
+      bgmPlaylist.push(newTrack);
+      renderBgmPlaylist();
+
+      broadcastNetworkMessage({
+        type: 'BGM_ADD_TRACK',
+        payload: { track: newTrack }
+      });
+
+      appendChatMessage(`🔗 [BGM 웹URL 등록] [${name}] 음원이 플레이리스트에 추가되었습니다.`);
+      playTrackById(trackId, true);
+    }
+
+    function deleteTrackFromPlaylist(trackId) {
+      if (currentRole !== 'gm') {
+        alert('음원 삭제는 게임 마스터만 가능합니다.');
+        return;
+      }
+      const track = bgmPlaylist.find(t => t.id === trackId);
+      if (!track) return;
+
+      if (track.type === 'synth') {
+        alert('기본 내장 신디사이저 테마는 삭제할 수 없습니다. (반복 재생에서 제외하려면 체크박스를 해제하세요)');
+        return;
+      }
+
+      if (!confirm(`정말로 음원 [${track.name}]을(를) 플레이리스트에서 삭제하시겠습니까?`)) return;
+
+      const wasPlaying = (bgmIsPlaying && currentBgmTrackId === trackId);
+      if (wasPlaying) {
+        playNextCheckedTrack();
+      }
+
+      bgmPlaylist = bgmPlaylist.filter(t => t.id !== trackId);
+      renderBgmPlaylist();
+
+      broadcastNetworkMessage({
+        type: 'BGM_DELETE_TRACK',
+        payload: { trackId }
+      });
+
+      appendChatMessage(`🗑️ [BGM 삭제] [${track.name}] 음원이 플레이리스트에서 영구 삭제되었습니다.`);
     }
 
     // --- Viewport Zoom & Pan ---
@@ -4190,7 +4575,7 @@
         selectedCharIndex = characters.length - 1;
         renderSheetTabs();
         renderSheet();
-        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive, bgmState: { playlist: bgmPlaylist, currentTrackId: currentBgmTrackId, isPlaying: bgmIsPlaying, loopMode: bgmLoopMode } } });
         appendChatMessage(`🛡️ 새 캐릭터 [${name} (${job})] 시트가 등록되었습니다.`);
       };
       bar.appendChild(addBtn);
@@ -4248,7 +4633,7 @@
         renderTokens();
         populateGmTargetTokenDropdown();
         redrawFog();
-        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive, bgmState: { playlist: bgmPlaylist, currentTrackId: currentBgmTrackId, isPlaying: bgmIsPlaying, loopMode: bgmLoopMode } } });
         appendChatMessage(`🗑️ [${c.name}] 캐릭터 시트가 삭제되었습니다.`);
       }
     }
@@ -5055,7 +5440,7 @@
         handoutsLibrary.push(newH);
         renderHandoutsLibrary();
         showHandoutModal(newH.title, newH.text, newH.image);
-        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive, bgmState: { playlist: bgmPlaylist, currentTrackId: currentBgmTrackId, isPlaying: bgmIsPlaying, loopMode: bgmLoopMode } } });
         appendChatMessage(`📜 새로운 단서 [${newH.title}]이(가) 등록되었습니다.`);
       }
 
@@ -5077,7 +5462,7 @@
       if (confirm(`정말로 이 단서를 삭제하시겠습니까?`)) {
         handoutsLibrary = handoutsLibrary.filter(x => x.id !== id);
         renderHandoutsLibrary();
-        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive, bgmState: { playlist: bgmPlaylist, currentTrackId: currentBgmTrackId, isPlaying: bgmIsPlaying, loopMode: bgmLoopMode } } });
       }
     }
 
@@ -5278,6 +5663,7 @@
       populateGmTargetTokenDropdown();
       renderCustomSfxList();
       resetFullFog();
+      renderBgmPlaylist();
     });
   </script>
 </body>
