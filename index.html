@@ -75,6 +75,12 @@
 
     .header-right { display: flex; align-items: center; gap: 10px; }
 
+    .room-badge {
+      background: #201105; border: 1px solid var(--brass);
+      padding: 3px 8px; border-radius: 12px; font-size: 0.75rem;
+      color: #ffdca8; display: flex; align-items: center; gap: 4px;
+    }
+
     .user-pill {
       background: #2a1607; border: 1px solid #8b5a2b;
       padding: 3px 10px; border-radius: 14px; font-size: 0.78rem;
@@ -595,7 +601,6 @@
       background: #7c4c23; color: white; border-color: #381f08; font-weight: bold;
     }
 
-    /* Map Compendium Grid Styles */
     .map-compendium-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-top: 8px;
     }
@@ -647,11 +652,12 @@
         </div>
       </div>
 
-      <!-- P2P Session Sync Room Connect (Optional) -->
+      <!-- P2P Session Sync Room Connect -->
       <div style="background:#eedbc2; border:1px dashed #b3814d; padding:8px; border-radius:6px; margin-bottom:8px; font-size:0.75rem;">
-        <strong style="color:var(--wood-dark);">🌐 멀티플레이 P2P 방 연결 (선택)</strong>
+        <strong style="color:var(--wood-dark);">🌐 멀티플레이 P2P 방 연결</strong>
+        <p style="color:var(--ink-muted); margin-top:2px;">GM은 비워두면 방이 자동 생성되며, 참가자는 초대 링크나 전달받은 방 코드를 입력하세요.</p>
         <div style="display:flex; gap:4px; margin-top:4px;">
-          <input type="text" id="entry-room-id" placeholder="방 코드 (GM은 비워두면 자동 생성)" style="font-size:0.75rem; padding:4px;">
+          <input type="text" id="entry-room-id" placeholder="방 코드 (예: DW_ABC123)" style="font-size:0.75rem; padding:4px;">
         </div>
       </div>
 
@@ -677,8 +683,13 @@
     </div>
 
     <div class="header-right">
+      <div class="room-badge">
+        <span>방:</span>
+        <strong id="header-room-display">연결 중...</strong>
+        <button onclick="copyRoomShareLink()" style="background:#5e3512; border:1px solid #b3814d; color:#fff; border-radius:3px; padding:1px 5px; font-size:0.7rem; cursor:pointer; margin-left:4px;">🔗 초대 복사</button>
+      </div>
       <div class="user-pill">
-        <span>👤 접속자:</span>
+        <span>👤</span>
         <strong id="header-user-display" onclick="reopenEntryModal()">설정 안 됨</strong>
         <span id="header-bound-char" style="color:#caa372; font-size:0.72rem;"></span>
       </div>
@@ -827,7 +838,7 @@
         </div>
       </div>
 
-      <!-- Token Size Selection for Boss/Large monsters -->
+      <!-- Token Size Selection -->
       <div class="form-group" style="margin-top:6px;">
         <label>📐 토큰 크기 (전장 격자 기준)</label>
         <select id="spawn-token-size">
@@ -872,7 +883,6 @@
       </div>
     </div>
     <div class="window-content">
-      <!-- Remote Status Condition Applier for GM -->
       <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
         <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">⚠️ 상태이상 원격 부여 및 관리</strong>
         <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:6px;">플레이어 또는 몬스터 토큰을 선택하고 상태이상을 클릭하여 즉시 토글 부착합니다.</p>
@@ -1079,7 +1089,6 @@
         <button class="spawner-tab-btn" id="tab-map-compendium" onclick="switchMapWindowTab('compendium')">📖 맵 도감 (원클릭 교체)</button>
       </div>
 
-      <!-- Tab 1: Current Map Settings -->
       <div id="map-subview-apply">
         <div class="drop-zone" id="map-drop-zone" onclick="document.getElementById('map-file-input').click()">
           🗺️ 새 지도 이미지 업로드 (드래그&드롭)
@@ -1125,7 +1134,6 @@
         </div>
       </div>
 
-      <!-- Tab 2: Map Compendium -->
       <div id="map-subview-compendium" style="display:none;">
         <strong style="color:var(--wood-dark); font-size:0.82rem; display:block; margin-bottom:4px;">📜 사전 저장된 맵 목록 (클릭 즉시 전장 반영):</strong>
         <div class="map-compendium-grid" id="map-compendium-container"></div>
@@ -1222,7 +1230,6 @@
     // PeerJS & Cross-tab Sync State
     let peer = null;
     let peerConnections = [];
-    let isHostGM = false;
     let currentRoomId = '';
     const localBroadcast = new BroadcastChannel('dungeon_world_vtt_channel');
 
@@ -1306,7 +1313,6 @@
       ]
     };
 
-    // Pre-saved Map Compendium Library
     let mapCompendium = [
       {
         id: 'map_cave',
@@ -1344,50 +1350,102 @@
 
     let customSfxList = [];
 
-    // --- WebRTC / Local Multi-client Sync System ---
+    // --- WebRTC / Multi-Client Networking Engine ---
     function initNetworkSync(roomIdInput) {
       const urlParams = new URLSearchParams(window.location.search);
       const roomFromUrl = urlParams.get('room');
-      currentRoomId = roomIdInput || roomFromUrl || (currentRole === 'gm' ? 'DW_' + Math.random().toString(36).substring(2, 8).toUpperCase() : '');
+      
+      const targetRoom = (roomIdInput || roomFromUrl || '').trim();
+      const isGM = (currentRole === 'gm');
 
+      // GM은 고유 ID로 Peer 생성(방장이 됨), 플레이어는 임의 ID로 생성 후 GM에 접속
       try {
-        peer = new Peer(currentRole === 'gm' && currentRoomId ? currentRoomId : undefined, { debug: 1 });
+        if (isGM) {
+          // GM의 경우 입력된 방코드가 있으면 사용, 없으면 랜덤 생성
+          currentRoomId = targetRoom || ('DW_' + Math.random().toString(36).substring(2, 8).toUpperCase());
+          peer = new Peer(currentRoomId, { debug: 1 });
+        } else {
+          currentRoomId = targetRoom;
+          peer = new Peer(undefined, { debug: 1 });
+        }
 
         peer.on('open', (id) => {
-          if (currentRole === 'gm' && !currentRoomId) currentRoomId = id;
-          if (currentRole !== 'gm' && currentRoomId) {
-            connectToGmPeer(currentRoomId);
+          if (isGM) {
+            currentRoomId = id;
+            document.getElementById('header-room-display').innerText = currentRoomId;
+            appendChatMessage(`🌐 <strong>[GM 방 생성됨]</strong> 방 코드: <code>${currentRoomId}</code> (초대 링크를 공유하세요)`);
+          } else {
+            document.getElementById('header-room-display').innerText = currentRoomId || '로컬';
+            if (currentRoomId) {
+              appendChatMessage(`🔗 GM 방(<code>${currentRoomId}</code>)에 접속을 시도합니다...`);
+              connectToGmPeer(currentRoomId);
+            } else {
+              appendChatMessage(`⚠️ 방 코드가 지정되지 않았습니다. 단독 모드로 실행됩니다.`);
+            }
+          }
+        });
+
+        peer.on('error', (err) => {
+          console.error('PeerJS 에러:', err);
+          if (err.type === 'unavailable-id') {
+            alert(`방 코드 [${currentRoomId}]가 이미 사용 중입니다. 다른 방 코드를 사용하거나 비워두세요.`);
+          } else if (err.type === 'peer-unavailable') {
+            alert(`GM 방 [${currentRoomId}]를 찾을 수 없습니다. GM이 먼저 방을 열었는지 확인해주세요.`);
           }
         });
 
         peer.on('connection', (conn) => {
-          peerConnections.push(conn);
-          conn.on('data', (data) => handleNetworkMessage(data));
-          conn.on('open', () => {
-            // GM sends full initial session state to new joiner
-            if (currentRole === 'gm') {
-              conn.send({
-                type: 'FULL_SYNC',
-                payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive }
-              });
-            }
-          });
+          setupConnectionEvents(conn);
         });
       } catch (err) {
-        console.warn('P2P connection error; running cross-tab sync mode', err);
+        console.warn('P2P 초기화 오류; 로컬 탭 동기화 모드로 동작합니다.', err);
       }
 
-      // Cross-tab broadcast listener (for multiple tabs on same browser/device)
+      // 같은 브라우저 탭 간 BroadcastChannel 지원
       localBroadcast.onmessage = (event) => {
-        handleNetworkMessage(event.data);
+        handleNetworkMessage(event.data, false);
       };
+    }
+
+    function setupConnectionEvents(conn) {
+      if (!peerConnections.some(c => c.peer === conn.peer)) {
+        peerConnections.push(conn);
+      }
+
+      conn.on('open', () => {
+        // GM이 신규 참가자에게 현재 세션 전체 상태 동기화
+        if (currentRole === 'gm') {
+          conn.send({
+            type: 'FULL_SYNC',
+            payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive }
+          });
+        }
+      });
+
+      conn.on('data', (data) => {
+        // [중요 수정] GM은 플레이어에게서 받은 메시지를 다른 모든 참가자에게 릴레이(중계)해야 함!
+        if (currentRole === 'gm') {
+          peerConnections.forEach(otherConn => {
+            if (otherConn.peer !== conn.peer && otherConn.open) {
+              otherConn.send(data);
+            }
+          });
+        }
+        handleNetworkMessage(data, false);
+      });
+
+      conn.on('close', () => {
+        peerConnections = peerConnections.filter(c => c.peer !== conn.peer);
+      });
     }
 
     function connectToGmPeer(targetRoomId) {
       if (!peer) return;
-      const conn = peer.connect(targetRoomId);
-      peerConnections.push(conn);
+      const conn = peer.connect(targetRoomId, { reliable: true });
+      setupConnectionEvents(conn);
+
       conn.on('open', () => {
+        appendChatMessage(`✅ GM 방(<code>${targetRoomId}</code>)과 성공적으로 연결되었습니다!`);
         broadcastNetworkMessage({
           type: 'USER_JOIN',
           payload: {
@@ -1399,19 +1457,18 @@
           }
         });
       });
-      conn.on('data', (data) => handleNetworkMessage(data));
     }
 
     function broadcastNetworkMessage(msg) {
-      // 1. Send via WebRTC peers
+      // 1. WebRTC 연결된 모든 피어에게 전송
       peerConnections.forEach(conn => {
         if (conn && conn.open) conn.send(msg);
       });
-      // 2. Send via local broadcast channel
+      // 2. 같은 브라우저의 다른 탭 동기화
       localBroadcast.postMessage(msg);
     }
 
-    function handleNetworkMessage(msg) {
+    function handleNetworkMessage(msg, isLocalBroadcast = false) {
       if (!msg || !msg.type) return;
 
       if (msg.type === 'FULL_SYNC') {
@@ -1422,6 +1479,7 @@
         isFogActive = msg.payload.isFogActive || false;
         renderUsersTable();
         renderTokens();
+        renderSheetTabs();
         renderSheet();
         redrawFog();
       } else if (msg.type === 'USER_JOIN') {
@@ -1460,11 +1518,15 @@
     }
 
     function copyRoomShareLink() {
+      if (!currentRoomId) {
+        alert('아직 방 코드가 생성되지 않았습니다.');
+        return;
+      }
       const url = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
       navigator.clipboard.writeText(url).then(() => {
         alert(`초대 링크가 복사되었습니다!\n방 코드: ${currentRoomId}\n${url}`);
       }).catch(() => {
-        prompt('초대 링크 복사:', url);
+        prompt('초대 링크 복사 (Ctrl+C로 복사):', url);
       });
     }
 
@@ -1474,7 +1536,7 @@
       return c ? c.name : '미배정';
     }
 
-    // --- Entry Modal Options (including GM role) ---
+    // --- Entry Modal Options ---
     function renderEntryModalOptions() {
       const sel = document.getElementById('entry-char-select');
       if (!sel) return;
@@ -1668,7 +1730,7 @@
       });
     }
 
-    // --- Web Audio Synthesis (Dice, SFX, and PING Sound) ---
+    // --- Web Audio Synthesis (Dice, SFX, PING) ---
     let audioCtx = null;
     function getAudioContext() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1849,7 +1911,7 @@
       appendChatMessage('🗑️ 스케치 펜 드로잉이 전체 지워졌습니다.');
     }
 
-    // --- High-Performance Fog of War Engine ---
+    // --- Fog of War Engine ---
     const fogCanvas = document.getElementById('fog-canvas');
     const fogCtx = fogCanvas.getContext('2d');
 
@@ -2232,7 +2294,7 @@
     function toggleGridOnTop(isOnTop) { document.getElementById('grid-overlay').classList.toggle('on-top', isOnTop); }
     function toggleGridVisible(isVisible) { document.getElementById('grid-overlay').classList.toggle('hidden', !isVisible); }
 
-    // --- Viewport Zoom & Pan (Standardized to Wheel Button Click + Drag) ---
+    // --- Viewport Zoom & Pan ---
     let zoomLevel = 1.0;
     let panX = -450;
     let panY = -450;
@@ -2734,7 +2796,7 @@
       renderTokens();
     }
 
-    // --- High-Performance Lag-Free Token Dragging Logic ---
+    // --- Token Dragging & Rendering ---
     function renderTokens() {
       const layer = document.getElementById('tokens-layer');
       layer.innerHTML = '';
@@ -2851,7 +2913,6 @@
       });
     }
 
-    // Smooth Dragging with Throttled Fog Updates via requestAnimationFrame
     function attachSmoothTokenDraggable(element, tokenObj) {
       let isDragging = false;
       let startMouseX, startMouseY;
@@ -2878,11 +2939,9 @@
           tokenObj.x = Math.round(initialTokenX + dx);
           tokenObj.y = Math.round(initialTokenY + dy);
 
-          // Fast direct DOM update (Lag-free)
           element.style.left = `${tokenObj.x}px`;
           element.style.top = `${tokenObj.y}px`;
 
-          // Throttle fog update using requestAnimationFrame
           if (!animFrameId) {
             animFrameId = requestAnimationFrame(() => {
               if (isFogActive && (tokenObj.id === myBoundCharId || tokenObj.owner === myNickname)) {
@@ -2911,7 +2970,6 @@
             renderTokens();
           }
 
-          // Broadcast final coordinates to other players
           broadcastNetworkMessage({ type: 'TOKEN_MOVE', payload: { id: tokenObj.id, x: tokenObj.x, y: tokenObj.y } });
         }
 
@@ -3510,6 +3568,14 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      // URL 파라미터에 ?room= 방코드가 있으면 입장창에 자동 입력
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomParam = urlParams.get('room');
+      if (roomParam) {
+        const roomInput = document.getElementById('entry-room-id');
+        if (roomInput) roomInput.value = roomParam;
+      }
+
       updateWorldTransform();
       renderEntryModalOptions();
       populateOwnerDropdowns();
