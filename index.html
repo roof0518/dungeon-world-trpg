@@ -1188,13 +1188,34 @@
       </div>
 
       <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
-        <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">🌫️ 전장의 안개 (Fog of War)</strong>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:0.8rem;">
-          <input type="checkbox" id="chk-fog-enabled" onchange="toggleFogOfWar(this.checked)">
-          <span>전장의 안개 활성화 (실시간 시야 외 음영 처리 & 토큰 은폐)</span>
-        </label>
-        
-        <div id="fog-brush-controls" style="margin-top:6px; display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <strong style="color:var(--wood-dark); font-size:0.85rem;">🌫️ 구역별 전장의 안개 (Fog of War)</strong>
+          <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:bold; font-size:0.75rem;">
+            <input type="checkbox" id="chk-fog-enabled" onchange="toggleFogOfWar(this.checked)">
+            <span>전체 안개 일괄 전환</span>
+          </label>
+        </div>
+        <p style="font-size:0.73rem; color:var(--ink-muted); margin-bottom:6px;">
+          구역별로 안개를 독립적으로 켜고 끌 수 있습니다. 안개가 켜진 구역은 시야 외 토큰이 은폐됩니다.
+        </p>
+
+        <!-- 구역별 독립 안개 토글 스위치 -->
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <label class="zone-fog-toggle-card" style="flex:1; background:#fff; border:1px solid #b3814d; border-radius:4px; padding:5px 6px; display:flex; align-items:center; gap:4px; font-size:0.75rem; cursor:pointer;">
+            <input type="checkbox" id="chk-fog-zone-1" onchange="toggleZoneFog(1, this.checked)">
+            <span style="font-weight:bold;">📍 1구역 안개</span>
+          </label>
+          <label class="zone-fog-toggle-card" style="flex:1; background:#fff; border:1px solid #b3814d; border-radius:4px; padding:5px 6px; display:flex; align-items:center; gap:4px; font-size:0.75rem; cursor:pointer;">
+            <input type="checkbox" id="chk-fog-zone-2" onchange="toggleZoneFog(2, this.checked)">
+            <span style="font-weight:bold;">📍 2구역 안개</span>
+          </label>
+          <label class="zone-fog-toggle-card" style="flex:1; background:#fff; border:1px solid #b3814d; border-radius:4px; padding:5px 6px; display:flex; align-items:center; gap:4px; font-size:0.75rem; cursor:pointer;">
+            <input type="checkbox" id="chk-fog-zone-3" onchange="toggleZoneFog(3, this.checked)">
+            <span style="font-weight:bold;">📍 3구역 안개</span>
+          </label>
+        </div>
+
+        <div id="fog-brush-controls" style="margin-top:6px;">
           <label style="font-size:0.75rem; font-weight:bold; color:var(--wood-dark);">마스터 안개 브러시 도구:</label>
           <div style="display:flex; gap:4px; margin-top:3px;">
             <button class="menu-btn" id="btn-fog-brush-off" style="flex:1;" onclick="setFogBrushMode('none')">🖐️ 이동 모드</button>
@@ -1386,12 +1407,18 @@
 
       <!-- Zone Form Panel -->
       <div id="zone-editor-form">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:4px;">
           <strong id="zone-editor-title" style="color:var(--wood-dark); font-size:0.9rem;">📍 제 1구역 설정</strong>
-          <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem; cursor:pointer;">
-            <input type="checkbox" id="zone-enabled-chk" onchange="updateCurrentZoneField('enabled', this.checked)">
-            <span>구역 전장 활성화</span>
-          </label>
+          <div style="display:flex; gap:8px;">
+            <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem; cursor:pointer;">
+              <input type="checkbox" id="zone-enabled-chk" onchange="updateCurrentZoneField('enabled', this.checked)">
+              <span>구역 활성화</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem; cursor:pointer; color:#795548; font-weight:bold;">
+              <input type="checkbox" id="zone-fog-chk" onchange="updateCurrentZoneField('fogEnabled', this.checked)">
+              <span>🌫️ 전장의 안개 적용</span>
+            </label>
+          </div>
         </div>
 
         <div class="form-group">
@@ -1422,15 +1449,20 @@
           </div>
         </div>
 
-        <div style="display:flex; gap:6px; margin-top:8px;">
-          <button class="btn-create" onclick="applyCurrentZoneSettings()">현재 구역에 즉시 적용</button>
-          <button class="btn-create" onclick="saveCurrentZoneToCompendium()" style="background:var(--green);">구역 적용 + 도감 저장</button>
+        <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+          <div style="display:flex; gap:6px;">
+            <button class="btn-create" onclick="applyCurrentZoneSettings()" style="flex:1;">현재 구역 설정 적용</button>
+            <button class="btn-create" onclick="saveCurrentZonePresetToCompendium()" style="flex:1; background:var(--green); font-size:0.78rem;" title="맵 배경뿐 아니라 이 구역의 모든 오브젝트, 포탈, 몬스터 토큰을 통째로 프리셋으로 도감에 저장">💾 전체 세팅 도감 저장</button>
+          </div>
         </div>
       </div>
 
       <!-- Zone Compendium Panel -->
       <div id="zone-compendium-panel" style="display:none;">
-        <strong style="color:var(--wood-dark); font-size:0.82rem; display:block; margin-bottom:4px;">📜 사전 저장된 맵 목록 (원하는 구역에 즉시 배치):</strong>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <strong style="color:var(--wood-dark); font-size:0.82rem;">📜 구역 전체 세팅 프리셋 도감:</strong>
+          <span style="font-size:0.7rem; color:var(--ink-muted);">(맵 배경 + 오브젝트 + 포탈 + 몬스터 토큰 동시 복원)</span>
+        </div>
         <div class="map-compendium-grid" id="zone-compendium-container"></div>
       </div>
     </div>
@@ -1569,6 +1601,7 @@
         id: 1,
         name: '제 1구역: 고블린 동굴 지하 1층',
         enabled: true,
+        fogEnabled: false,
         x: 300,
         y: 400,
         gridW: 24,
@@ -1579,6 +1612,7 @@
         id: 2,
         name: '제 2구역: 고블린 은신처 심층 B2',
         enabled: true,
+        fogEnabled: true,
         x: 1800,
         y: 400,
         gridW: 26,
@@ -1589,6 +1623,7 @@
         id: 3,
         name: '제 3구역: 지상 여관 & 모험가 길드',
         enabled: true,
+        fogEnabled: false,
         x: 3400,
         y: 400,
         gridW: 22,
@@ -1783,25 +1818,50 @@
 
     let mapCompendium = [
       {
-        id: 'map_cave',
-        name: '고블린 은신처 지하 동굴 B1',
+        id: 'preset_cave',
+        name: '고블린 은신처 지하 동굴 B1 세팅',
         src: 'https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=1600&q=80',
         gridW: 24,
-        gridH: 18
+        gridH: 18,
+        fogEnabled: false,
+        savedAt: '기본 프리셋',
+        objects: [
+          { id: 'obj_stair_down', name: '지하 2층 연결 돌계단 [입구]', icon: '🪜', size: 60, relX: 900, relY: 250, message: '어둡고 가파른 계단을 밟고 내려가 지하 2층으로 이동했습니다!', repeatable: true, teleportEnabled: true, pairedObjectId: 'obj_stair_up' },
+          { id: 'obj_sample_chest', name: '황금 보물상자', icon: '📦', size: 60, relX: 350, relY: 250, message: '뚜껑을 열자 눈부신 금화 50닢과 [푸른빛 회복 물약]이 들어있습니다!', repeatable: true, targetMode: 'TRIGGER_USER' }
+        ],
+        tokens: [
+          { id: 'mon_sample_goblin', name: '고블린 정찰병', type: 'monster', owner: 'GM', size: 60, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', relX: 550, relY: 200 }
+        ]
       },
       {
-        id: 'map_forest',
-        name: '안개 낀 고대 수림 심층 B2',
+        id: 'preset_forest',
+        name: '안개 낀 고대 수림 심층 B2 세팅',
         src: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80',
         gridW: 26,
-        gridH: 20
+        gridH: 20,
+        fogEnabled: true,
+        savedAt: '기본 프리셋',
+        objects: [
+          { id: 'obj_stair_up', name: '지하 1층 복귀 사다리 [출구]', icon: '🪜', size: 60, relX: 150, relY: 150, message: '사다리를 타고 올라가 지하 1층으로 복귀했습니다!', repeatable: true, teleportEnabled: true, pairedObjectId: 'obj_stair_down' }
+        ],
+        tokens: [
+          { id: 'mon_forest_beast', name: '흑마법사 발토', type: 'monster', owner: 'GM', size: 60, hp: 16, maxHp: 16, armor: 0, damage: 'd8+2', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=wizard', relX: 450, relY: 300 }
+        ]
       },
       {
-        id: 'map_tavern',
-        name: '황금빛 모험가 주점 & 길드 1F',
+        id: 'preset_tavern',
+        name: '황금빛 모험가 주점 & 길드 1F 세팅',
         src: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1600&q=80',
         gridW: 22,
-        gridH: 16
+        gridH: 16,
+        fogEnabled: false,
+        savedAt: '기본 프리셋',
+        objects: [
+          { id: 'obj_tavern_door', name: '주점 후문 통로', icon: '🚪', size: 60, relX: 600, relY: 200, message: '주점 후문을 열고 뒤뜰로 나갔습니다.', repeatable: true }
+        ],
+        tokens: [
+          { id: 'npc_paengdeok', name: '김팽덕', type: 'npc', owner: 'GM', size: 60, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok', relX: 150, relY: 150 }
+        ]
       }
     ];
 
@@ -1956,6 +2016,12 @@
         renderObjectRecipientsCheckboxes();
         renderHandoutRecipientsCheckboxes();
         appendChatMessage(`👋 [${u.nickname} (${u.realName})]님이 접속했습니다.`);
+      } else if (msg.type === 'ZONE_FOG_UPDATE') {
+        mapZones = msg.payload.mapZones || mapZones;
+        isFogActive = msg.payload.isFogActive;
+        updateFogCheckboxes();
+        redrawFog();
+        renderTokens();
       } else if (msg.type === 'TOKEN_MOVE') {
         const t = tokens.find(tok => tok.id === msg.payload.id);
         if (t) {
@@ -2202,7 +2268,7 @@
       renderUsersTable();
       renderZoneCompendium();
       loadZoneFormValues(1);
-      populateGmTargetTokenDropdown();
+      populateGmTargetTokenDropdown(); updateFogCheckboxes();
       updatePlayerExploredHistory();
       redrawFog();
       appendChatMessage(`🎉 [${myNickname} (${myRealName})]님이 [${currentRole === 'gm' ? '게임 마스터' : (isSpectator ? '관전자' : '플레이어')}] 역할로 입장하셨습니다.`);
@@ -2464,12 +2530,22 @@
       document.getElementById('zone-grid-w').value = zone.gridW;
       document.getElementById('zone-grid-h').value = zone.gridH;
       document.getElementById('zone-enabled-chk').checked = zone.enabled !== false;
+      const fogChk = document.getElementById('zone-fog-chk');
+      if (fogChk) fogChk.checked = !!zone.fogEnabled;
       pendingZoneImageSrc = null;
     }
 
     function updateCurrentZoneField(field, val) {
       const zone = getZoneById(editingZoneId);
-      if (zone) zone[field] = val;
+      if (zone) {
+        zone[field] = val;
+        if (field === 'fogEnabled') {
+          isFogActive = mapZones.some(z => z.enabled && z.fogEnabled);
+          updateFogCheckboxes();
+          redrawFog();
+          renderTokens();
+        }
+      }
     }
 
     function handleZoneFileSelect(e) {
@@ -2488,33 +2564,68 @@
       const zone = getZoneById(editingZoneId);
       if (!zone) return;
 
-      zone.name = document.getElementById('zone-name-input').value.trim() || `제 ${zone.id}구역`;
-      const urlInput = document.getElementById('zone-url-input').value.trim();
-      if (pendingZoneImageSrc) zone.src = pendingZoneImageSrc;
-      else if (urlInput) zone.src = urlInput;
-
+      zone.name = document.getElementById('zone-name-input').value.trim() || `제 ${editingZoneId}구역`;
+      if (pendingZoneImageSrc) {
+        zone.src = pendingZoneImageSrc;
+      } else {
+        const urlVal = document.getElementById('zone-url-input').value.trim();
+        if (urlVal) zone.src = urlVal;
+      }
       zone.gridW = parseInt(document.getElementById('zone-grid-w').value, 10) || 24;
       zone.gridH = parseInt(document.getElementById('zone-grid-h').value, 10) || 18;
       zone.enabled = document.getElementById('zone-enabled-chk').checked;
+      const fogChk = document.getElementById('zone-fog-chk');
+      if (fogChk) zone.fogEnabled = fogChk.checked;
+
+      isFogActive = mapZones.some(z => z.enabled && z.fogEnabled);
+      updateFogCheckboxes();
 
       renderMapZones();
+      redrawFog();
+      renderTokens();
       broadcastNetworkMessage({ type: 'MAP_ZONES_UPDATE', payload: { mapZones } });
-      appendChatMessage(`🗺️ [제 ${zone.id}구역: ${zone.name}] 설정이 전장에 적용되었습니다.`);
-      pendingZoneImageSrc = null;
+      appendChatMessage(`🗺️ [제 ${editingZoneId}구역: ${zone.name}] 설정이 적용되었습니다. (안개: ${zone.fogEnabled ? 'ON' : 'OFF'})`);
     }
 
-    function saveCurrentZoneToCompendium() {
+    function saveCurrentZonePresetToCompendium() {
       applyCurrentZoneSettings();
       const zone = getZoneById(editingZoneId);
-      mapCompendium.push({
-        id: 'map_' + Date.now(),
-        name: zone.name,
+      if (!zone) return;
+
+      const defaultName = `${zone.name || ('제 ' + editingZoneId + '구역')} 프리셋`;
+      const presetName = prompt('저장할 구역 전체 세팅 프리셋 이름을 입력하세요:', defaultName);
+      if (!presetName) return;
+
+      // Extract all objects in this zone with relative coordinates
+      const zoneObjects = objects.filter(o => o.zoneId === zone.id).map(o => ({
+        ...o,
+        relX: o.x - zone.x,
+        relY: o.y - zone.y
+      }));
+
+      // Extract all monster/NPC tokens in this zone (excluding player bound character)
+      const zoneTokens = tokens.filter(t => t.zoneId === zone.id && t.type !== 'player' && t.id !== myBoundCharId).map(t => ({
+        ...t,
+        relX: t.x - zone.x,
+        relY: t.y - zone.y
+      }));
+
+      const newPreset = {
+        id: 'preset_' + Date.now(),
+        name: presetName,
         src: zone.src,
         gridW: zone.gridW,
-        gridH: zone.gridH
-      });
+        gridH: zone.gridH,
+        fogEnabled: !!zone.fogEnabled,
+        savedAt: new Date().toLocaleTimeString(),
+        objects: JSON.parse(JSON.stringify(zoneObjects)),
+        tokens: JSON.parse(JSON.stringify(zoneTokens))
+      };
+
+      mapCompendium.push(newPreset);
       renderZoneCompendium();
-      appendChatMessage(`💾 [${zone.name}] 설정이 맵 도감에 등록되었습니다.`);
+      switchZoneEditorTab('comp');
+      appendChatMessage(`💾 <strong>[구역 프리셋 저장 완료]</strong> [${presetName}]에 맵 배경, 오브젝트 ${zoneObjects.length}개, 몬스터/NPC ${zoneTokens.length}개가 세트로 저장되었습니다.`);
     }
 
     function renderZoneCompendium() {
@@ -2525,15 +2636,26 @@
       mapCompendium.forEach((m, idx) => {
         const card = document.createElement('div');
         card.className = 'map-compendium-card';
+        const objCount = m.objects ? m.objects.length : 0;
+        const tokCount = m.tokens ? m.tokens.length : 0;
+        const fogStatus = m.fogEnabled ? 'ON' : 'OFF';
+
         card.innerHTML = `
-          <button class="compendium-del-btn" onclick="deleteZoneCompendiumItem(${idx})" title="삭제">×</button>
+          <button class="compendium-del-btn" onclick="deleteZoneCompendiumItem(${idx})" title="도감에서 삭제">×</button>
           <img src="${m.src}" class="map-compendium-thumb" onerror="this.src='https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=300&q=80'">
-          <strong style="font-size:0.75rem; color:var(--wood-dark); margin-top:2px;">${m.name}</strong>
+          <strong style="font-size:0.78rem; color:var(--wood-dark); margin-top:2px;">${m.name}</strong>
           <span style="font-size:0.68rem; color:var(--ink-muted);">${m.gridW} × ${m.gridH} 칸</span>
+          
+          <div style="display:flex; gap:3px; flex-wrap:wrap; font-size:0.68rem; margin:2px 0;">
+            <span style="background:#e1bee7; color:#4a148c; padding:1px 4px; border-radius:3px; font-weight:bold;">📦 오브젝트 ${objCount}개</span>
+            <span style="background:#ffcdd2; color:#b71c1c; padding:1px 4px; border-radius:3px; font-weight:bold;">👹 몬스터 ${tokCount}개</span>
+            <span style="background:${m.fogEnabled ? '#cfd8dc' : '#c8e6c9'}; color:${m.fogEnabled ? '#263238' : '#1b5e20'}; padding:1px 4px; border-radius:3px; font-weight:bold;">🌫️ 안개 ${fogStatus}</span>
+          </div>
+
           <div style="display:flex; gap:2px; margin-top:4px;">
-            <button class="compendium-spawn-btn" style="flex:1; padding:3px 2px; font-size:0.68rem;" onclick="applyCompendiumToZone(${idx}, 1)">1구역 적용</button>
-            <button class="compendium-spawn-btn" style="flex:1; padding:3px 2px; font-size:0.68rem;" onclick="applyCompendiumToZone(${idx}, 2)">2구역 적용</button>
-            <button class="compendium-spawn-btn" style="flex:1; padding:3px 2px; font-size:0.68rem;" onclick="applyCompendiumToZone(${idx}, 3)">3구역 적용</button>
+            <button class="compendium-spawn-btn" style="flex:1; padding:3px 2px; font-size:0.68rem;" onclick="applyCompendiumToZone(${idx}, 1)">📍 1구역 로드</button>
+            <button class="compendium-spawn-btn" style="flex:1; padding:3px 2px; font-size:0.68rem;" onclick="applyCompendiumToZone(${idx}, 2)">📍 2구역 로드</button>
+            <button class="compendium-spawn-btn" style="flex:1; padding:3px 2px; font-size:0.68rem;" onclick="applyCompendiumToZone(${idx}, 3)">📍 3구역 로드</button>
           </div>
         `;
         container.appendChild(card);
@@ -2541,30 +2663,89 @@
     }
 
     function applyCompendiumToZone(compIdx, targetZoneId) {
-      const item = mapCompendium[compIdx];
-      const zone = getZoneById(targetZoneId);
-      if (!item || !zone) return;
+      const preset = mapCompendium[compIdx];
+      const targetZone = getZoneById(targetZoneId);
+      if (!preset || !targetZone) return;
 
-      zone.name = item.name;
-      zone.src = item.src;
-      zone.gridW = item.gridW;
-      zone.gridH = item.gridH;
-      zone.enabled = true;
+      const objCount = preset.objects ? preset.objects.length : 0;
+      const tokCount = preset.tokens ? preset.tokens.length : 0;
 
+      const ok = confirm(`[제 ${targetZoneId}구역: ${targetZone.name}]에 [${preset.name}] 프리셋을 복원하시겠습니까?\n(맵 배경, 오브젝트 ${objCount}개, 몬스터/NPC ${tokCount}개가 해당 구역에 그대로 세팅됩니다)`);
+      if (!ok) return;
+
+      // 1. Update target zone metadata
+      targetZone.name = preset.name.replace(' 프리셋', '').replace(' 세팅', '');
+      targetZone.src = preset.src;
+      targetZone.gridW = preset.gridW || 24;
+      targetZone.gridH = preset.gridH || 18;
+      targetZone.fogEnabled = !!preset.fogEnabled;
+      targetZone.enabled = true;
+
+      // 2. Remove existing objects and monsters in targetZone
+      objects = objects.filter(o => o.zoneId !== targetZone.id);
+      tokens = tokens.filter(t => t.zoneId !== targetZone.id || (t.type === 'player' && t.id === myBoundCharId));
+
+      // 3. Restore objects
+      if (preset.objects && preset.objects.length > 0) {
+        const idMap = {};
+        const clonedObjects = JSON.parse(JSON.stringify(preset.objects));
+
+        clonedObjects.forEach(o => {
+          const oldId = o.id;
+          const newId = 'obj_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+          idMap[oldId] = newId;
+          o.id = newId;
+          o.zoneId = targetZone.id;
+          o.x = targetZone.x + (o.relX !== undefined ? o.relX : 80);
+          o.y = targetZone.y + (o.relY !== undefined ? o.relY : 80);
+        });
+
+        clonedObjects.forEach(o => {
+          if (o.pairedObjectId && idMap[o.pairedObjectId]) {
+            o.pairedObjectId = idMap[o.pairedObjectId];
+          }
+          objects.push(o);
+        });
+      }
+
+      // 4. Restore tokens (monsters/NPCs)
+      if (preset.tokens && preset.tokens.length > 0) {
+        const clonedTokens = JSON.parse(JSON.stringify(preset.tokens));
+        clonedTokens.forEach(t => {
+          t.id = (t.type || 'mon') + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+          t.zoneId = targetZone.id;
+          t.x = targetZone.x + (t.relX !== undefined ? t.relX : 100);
+          t.y = targetZone.y + (t.relY !== undefined ? t.relY : 100);
+          tokens.push(t);
+        });
+      }
+
+      // 5. Update UI & sync
+      isFogActive = mapZones.some(z => z.enabled && z.fogEnabled);
+      updateFogCheckboxes();
       renderMapZones();
-      broadcastNetworkMessage({ type: 'MAP_ZONES_UPDATE', payload: { mapZones } });
-      appendChatMessage(`🗺️ 도감의 [${item.name}]이(가) [제 ${targetZoneId}구역]으로 배치되었습니다.`);
+      renderObjects();
+      renderTokens();
+      populateGmTargetTokenDropdown();
+      redrawFog();
+
+      broadcastNetworkMessage({
+        type: 'FULL_SYNC',
+        payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive }
+      });
+
+      appendChatMessage(`🗺️ <strong>[구역 세팅 복원]</strong> [${preset.name}] 프리셋(맵, 오브젝트 ${objCount}개, 몬스터/NPC ${tokCount}개)이 [제 ${targetZoneId}구역]으로 로드되었습니다!`, 'teleport-msg');
       jumpToZone(targetZoneId);
     }
 
     function deleteZoneCompendiumItem(idx) {
-      if (confirm(`[${mapCompendium[idx].name}] 맵을 도감에서 삭제하시겠습니까?`)) {
+      if (confirm(`[${mapCompendium[idx].name}] 프리셋을 도감에서 삭제하시겠습니까?`)) {
         mapCompendium.splice(idx, 1);
         renderZoneCompendium();
       }
     }
 
-    // =========================================================================
+        // =========================================================================
     // --- INTERACTIVE OBJECT SYSTEM & PORTAL TELEPORTATION ---
     // =========================================================================
 
@@ -3362,14 +3543,60 @@
       appendChatMessage('🌫️ 전장의 안개가 전체 초기화되었습니다.');
     }
 
-    function toggleFogOfWar(enabled) {
-      isFogActive = enabled;
-      document.getElementById('fog-brush-controls').style.display = enabled ? 'block' : 'none';
-      if (!enabled) setFogBrushMode('none');
+    function toggleZoneFog(zoneId, enabled) {
+      const z = getZoneById(zoneId);
+      if (!z) return;
+      z.fogEnabled = enabled;
+
+      isFogActive = mapZones.some(zone => zone.enabled && zone.fogEnabled);
+      updateFogCheckboxes();
       updatePlayerExploredHistory();
       redrawFog();
       renderTokens();
-      broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
+
+      broadcastNetworkMessage({
+        type: 'ZONE_FOG_UPDATE',
+        payload: { zoneId, fogEnabled: enabled, mapZones, isFogActive }
+      });
+
+      appendChatMessage(`🌫️ [제 ${zoneId}구역: ${z.name}] 전장의 안개가 ${enabled ? '활성화' : '비활성화'}되었습니다.`);
+    }
+
+    function toggleFogOfWar(enabled) {
+      isFogActive = enabled;
+      mapZones.forEach(z => {
+        z.fogEnabled = enabled;
+      });
+
+      updateFogCheckboxes();
+      const brushControls = document.getElementById('fog-brush-controls');
+      if (brushControls) brushControls.style.display = enabled ? 'block' : 'none';
+      if (!enabled) setFogBrushMode('none');
+
+      updatePlayerExploredHistory();
+      redrawFog();
+      renderTokens();
+
+      broadcastNetworkMessage({
+        type: 'FULL_SYNC',
+        payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive }
+      });
+      appendChatMessage(`🌫️ 전장의 안개가 전체 구역 일괄 ${enabled ? '켜짐' : '꺼짐'} 상태로 전환되었습니다.`);
+    }
+
+    function updateFogCheckboxes() {
+      const masterChk = document.getElementById('chk-fog-enabled');
+      if (masterChk) masterChk.checked = mapZones.some(z => z.enabled && z.fogEnabled);
+
+      for (let i = 1; i <= 3; i++) {
+        const chk = document.getElementById(`chk-fog-zone-${i}`);
+        const z = getZoneById(i);
+        if (chk && z) chk.checked = !!z.fogEnabled;
+      }
+
+      const editorChk = document.getElementById('zone-fog-chk');
+      const currZone = getZoneById(editingZoneId);
+      if (editorChk && currZone) editorChk.checked = !!currZone.fogEnabled;
     }
 
     function setFogBrushMode(mode) {
@@ -3395,37 +3622,27 @@
 
     function applyFogBrushAt(e) {
       const rect = viewport.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      const worldX = (mouseX - panX) / zoomLevel;
-      const worldY = (mouseY - panY) / zoomLevel;
-      const brushRadius = parseInt(document.getElementById('fog-brush-size').value, 10) || 100;
+      const worldX = (e.clientX - rect.left - panX) / zoomLevel;
+      const worldY = (e.clientY - rect.top - panY) / zoomLevel;
+      const brushSize = parseInt(document.getElementById('fog-brush-size').value, 10) || 100;
 
       fogMaskCtx.save();
       if (fogBrushMode === 'erase') {
         fogMaskCtx.globalCompositeOperation = 'destination-out';
         fogMaskCtx.beginPath();
-        fogMaskCtx.arc(worldX, worldY, brushRadius, 0, Math.PI * 2);
+        fogMaskCtx.arc(worldX, worldY, brushSize, 0, Math.PI * 2);
         fogMaskCtx.fill();
       } else if (fogBrushMode === 'paint') {
         fogMaskCtx.globalCompositeOperation = 'source-over';
         fogMaskCtx.fillStyle = 'rgba(0, 0, 0, 1)';
         fogMaskCtx.beginPath();
-        fogMaskCtx.arc(worldX, worldY, brushRadius, 0, Math.PI * 2);
+        fogMaskCtx.arc(worldX, worldY, brushSize, 0, Math.PI * 2);
         fogMaskCtx.fill();
       }
       fogMaskCtx.restore();
+
       redrawFog();
       renderTokens();
-    }
-
-    function getDungeonWorldVisionRadius(visionBase, bonusGrids) {
-      let basePx = 250;
-      if (visionBase === '반걸음') basePx = 100;
-      else if (visionBase === '한걸음') basePx = 150;
-      else if (visionBase === '몇걸음') basePx = 250;
-      else if (visionBase === '중거리') basePx = 400;
-      return basePx + (bonusGrids * 50);
     }
 
     function updatePlayerExploredHistory() {
@@ -3447,15 +3664,23 @@
 
     function redrawFog() {
       fogCtx.clearRect(0, 0, 5500, 5000);
-      if (!isFogActive) return;
+      const activeFogZones = mapZones.filter(z => z.enabled && z.fogEnabled);
+      if (!isFogActive || activeFogZones.length === 0) return;
+
+      fogCtx.save();
+      // Clip fog strictly to bounds of zones that have fogEnabled === true!
+      fogCtx.beginPath();
+      activeFogZones.forEach(z => {
+        const w = (z.gridW || 24) * 50;
+        const h = (z.gridH || 18) * 50;
+        fogCtx.rect(z.x, z.y, w, h);
+      });
+      fogCtx.clip();
 
       if (currentRole === 'gm') {
-        fogCtx.save();
         fogCtx.globalAlpha = 0.45;
         fogCtx.drawImage(fogMaskCanvas, 0, 0);
-        fogCtx.restore();
       } else {
-        fogCtx.save();
         fogCtx.drawImage(fogMaskCanvas, 0, 0);
 
         fogCtx.globalCompositeOperation = 'destination-out';
@@ -3465,31 +3690,35 @@
         fogCtx.save();
         fogCtx.globalAlpha = 0.62;
         fogCtx.fillStyle = '#080503';
-        fogCtx.beginPath();
-        fogCtx.rect(0, 0, 5500, 5000);
-        fogCtx.fill();
+        activeFogZones.forEach(z => {
+          const w = (z.gridW || 24) * 50;
+          const h = (z.gridH || 18) * 50;
+          fogCtx.fillRect(z.x, z.y, w, h);
+        });
         fogCtx.restore();
 
         const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
         const myChar = characters.find(c => c.id === myBoundCharId);
 
         if (myTok && myChar && !isSpectator) {
-          const centerOffset = (myTok.size || 60) / 2;
-          const radius = getDungeonWorldVisionRadius(myChar.visionBase || '몇걸음', myChar.visionBonusGrids || 0);
+          const myZone = getZoneById(myTok.zoneId || 1);
+          if (myZone && myZone.fogEnabled) {
+            const centerOffset = (myTok.size || 60) / 2;
+            const radius = getDungeonWorldVisionRadius(myChar.visionBase || '몇걸음', myChar.visionBonusGrids || 0);
 
-          fogCtx.globalCompositeOperation = 'destination-out';
-          const grad = fogCtx.createRadialGradient(myTok.x + centerOffset, myTok.y + centerOffset, radius * 0.75, myTok.x + centerOffset, myTok.y + centerOffset, radius);
-          grad.addColorStop(0, 'rgba(0,0,0,1)');
-          grad.addColorStop(1, 'rgba(0,0,0,0)');
+            fogCtx.globalCompositeOperation = 'destination-out';
+            const grad = fogCtx.createRadialGradient(myTok.x + centerOffset, myTok.y + centerOffset, radius * 0.75, myTok.x + centerOffset, myTok.y + centerOffset, radius);
+            grad.addColorStop(0, 'rgba(0,0,0,1)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
 
-          fogCtx.fillStyle = grad;
-          fogCtx.beginPath();
-          fogCtx.arc(myTok.x + centerOffset, myTok.y + centerOffset, radius, 0, Math.PI * 2);
-          fogCtx.fill();
+            fogCtx.fillStyle = grad;
+            fogCtx.beginPath();
+            fogCtx.arc(myTok.x + centerOffset, myTok.y + centerOffset, radius, 0, Math.PI * 2);
+            fogCtx.fill();
+          }
         }
-
-        fogCtx.restore();
       }
+      fogCtx.restore();
     }
 
     function togglePlayerReachGuide() {
@@ -4369,7 +4598,10 @@
         const tokCenterOffset = tokSize / 2;
 
         let isVisibleInFog = true;
-        if (isFogActive && currentRole !== 'gm') {
+        const tokZone = getZoneById(tok.zoneId || 1);
+        const zoneHasFog = isFogActive && tokZone && tokZone.fogEnabled;
+
+        if (zoneHasFog && currentRole !== 'gm') {
           if (isSpectator) {
             isVisibleInFog = false;
           } else if (isMyBoundChar) {
