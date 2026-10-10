@@ -49,364 +49,245 @@
       color: #fdf5ea;
     }
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .header-left { display: flex; align-items: center; gap: 10px; }
     .brand-title {
-      font-size: 1.15rem;
-      font-weight: bold;
-      color: #ffdfa9;
+      font-size: 1.1rem; font-weight: bold; color: #ffdfa9;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: flex; align-items: center; gap: 6px;
     }
 
     .menu-bar { display: flex; gap: 6px; }
-
     .menu-btn {
       background: linear-gradient(to bottom, #8a582c, #5e3512);
-      border: 1px solid #ffdfa9;
-      color: #fff8ee;
-      padding: 5px 12px;
-      font-size: 0.85rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.15s;
+      border: 1px solid #ffdfa9; color: #fff8ee;
+      padding: 5px 11px; font-size: 0.82rem; border-radius: 4px;
+      cursor: pointer; font-weight: bold;
+      display: flex; align-items: center; gap: 5px; transition: all 0.15s;
     }
-
     .menu-btn:hover {
       background: linear-gradient(to bottom, #a36d3c, #73431a);
       box-shadow: 0 0 6px rgba(255, 223, 169, 0.4);
     }
-
     .menu-btn.active-toggle {
-      background: #edd8bf;
-      color: #3b200b;
-      border-color: #ffe6ba;
+      background: #edd8bf; color: #3b200b; border-color: #ffe6ba;
     }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .header-right { display: flex; align-items: center; gap: 12px; }
     .role-toggle {
-      display: flex;
-      background: #231205;
-      padding: 3px;
-      border-radius: 16px;
-      border: 1px solid #8a582c;
+      display: flex; background: #231205; padding: 3px;
+      border-radius: 16px; border: 1px solid #8a582c;
     }
-
     .role-toggle button {
-      background: transparent;
-      border: none;
-      color: #c9ad90;
-      padding: 4px 12px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      border-radius: 12px;
-      font-weight: bold;
+      background: transparent; border: none; color: #c9ad90;
+      padding: 4px 12px; font-size: 0.8rem; cursor: pointer;
+      border-radius: 12px; font-weight: bold;
     }
-
     .role-toggle button.active {
-      background: var(--brass);
-      color: #2b1704;
+      background: var(--brass); color: #2b1704;
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
 
     /* VTT Workspace */
     #vtt-viewport {
-      position: absolute;
-      top: 48px; left: 0; right: 0; bottom: 0;
-      background: #140f0a;
-      overflow: hidden;
-      cursor: default;
+      position: absolute; top: 48px; left: 0; right: 0; bottom: 0;
+      background: #140f0a; overflow: hidden; cursor: default;
     }
-
     #vtt-viewport.panning { cursor: grab; }
     #vtt-viewport.panning:active { cursor: grabbing; }
 
     #vtt-world {
-      position: absolute;
-      top: 0; left: 0;
-      width: 5000px; height: 5000px;
-      transform-origin: 0 0;
-      background-size: 50px 50px;
-      background-image: 
-        linear-gradient(to right, rgba(202, 163, 114, 0.16) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(202, 163, 114, 0.16) 1px, transparent 1px);
+      position: absolute; top: 0; left: 0;
+      width: 5000px; height: 5000px; transform-origin: 0 0;
     }
 
+    #grid-overlay {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-size: 50px 50px;
+      background-image: 
+        linear-gradient(to right, rgba(202, 163, 114, 0.22) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(202, 163, 114, 0.22) 1px, transparent 1px);
+      pointer-events: none;
+      z-index: 10;
+    }
+    #grid-overlay.on-top { z-index: 45; }
+    #grid-overlay.hidden { display: none; }
+
     #map-background-layer {
-      position: absolute;
-      top: 500px; left: 500px;
+      position: absolute; top: 500px; left: 500px;
       pointer-events: none;
       box-shadow: 0 10px 40px rgba(0,0,0,0.9);
       border: 2px solid var(--parchment-border);
+      z-index: 20;
     }
-
-    #map-image {
-      display: block;
-      max-width: 4000px;
-      max-height: 4000px;
-      pointer-events: none;
-    }
+    #map-image { display: block; max-width: 4000px; max-height: 4000px; pointer-events: none; }
 
     .vtt-hud {
-      position: absolute;
-      bottom: 16px; left: 16px;
-      background: rgba(30, 18, 9, 0.85);
-      border: 1px solid var(--wood-light);
-      border-radius: 6px;
-      padding: 6px 12px;
-      color: #f7ead9;
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      z-index: 500;
+      position: absolute; bottom: 16px; right: 16px;
+      background: rgba(30, 18, 9, 0.85); border: 1px solid var(--wood-light);
+      border-radius: 6px; padding: 6px 12px; color: #f7ead9; font-size: 0.8rem;
+      display: flex; align-items: center; gap: 10px; z-index: 500;
     }
-
     .vtt-hud button {
-      background: #5e3512;
-      border: 1px solid #b3814d;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
+      background: #5e3512; border: 1px solid #b3814d; color: white;
+      padding: 2px 8px; border-radius: 3px; cursor: pointer; font-weight: bold;
     }
 
     /* Tokens */
     .vtt-token {
-      position: absolute;
-      width: 60px; height: 60px;
-      cursor: grab;
-      user-select: none;
-      z-index: 50;
+      position: absolute; width: 60px; height: 60px;
+      cursor: grab; user-select: none; z-index: 50;
     }
-
     .vtt-token:active { cursor: grabbing; z-index: 900 !important; }
 
     .token-bubbles {
-      position: absolute;
-      top: -24px; left: 50%;
-      transform: translateX(-50%);
-      display: flex; gap: 4px;
-      z-index: 60;
+      position: absolute; top: -24px; left: 50%;
+      transform: translateX(-50%); display: flex; gap: 4px; z-index: 60;
     }
-
     .token-bubble {
-      width: 22px; height: 22px;
-      border-radius: 50%;
+      width: 22px; height: 22px; border-radius: 50%;
       display: flex; justify-content: center; align-items: center;
       font-size: 0.65rem; font-weight: bold; color: white;
-      border: 2px solid #ffffff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+      border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.6);
       cursor: pointer; position: relative;
     }
-
     .bubble-green { background: #2e7d32; }
     .bubble-blue { background: #1976d2; }
     .bubble-red { background: #c62828; }
 
     .token-bubble:hover::after {
       content: attr(data-tooltip);
-      position: absolute; bottom: 25px; left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.85); color: white;
-      padding: 2px 6px; font-size: 0.65rem;
-      white-space: nowrap; border-radius: 3px;
-      pointer-events: none;
+      position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: white; padding: 2px 6px;
+      font-size: 0.65rem; white-space: nowrap; border-radius: 3px; pointer-events: none;
     }
 
     .token-hp-bar {
       position: absolute; top: -3px; left: 4px; right: 4px; height: 4px;
-      background: rgba(0,0,0,0.7); border-radius: 2px;
-      overflow: hidden; border: 1px solid #111;
+      background: rgba(0,0,0,0.7); border-radius: 2px; overflow: hidden; border: 1px solid #111;
     }
-
     .token-hp-fill { height: 100%; background: #4caf50; }
 
     .token-circle {
-      width: 100%; height: 100%;
-      border-radius: 50%; border: 3px solid #ffd700;
-      overflow: hidden; background: #2a1a0c;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.7);
+      width: 100%; height: 100%; border-radius: 50%; border: 3px solid #ffd700;
+      overflow: hidden; background: #2a1a0c; box-shadow: 0 3px 8px rgba(0,0,0,0.7);
       display: flex; justify-content: center; align-items: center;
     }
-
     .token-circle.monster { border-color: #e53935; }
     .token-circle.npc { border-color: #8e24aa; }
-
-    .token-circle img {
-      width: 100%; height: 100%;
-      object-fit: cover; pointer-events: none;
-    }
+    .token-circle img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
     .token-label {
-      position: absolute; bottom: -18px; left: 50%;
-      transform: translateX(-50%);
-      background: rgba(18, 10, 4, 0.85); color: #fff4e3;
-      font-size: 0.72rem; font-weight: bold;
-      padding: 1px 7px; border-radius: 4px;
-      border: 1px solid #805325; white-space: nowrap;
-      pointer-events: none;
+      position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+      background: rgba(18, 10, 4, 0.85); color: #fff4e3; font-size: 0.72rem; font-weight: bold;
+      padding: 1px 7px; border-radius: 4px; border: 1px solid #805325;
+      white-space: nowrap; pointer-events: none;
     }
 
     .token-del-btn {
-      display: none; position: absolute;
-      top: -10px; right: -10px;
-      width: 20px; height: 20px;
-      background: #c62828; color: white;
-      border-radius: 50%; border: 1px solid white;
-      font-size: 0.7rem; font-weight: bold;
-      cursor: pointer; justify-content: center; align-items: center;
-      z-index: 70;
+      display: none; position: absolute; top: -10px; right: -10px;
+      width: 20px; height: 20px; background: #c62828; color: white;
+      border-radius: 50%; border: 1px solid white; font-size: 0.7rem; font-weight: bold;
+      cursor: pointer; justify-content: center; align-items: center; z-index: 70;
     }
-
     .gm-mode .token-del-btn { display: flex; }
 
     /* Floating Draggable Windows */
     .floating-window {
-      position: absolute;
-      background: var(--parchment);
-      border: 2px solid var(--wood-medium);
-      border-radius: 8px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-      display: flex; flex-direction: column;
-      z-index: 1200;
-      min-width: 320px; max-width: 90vw;
-      resize: both; overflow: hidden;
+      position: absolute; background: var(--parchment);
+      border: 2px solid var(--wood-medium); border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: flex; flex-direction: column;
+      z-index: 1200; min-width: 300px; max-width: 90vw; resize: both; overflow: hidden;
     }
-
     .floating-window.minimized .window-content { display: none; }
     .floating-window.minimized { height: auto !important; resize: none; }
 
     .window-header {
       background: linear-gradient(to bottom, #7c4c23, #532e0e);
-      color: #fdf5ea; padding: 8px 12px;
-      display: flex; justify-content: space-between; align-items: center;
-      cursor: move; border-bottom: 2px solid #381f08;
-      font-size: 0.9rem; font-weight: bold;
+      color: #fdf5ea; padding: 8px 12px; display: flex; justify-content: space-between;
+      align-items: center; cursor: move; border-bottom: 2px solid #381f08;
+      font-size: 0.88rem; font-weight: bold;
     }
-
     .window-title { display: flex; align-items: center; gap: 6px; }
     .window-actions { display: flex; gap: 6px; }
-
     .win-btn {
-      background: #41230a; border: 1px solid #996738;
-      color: white; width: 22px; height: 22px;
-      border-radius: 3px; cursor: pointer;
-      display: flex; justify-content: center; align-items: center;
-      font-size: 0.75rem;
+      background: #41230a; border: 1px solid #996738; color: white;
+      width: 22px; height: 22px; border-radius: 3px; cursor: pointer;
+      display: flex; justify-content: center; align-items: center; font-size: 0.75rem;
     }
     .win-btn:hover { background: #613611; }
 
     .window-content {
-      padding: 14px;
-      overflow-y: auto; max-height: 70vh;
-      color: var(--ink); font-size: 0.88rem;
+      padding: 12px 14px; overflow-y: auto; max-height: 70vh;
+      color: var(--ink); font-size: 0.86rem;
     }
 
-    /* Window specific coordinates */
-    #sheet-window { top: 60px; left: 20px; width: 480px; height: 600px; }
-    #dice-window { top: 60px; right: 20px; width: 350px; }
+    #sheet-window { top: 60px; left: 20px; width: 480px; height: 580px; }
+    #dice-window { top: 60px; right: 20px; width: 340px; }
     #spawner-window { top: 120px; left: 520px; width: 380px; display: none; }
-    #map-window { top: 150px; left: 300px; width: 360px; display: none; }
+    #compendium-window { top: 100px; left: 250px; width: 520px; height: 480px; display: none; }
+    #map-window { top: 140px; left: 320px; width: 360px; display: none; }
 
     .char-tab-bar {
-      display: flex; gap: 6px; margin-bottom: 12px;
+      display: flex; gap: 6px; margin-bottom: 10px;
       border-bottom: 2px solid var(--parchment-border); padding-bottom: 6px;
+      flex-wrap: wrap; align-items: center;
     }
-
     .char-tab-btn {
-      background: #ebd8c0; border: 1px solid #c9a574;
-      padding: 4px 10px; border-radius: 4px;
-      cursor: pointer; font-weight: bold; font-size: 0.82rem;
+      background: #ebd8c0; border: 1px solid #c9a574; padding: 4px 10px;
+      border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;
     }
-
-    .char-tab-btn.active {
-      background: var(--wood-medium); color: white;
-      border-color: var(--wood-dark);
+    .char-tab-btn.active { background: var(--wood-medium); color: white; border-color: var(--wood-dark); }
+    .char-add-btn {
+      background: #2e7d32; color: white; border: 1px solid #1b5e20;
+      padding: 4px 8px; border-radius: 4px; cursor: pointer;
+      font-size: 0.78rem; font-weight: bold; margin-left: auto;
     }
+    .char-add-btn:hover { background: #388e3c; }
 
-    .sheet-stats-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 8px; margin: 10px 0;
-    }
-
+    .sheet-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
     .sheet-stat-box {
-      background: #f7eedf; border: 1px solid #d4b689;
-      border-radius: 6px; padding: 6px; text-align: center;
+      background: #f7eedf; border: 1px solid #d4b689; border-radius: 6px;
+      padding: 6px; text-align: center;
     }
-
     .stat-name { font-size: 0.75rem; color: var(--ink-muted); font-weight: bold; }
     .stat-val-input {
-      font-size: 1.1rem; font-weight: bold;
-      color: var(--wood-dark); text-align: center;
-      width: 50px; border: none; background: transparent;
+      font-size: 1.1rem; font-weight: bold; color: var(--wood-dark);
+      text-align: center; width: 50px; border: none; background: transparent;
     }
     .stat-val-input:focus { background: #fff; border: 1px solid var(--brass); }
-
     .stat-mod-pill {
-      display: inline-block; padding: 1px 6px;
-      background: #deb887; border-radius: 4px;
-      font-size: 0.75rem; font-weight: bold;
+      display: inline-block; padding: 1px 6px; background: #deb887;
+      border-radius: 4px; font-size: 0.75rem; font-weight: bold;
     }
 
-    .sheet-row {
-      display: flex; justify-content: space-between;
-      gap: 8px; margin-bottom: 8px; align-items: center;
-    }
-    .sheet-row label { font-weight: bold; font-size: 0.85rem; color: var(--wood-dark); }
+    .sheet-row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; align-items: center; }
+    .sheet-row label { font-weight: bold; font-size: 0.82rem; color: var(--wood-dark); }
     .sheet-input {
-      padding: 4px 8px; border: 1px solid #c9a574;
-      border-radius: 4px; background: #fff; font-family: inherit;
+      padding: 4px 8px; border: 1px solid #c9a574; border-radius: 4px;
+      background: #fff; font-family: inherit; font-size: 0.85rem;
     }
 
-    .dice-grid-btns {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 8px; margin-bottom: 12px;
-    }
-
+    .dice-grid-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
     .vtt-dice-btn {
       background: linear-gradient(to bottom, #deb887, #ad7845);
-      border: 1px solid #fff; color: #2b1704;
-      padding: 8px; border-radius: 6px;
-      font-weight: bold; cursor: pointer; font-size: 0.85rem;
+      border: 1px solid #fff; color: #2b1704; padding: 7px;
+      border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.82rem;
     }
     .vtt-dice-btn:hover { background: linear-gradient(to bottom, #edd2a8, #c58c54); }
 
     .dice-window-display {
-      background: #eedbc2; border: 2px solid #c09d6e;
-      border-radius: 8px; padding: 12px;
-      text-align: center; min-height: 110px;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
+      background: #eedbc2; border: 2px solid #c09d6e; border-radius: 8px;
+      padding: 10px; text-align: center; min-height: 90px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      margin-bottom: 10px;
     }
-
-    .dice-tray-cubes { display: flex; gap: 12px; margin-bottom: 8px; }
-
+    .dice-tray-cubes { display: flex; gap: 10px; margin-bottom: 6px; }
     .window-die {
-      width: 50px; height: 50px;
-      background: white; border: 2px solid var(--wood-medium);
-      border-radius: 8px; display: flex;
-      justify-content: center; align-items: center;
-      font-size: 1.5rem; font-weight: bold;
-      color: var(--wood-dark); box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+      width: 44px; height: 44px; background: white; border: 2px solid var(--wood-medium);
+      border-radius: 6px; display: flex; justify-content: center; align-items: center;
+      font-size: 1.35rem; font-weight: bold; color: var(--wood-dark); box-shadow: 0 3px 6px rgba(0,0,0,0.25);
     }
-
     .window-die.rolling { animation: diceRollShake 0.1s infinite alternate; }
     .window-die.dramatic { animation: dramaticSuspense 0.35s ease forwards; }
 
@@ -419,51 +300,125 @@
       100% { transform: scale(1) rotate(0deg); }
     }
 
+    .dice-log-box {
+      background: #fbf3e4; border: 1px solid #d4b88b; border-radius: 4px;
+      padding: 6px 8px; max-height: 90px; overflow-y: auto; font-size: 0.75rem;
+      color: #4a2c11; text-align: left;
+    }
+    .dice-log-item { border-bottom: 1px dashed #e2cca8; padding: 2px 0; }
+
     .spawner-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
     .spawner-tab-btn {
-      flex: 1; padding: 5px; background: #ebd8c0;
-      border: 1px solid #c9a574; border-radius: 4px;
-      cursor: pointer; font-weight: bold; font-size: 0.8rem;
+      flex: 1; padding: 5px; background: #ebd8c0; border: 1px solid #c9a574;
+      border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;
     }
     .spawner-tab-btn.active { background: var(--wood-medium); color: white; }
 
     .drop-zone {
-      border: 2px dashed #b8860b; border-radius: 6px;
-      padding: 12px; text-align: center; background: #faf3e6;
-      cursor: pointer; margin-bottom: 10px;
+      border: 2px dashed #b8860b; border-radius: 6px; padding: 10px;
+      text-align: center; background: #faf3e6; cursor: pointer; margin-bottom: 8px;
       font-size: 0.8rem; color: var(--ink-muted);
     }
     .drop-zone.dragover { background: #ffecb3; border-color: #e65100; }
-
     .form-group { margin-bottom: 8px; }
     .form-group label {
-      display: block; font-weight: bold;
-      font-size: 0.78rem; margin-bottom: 2px; color: var(--wood-dark);
+      display: block; font-weight: bold; font-size: 0.78rem;
+      margin-bottom: 2px; color: var(--wood-dark);
     }
     .form-group input, .form-group textarea {
-      width: 100%; padding: 5px 8px;
-      border: 1px solid #caa372; border-radius: 4px;
-      font-family: inherit; font-size: 0.82rem;
+      width: 100%; padding: 5px 8px; border: 1px solid #caa372;
+      border-radius: 4px; font-family: inherit; font-size: 0.82rem;
+    }
+    .btn-create {
+      width: 100%; background: linear-gradient(to bottom, #8a582c, #5e3512);
+      color: white; border: 1px solid #3b200b; padding: 7px;
+      border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 4px;
     }
 
-    .btn-create {
-      width: 100%;
-      background: linear-gradient(to bottom, #8a582c, #5e3512);
-      color: white; border: 1px solid #3b200b;
-      padding: 8px; border-radius: 4px;
-      font-weight: bold; cursor: pointer; margin-top: 6px;
+    .compendium-category { margin-bottom: 14px; }
+    .compendium-category h4 {
+      border-bottom: 1px solid var(--parchment-border);
+      padding-bottom: 4px; margin-bottom: 6px; color: var(--wood-dark);
+    }
+    .compendium-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+    .compendium-card {
+      background: #f7eedf; border: 1px solid #caa372; border-radius: 6px;
+      padding: 8px; display: flex; gap: 8px; align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .compendium-img {
+      width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--brass); flex-shrink: 0;
+    }
+    .compendium-info { flex: 1; font-size: 0.75rem; line-height: 1.3; }
+    .compendium-spawn-btn {
+      background: var(--wood-medium); color: white; border: none;
+      padding: 3px 8px; border-radius: 3px; cursor: pointer;
+      font-weight: bold; font-size: 0.72rem;
+    }
+
+    /* Semi-transparent Resizable Chat Window */
+    #chat-window {
+      position: absolute; bottom: 20px; left: 20px;
+      width: 320px; height: 240px;
+      background: rgba(35, 21, 10, 0.78);
+      border: 2px solid var(--wood-light); border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 1100;
+      display: flex; flex-direction: column; resize: both;
+      overflow: hidden; backdrop-filter: blur(4px);
+    }
+    .chat-header {
+      background: rgba(90, 52, 23, 0.9); color: #ffe8cc;
+      padding: 4px 10px; font-size: 0.8rem; font-weight: bold;
+      cursor: move; display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #7c4c23;
+    }
+    .chat-messages {
+      flex: 1; padding: 8px; overflow-y: auto; font-size: 0.8rem;
+      color: #f7ead9; display: flex; flex-direction: column; gap: 4px;
+    }
+    .chat-msg { background: rgba(255,255,255,0.08); padding: 3px 6px; border-radius: 4px; word-break: break-all; }
+    .chat-msg.dice { border-left: 3px solid var(--brass); color: #ffdca8; }
+    .chat-input-bar {
+      display: flex; border-top: 1px solid #7c4c23; padding: 4px;
+      background: rgba(20, 12, 5, 0.9);
+    }
+    .chat-input-bar input {
+      flex: 1; background: rgba(255,255,255,0.15); border: 1px solid #8b5a2b;
+      color: #fff; padding: 4px 8px; font-size: 0.8rem; border-radius: 3px; outline: none;
+    }
+    .chat-input-bar button {
+      background: var(--wood-medium); color: white; border: none;
+      padding: 4px 10px; font-size: 0.78rem; border-radius: 3px; margin-left: 4px; cursor: pointer;
+    }
+
+    /* Small BGM Player Dock */
+    #bgm-dock {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(40, 24, 12, 0.9); border: 2px solid var(--wood-light);
+      border-radius: 8px; padding: 6px 14px; color: #ffe6ba; font-size: 0.8rem;
+      display: flex; align-items: center; gap: 10px; z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6); backdrop-filter: blur(3px);
+    }
+    .bgm-btn {
+      background: #7c4c23; color: white; border: 1px solid #deb887;
+      padding: 3px 8px; border-radius: 4px; cursor: pointer;
+      font-size: 0.78rem; font-weight: bold;
+    }
+    .bgm-btn:hover { background: #965d2d; }
+    .bgm-select {
+      background: #fdf8ee; border: 1px solid #deb887;
+      padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; color: #2b1d0c;
     }
 
     .bubble-modal {
-      display: none; position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.6); z-index: 2000;
       justify-content: center; align-items: center;
     }
     .bubble-modal.active { display: flex; }
     .bubble-card {
-      background: var(--parchment);
-      border: 3px solid var(--wood-medium);
+      background: var(--parchment); border: 3px solid var(--wood-medium);
       border-radius: 8px; padding: 18px; width: 300px;
     }
   </style>
@@ -477,6 +432,7 @@
         <button class="menu-btn active-toggle" id="btn-toggle-sheet" onclick="toggleWindow('sheet-window')">📜 캐릭터 시트</button>
         <button class="menu-btn active-toggle" id="btn-toggle-dice" onclick="toggleWindow('dice-window')">🎲 주사위 굴림</button>
         <button class="menu-btn" id="btn-toggle-spawner" onclick="toggleWindow('spawner-window')">➕ 토큰 생성기</button>
+        <button class="menu-btn" id="btn-toggle-compendium" onclick="toggleWindow('compendium-window')" style="display:none;">📖 토큰 도감 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 맵 배경 설정</button>
       </div>
     </div>
@@ -495,15 +451,15 @@
       <div id="map-background-layer">
         <img id="map-image" src="https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=1600&q=80" alt="전술 맵">
       </div>
+      <div id="grid-overlay" class="on-top"></div>
       <div id="tokens-layer"></div>
     </div>
 
     <div class="vtt-hud">
-      <span>줌 레벨: <strong id="hud-zoom">100%</strong> (범위: 5x5 ~ 100x100)</span>
+      <span>줌: <strong id="hud-zoom">100%</strong></span>
       <button onclick="zoomStep(0.15)">➕ 확대</button>
       <button onclick="zoomStep(-0.15)">➖ 축소</button>
       <button onclick="resetZoomPan()">🎯 중앙 초기화</button>
-      <span style="color:#deb887; font-size:0.75rem;">※ 마우스 휠: 줌 | 우클릭/빈공간 드래그: 맵 이동</span>
     </div>
   </div>
 
@@ -512,15 +468,12 @@
     <div class="window-header" onmousedown="startDragWindow(event, 'sheet-window')">
       <div class="window-title">📜 캐릭터 시트</div>
       <div class="window-actions">
-        <button class="win-btn" onclick="minimizeWindow('sheet-window')">_</button>
-        <button class="win-btn" onclick="toggleWindow('sheet-window')">×</button>
+        <button class="win-btn" onclick="minimizeWindow('sheet-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('sheet-window')" title="닫기">×</button>
       </div>
     </div>
     <div class="window-content">
-      <div class="char-tab-bar">
-        <button class="char-tab-btn active" onclick="selectSheetChar(0)">김점순 (드루이드)</button>
-        <button class="char-tab-btn" onclick="selectSheetChar(1)">녹티엘 (전사)</button>
-      </div>
+      <div class="char-tab-bar" id="char-tab-list"></div>
       <div id="sheet-details-content"></div>
     </div>
   </div>
@@ -530,13 +483,13 @@
     <div class="window-header" onmousedown="startDragWindow(event, 'dice-window')">
       <div class="window-title">🎲 주사위 롤러</div>
       <div class="window-actions">
-        <button class="win-btn" onclick="minimizeWindow('dice-window')">_</button>
-        <button class="win-btn" onclick="toggleWindow('dice-window')">×</button>
+        <button class="win-btn" onclick="minimizeWindow('dice-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('dice-window')" title="닫기">×</button>
       </div>
     </div>
     <div class="window-content">
       <div class="dice-grid-btns">
-        <button class="vtt-dice-btn" style="grid-column: span 3; background:linear-gradient(to bottom, #ffd58a, #cf9236);" onclick="rollDiceSequence([6, 6], '기본 판정 (2d6)')">🎲 2d6 (던전월드 판정)</button>
+        <button class="vtt-dice-btn" style="grid-column: span 3; background:linear-gradient(to bottom, #ffd58a, #cf9236);" onclick="rollDiceSequence([6, 6], '2d6')">🎲 2d6 (기본 판정)</button>
         <button class="vtt-dice-btn" onclick="rollDiceSequence([4], 'd4')">d4</button>
         <button class="vtt-dice-btn" onclick="rollDiceSequence([6], 'd6')">d6</button>
         <button class="vtt-dice-btn" onclick="rollDiceSequence([8], 'd8')">d8</button>
@@ -544,16 +497,23 @@
         <button class="vtt-dice-btn" onclick="rollDiceSequence([12], 'd12')">d12</button>
         <button class="vtt-dice-btn" onclick="rollDiceSequence([100], 'd100')">d100</button>
       </div>
-      <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
         <span style="font-size:0.8rem; font-weight:bold;">커스텀:</span>
         <input type="number" id="dice-custom-count" value="1" min="1" max="10" style="width:40px; padding:3px; text-align:center;">
         <span>d</span>
         <input type="number" id="dice-custom-sides" value="20" min="2" max="1000" style="width:50px; padding:3px; text-align:center;">
         <button class="vtt-dice-btn" style="padding:4px 8px;" onclick="rollCustomDice()">굴리기</button>
       </div>
+
       <div class="dice-window-display">
         <div class="dice-tray-cubes" id="window-dice-tray"><div class="window-die">🎲</div></div>
         <div id="window-dice-result" style="font-weight:bold; font-size:1rem; color:var(--wood-dark);">주사위를 굴려보세요!</div>
+      </div>
+
+      <div style="font-size:0.78rem; font-weight:bold; margin-bottom:4px; color:var(--wood-dark);">📜 주사위 굴림 로그:</div>
+      <div class="dice-log-box" id="dice-history-log">
+        <div style="color:var(--ink-muted);">아직 굴린 주사위가 없습니다.</div>
       </div>
     </div>
   </div>
@@ -563,8 +523,8 @@
     <div class="window-header" onmousedown="startDragWindow(event, 'spawner-window')">
       <div class="window-title">➕ 토큰 생성기</div>
       <div class="window-actions">
-        <button class="win-btn" onclick="minimizeWindow('spawner-window')">_</button>
-        <button class="win-btn" onclick="toggleWindow('spawner-window')">×</button>
+        <button class="win-btn" onclick="minimizeWindow('spawner-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('spawner-window')" title="닫기">×</button>
       </div>
     </div>
     <div class="window-content">
@@ -579,7 +539,7 @@
         <input type="file" id="token-file-input" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
       </div>
       <div id="token-image-preview-wrap" style="text-align:center; margin-bottom:8px; display:none;">
-        <img id="token-image-preview" src="" style="width:50px; height:50px; border-radius:50%; border:2px solid var(--brass); object-fit:cover;">
+        <img id="token-image-preview" src="" style="width:48px; height:48px; border-radius:50%; border:2px solid var(--brass); object-fit:cover;">
       </div>
 
       <div id="spawner-form-monster">
@@ -613,17 +573,32 @@
         </div>
       </div>
 
-      <button class="btn-create" onclick="spawnNewToken()">전장에 토큰 배치하기</button>
+      <div style="display:flex; gap:6px;">
+        <button class="btn-create" onclick="spawnNewToken(true)" style="background:var(--green);">전장 배치 + 도감 저장</button>
+        <button class="btn-create" onclick="spawnNewToken(false)">전장 배치만</button>
+      </div>
     </div>
   </div>
 
-  <!-- FLOATING WINDOW 4: Map Background -->
+  <!-- FLOATING WINDOW 4: Token Compendium -->
+  <div class="floating-window" id="compendium-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'compendium-window')">
+      <div class="window-title">📖 토큰 도감 (원클릭 소환)</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('compendium-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('compendium-window')" title="닫기">×</button>
+      </div>
+    </div>
+    <div class="window-content" id="compendium-content"></div>
+  </div>
+
+  <!-- FLOATING WINDOW 5: Map Settings -->
   <div class="floating-window" id="map-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'map-window')">
-      <div class="window-title">🗺️ 전장 배경 맵 설정</div>
+      <div class="window-title">🗺️ 전장 배경 맵 & 격자 설정</div>
       <div class="window-actions">
-        <button class="win-btn" onclick="minimizeWindow('map-window')">_</button>
-        <button class="win-btn" onclick="toggleWindow('map-window')">×</button>
+        <button class="win-btn" onclick="minimizeWindow('map-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('map-window')" title="닫기">×</button>
       </div>
     </div>
     <div class="window-content">
@@ -635,8 +610,46 @@
         <label>또는 이미지 URL 입력</label>
         <input type="text" id="map-url-input" placeholder="https://example.com/map.jpg">
       </div>
-      <button class="btn-create" onclick="applyMapUrl()">지도 배경 적용하기</button>
+      <button class="btn-create" onclick="applyMapUrl()">지도 배경 적용</button>
+
+      <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--parchment-border);">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold;">
+          <input type="checkbox" id="chk-grid-ontop" checked onchange="toggleGridOnTop(this.checked)">
+          <span>격자 무늬를 지도 위에 띄우기 (Grid Overlay)</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:6px;">
+          <input type="checkbox" id="chk-grid-visible" checked onchange="toggleGridVisible(this.checked)">
+          <span>격자선 표시 (끄면 그리드 숨김)</span>
+        </label>
+      </div>
     </div>
+  </div>
+
+  <!-- Semi-Transparent Resizable Chat Window -->
+  <div id="chat-window">
+    <div class="chat-header" onmousedown="startDragWindow(event, 'chat-window')">
+      <span>💬 세션 대화 및 판정 로그</span>
+      <button class="win-btn" onclick="document.getElementById('chat-window').style.display='none'">×</button>
+    </div>
+    <div class="chat-messages" id="chat-messages-container">
+      <div class="chat-msg">⚔️ 던전월드 모험 세션이 시작되었습니다!</div>
+    </div>
+    <div class="chat-input-bar">
+      <input type="text" id="chat-text-input" placeholder="대화를 입력하세요..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+      <button onclick="sendChatMessage()">전송</button>
+    </div>
+  </div>
+
+  <!-- BGM Management Dock at Bottom -->
+  <div id="bgm-dock">
+    <span>🎵 BGM:</span>
+    <select id="bgm-select" class="bgm-select" onchange="changeBgmTrack(this.value)">
+      <option value="synth_tavern">🍺 활기찬 모험가 주점 (자체생성 테마)</option>
+      <option value="custom_url">🔗 외부 음악 URL 입력</option>
+    </select>
+    <button class="bgm-btn" id="bgm-play-btn" onclick="toggleBgmPlayback()">▶ 재생</button>
+    <button class="bgm-btn" onclick="openBgmUploadPrompt()">📁 음악 업로드/추가</button>
+    <input type="file" id="bgm-file-input" accept="audio/*" style="display:none;" onchange="handleBgmFileSelect(event)">
   </div>
 
   <!-- Bubble Edit Modal -->
@@ -700,6 +713,21 @@
       }
     ];
 
+    let tokenCompendium = {
+      player: [
+        { name: '김점순', hp: 14, damage: 'd6', armor: 1, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=jeomsoon', info: '엘프 드루이드' },
+        { name: '녹티엘', hp: 25, damage: 'd10', armor: 1, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=noctiel', info: '엘프 전사' }
+      ],
+      npc: [
+        { name: '김팽덕', hp: 12, damage: 'd4', armor: 0, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok', info: '동막골 경계 감시자' },
+        { name: '최나리', hp: 10, damage: 'd4', armor: 0, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=nari', info: '약초꾼 견습생' }
+      ],
+      monster: [
+        { name: '고블린 정찰병', hp: 6, damage: 'd6', armor: 1, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', info: '서식지: 동굴 / 전리품: 조잡한 단검' },
+        { name: '흑마법사 발토', hp: 16, damage: 'd8+2', armor: 0, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=wizard', info: '특징: 암흑 마법 연쇄 영창' }
+      ]
+    };
+
     let tokens = [
       { id: 'char_1', name: '김점순', type: 'player', x: 750, y: 750, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage },
       { id: 'char_2', name: '녹티엘', type: 'player', x: 830, y: 750, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage },
@@ -711,6 +739,179 @@
     let selectedCharIndex = 0;
     let uploadedTokenDataUrl = null;
 
+    // Web Audio Synthesizer
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playDiceSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        for (let i = 0; i < 7; i++) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const clackTime = now + (i * 0.09) + (Math.random() * 0.04);
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(320 + Math.random() * 450, clackTime);
+          osc.frequency.exponentialRampToValueAtTime(100, clackTime + 0.05);
+
+          gain.gain.setValueAtTime(0.35, clackTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, clackTime + 0.05);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(clackTime);
+          osc.stop(clackTime + 0.06);
+        }
+
+        const finalTime = now + 0.72;
+        const subOsc = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(180, finalTime);
+        subOsc.frequency.exponentialRampToValueAtTime(45, finalTime + 0.12);
+
+        subGain.gain.setValueAtTime(0.5, finalTime);
+        subGain.gain.exponentialRampToValueAtTime(0.01, finalTime + 0.12);
+
+        subOsc.connect(subGain);
+        subGain.connect(ctx.destination);
+        subOsc.start(finalTime);
+        subOsc.stop(finalTime + 0.14);
+      } catch (err) {
+        console.warn('Audio not available:', err);
+      }
+    }
+
+    let bgmIsPlaying = false;
+    let bgmTimer = null;
+    let customAudioElement = null;
+
+    const TAVERN_MELODY = [
+      { note: 293.66, dur: 0.25 },
+      { note: 329.63, dur: 0.25 },
+      { note: 369.99, dur: 0.25 },
+      { note: 440.00, dur: 0.50 },
+      { note: 369.99, dur: 0.25 },
+      { note: 440.00, dur: 0.25 },
+      { note: 493.88, dur: 0.50 },
+      { note: 440.00, dur: 0.25 },
+      { note: 369.99, dur: 0.25 },
+      { note: 293.66, dur: 0.50 },
+      { note: 329.63, dur: 0.25 },
+      { note: 369.99, dur: 0.25 },
+      { note: 329.63, dur: 0.50 }
+    ];
+
+    let noteIdx = 0;
+
+    function playSynthTavernStep() {
+      if (!bgmIsPlaying) return;
+      const ctx = getAudioContext();
+      const item = TAVERN_MELODY[noteIdx % TAVERN_MELODY.length];
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(item.note, ctx.currentTime);
+
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + item.dur * 1.2);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + item.dur * 1.3);
+
+      noteIdx++;
+      bgmTimer = setTimeout(playSynthTavernStep, item.dur * 1000);
+    }
+
+    function toggleBgmPlayback() {
+      const btn = document.getElementById('bgm-play-btn');
+      const select = document.getElementById('bgm-select').value;
+
+      if (bgmIsPlaying) {
+        bgmIsPlaying = false;
+        if (bgmTimer) clearTimeout(bgmTimer);
+        if (customAudioElement) customAudioElement.pause();
+        btn.innerText = '▶ 재생';
+      } else {
+        bgmIsPlaying = true;
+        btn.innerText = '⏸ 일시정지';
+        if (select === 'synth_tavern') {
+          getAudioContext();
+          noteIdx = 0;
+          playSynthTavernStep();
+        } else if (customAudioElement) {
+          customAudioElement.play();
+        }
+      }
+    }
+
+    function changeBgmTrack(val) {
+      if (val === 'custom_url') {
+        const url = prompt('음악 파일 URL (mp3/ogg 등)을 입력하세요:');
+        if (url) {
+          if (customAudioElement) customAudioElement.pause();
+          customAudioElement = new Audio(url);
+          customAudioElement.loop = true;
+          if (bgmIsPlaying) customAudioElement.play();
+        }
+      } else {
+        if (customAudioElement) customAudioElement.pause();
+        if (bgmIsPlaying) {
+          noteIdx = 0;
+          playSynthTavernStep();
+        }
+      }
+    }
+
+    function openBgmUploadPrompt() {
+      document.getElementById('bgm-file-input').click();
+    }
+
+    function handleBgmFileSelect(e) {
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        const url = URL.createObjectURL(file);
+        if (customAudioElement) customAudioElement.pause();
+        customAudioElement = new Audio(url);
+        customAudioElement.loop = true;
+
+        const sel = document.getElementById('bgm-select');
+        const opt = document.createElement('option');
+        opt.value = 'uploaded_' + Date.now();
+        opt.innerText = `📁 ${file.name}`;
+        sel.appendChild(opt);
+        sel.value = opt.value;
+
+        if (bgmIsPlaying) customAudioElement.play();
+        alert(`음악 [${file.name}]이 BGM 목록에 추가되었습니다!`);
+      }
+    }
+
+    function toggleGridOnTop(isOnTop) {
+      document.getElementById('grid-overlay').classList.toggle('on-top', isOnTop);
+    }
+
+    function toggleGridVisible(isVisible) {
+      document.getElementById('grid-overlay').classList.toggle('hidden', !isVisible);
+    }
+
+    // Viewport Pan/Zoom
     let zoomLevel = 1.0;
     let panX = -450;
     let panY = -450;
@@ -758,7 +959,7 @@
     }, { passive: false });
 
     viewport.addEventListener('mousedown', (e) => {
-      if (e.button === 2 || e.target.id === 'vtt-world' || e.target.id === 'vtt-viewport' || e.target.id === 'map-background-layer' || e.target.id === 'map-image') {
+      if (e.button === 2 || e.target.id === 'vtt-world' || e.target.id === 'vtt-viewport' || e.target.id === 'grid-overlay' || e.target.id === 'map-background-layer' || e.target.id === 'map-image') {
         isPanning = true;
         panStartX = e.clientX - panX;
         panStartY = e.clientY - panY;
@@ -789,6 +990,7 @@
         'sheet-window': 'btn-toggle-sheet',
         'dice-window': 'btn-toggle-dice',
         'spawner-window': 'btn-toggle-spawner',
+        'compendium-window': 'btn-toggle-compendium',
         'map-window': 'btn-toggle-map'
       };
       if (btnMap[winId]) {
@@ -825,20 +1027,87 @@
       document.body.className = role === 'gm' ? 'gm-mode' : 'player-mode';
       document.getElementById('role-btn-player').classList.toggle('active', role === 'player');
       document.getElementById('role-btn-gm').classList.toggle('active', role === 'gm');
+      document.getElementById('btn-toggle-compendium').style.display = role === 'gm' ? 'flex' : 'none';
+
+      renderSheetTabs();
       renderSheet();
+      renderCompendium();
       renderTokens();
+    }
+
+    function renderSheetTabs() {
+      const bar = document.getElementById('char-tab-list');
+      bar.innerHTML = '';
+
+      characters.forEach((c, i) => {
+        const btn = document.createElement('button');
+        btn.className = `char-tab-btn ${i === selectedCharIndex ? 'active' : ''}`;
+        btn.innerText = `${c.name} (${c.class})`;
+        btn.onclick = () => selectSheetChar(i);
+        bar.appendChild(btn);
+      });
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'char-add-btn';
+      addBtn.innerText = '➕ 새 플레이어 생성';
+      addBtn.onclick = createNewCharacter;
+      bar.appendChild(addBtn);
+    }
+
+    function createNewCharacter() {
+      const name = prompt('새 플레이어 캐릭터의 이름을 입력하세요:', '신규 모험가');
+      if (!name) return;
+      const job = prompt('직업을 입력하세요 (예: 성전사, 음유시인, 도적):', '모험가') || '모험가';
+
+      const newChar = {
+        id: 'char_' + Date.now(),
+        name: name,
+        class: job,
+        level: 1,
+        hp: 20,
+        maxHp: 20,
+        load: 3,
+        maxLoad: 9,
+        armor: 1,
+        damage: 'd8',
+        tokenImage: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`,
+        stats: {
+          str: { score: 10, mod: 0, name: '근력 (STR)' },
+          dex: { score: 10, mod: 0, name: '민첩 (DEX)' },
+          con: { score: 10, mod: 0, name: '체력 (CON)' },
+          int: { score: 10, mod: 0, name: '지능 (INT)' },
+          wis: { score: 10, mod: 0, name: '지혜 (WIS)' },
+          cha: { score: 10, mod: 0, name: '매력 (CHA)' }
+        }
+      };
+
+      characters.push(newChar);
+      selectedCharIndex = characters.length - 1;
+
+      tokenCompendium.player.push({
+        name: newChar.name,
+        hp: newChar.hp,
+        damage: newChar.damage,
+        armor: newChar.armor,
+        image: newChar.tokenImage,
+        info: `${newChar.class} Lv.${newChar.level}`
+      });
+
+      renderSheetTabs();
+      renderSheet();
+      renderCompendium();
+      appendChatMessage(`🛡️ 새 캐릭터 [${name} (${job})] 시트가 등록되었습니다.`);
     }
 
     function selectSheetChar(idx) {
       selectedCharIndex = idx;
-      document.querySelectorAll('.char-tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', i === idx);
-      });
+      renderSheetTabs();
       renderSheet();
     }
 
     function renderSheet() {
       const c = characters[selectedCharIndex];
+      if (!c) return;
       const isGm = currentRole === 'gm';
       const container = document.getElementById('sheet-details-content');
 
@@ -858,10 +1127,10 @@
 
       container.innerHTML = `
         <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
-          <img src="${c.tokenImage}" style="width:60px; height:60px; border-radius:50%; border:2px solid var(--brass); object-fit:cover;">
+          <img src="${c.tokenImage}" style="width:58px; height:58px; border-radius:50%; border:2px solid var(--brass); object-fit:cover;">
           <div style="flex:1;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <strong style="font-size:1.1rem; color:var(--wood-dark);">${c.name} (${c.class})</strong>
+              <strong style="font-size:1.05rem; color:var(--wood-dark);">${c.name} (${c.class})</strong>
               <span>Lv.${c.level}</span>
             </div>
             <div style="font-size:0.8rem; color:var(--ink-muted); margin-top:2px;">
@@ -894,11 +1163,11 @@
         </div>
 
         ${isGm ? `
-          <div style="margin-top:12px; font-size:0.75rem; color:var(--red); font-weight:bold;">
-            * GM 모드 활성화됨: 모든 수치를 바로 수정할 수 있습니다.
+          <div style="margin-top:10px; font-size:0.75rem; color:var(--red); font-weight:bold;">
+            * GM 모드: 스탯 수치를 직접 수정하면 보정치가 자동 재계산됩니다.
           </div>
         ` : `
-          <div style="margin-top:12px; font-size:0.75rem; color:var(--ink-muted);">
+          <div style="margin-top:10px; font-size:0.75rem; color:var(--ink-muted);">
             * 플레이어 뷰: 스탯 열람 모드입니다.
           </div>
         `}
@@ -930,6 +1199,69 @@
       const t = tokens.find(tok => tok.id === characters[charIdx].id);
       if (t) t.hp = num;
       renderTokens();
+    }
+
+    function renderCompendium() {
+      const wrap = document.getElementById('compendium-content');
+      wrap.innerHTML = '';
+
+      const categories = [
+        { key: 'monster', title: '👹 몬스터 도감' },
+        { key: 'npc', title: '👤 NPC 도감' },
+        { key: 'player', title: '🛡️ 플레이어 캐릭터 도감' }
+      ];
+
+      categories.forEach(cat => {
+        const sec = document.createElement('div');
+        sec.className = 'compendium-category';
+        sec.innerHTML = `<h4>${cat.title}</h4>`;
+
+        const grid = document.createElement('div');
+        grid.className = 'compendium-grid';
+
+        tokenCompendium[cat.key].forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'compendium-card';
+          card.innerHTML = `
+            <img src="${item.image}" class="compendium-img">
+            <div class="compendium-info">
+              <strong>${item.name}</strong><br>
+              HP: ${item.hp} | 피해: ${item.damage} | 장갑: ${item.armor}<br>
+              <span style="color:var(--ink-muted);">${item.info || ''}</span>
+            </div>
+            <button class="compendium-spawn-btn" onclick="spawnFromCompendium('${cat.key}', '${item.name}')">소환</button>
+          `;
+          grid.appendChild(card);
+        });
+
+        sec.appendChild(grid);
+        wrap.appendChild(sec);
+      });
+    }
+
+    function spawnFromCompendium(category, name) {
+      const item = tokenCompendium[category].find(x => x.name === name);
+      if (!item) return;
+
+      const viewRect = viewport.getBoundingClientRect();
+      const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - 30;
+      const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - 30;
+
+      tokens.push({
+        id: `${category}_${Date.now()}`,
+        name: item.name,
+        type: category,
+        x: spawnX + (Math.random() * 40 - 20),
+        y: spawnY + (Math.random() * 40 - 20),
+        hp: item.hp,
+        maxHp: item.hp,
+        armor: item.armor,
+        damage: item.damage,
+        image: item.image
+      });
+
+      renderTokens();
+      appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 전장에 소환되었습니다.`);
     }
 
     function renderTokens() {
@@ -1020,8 +1352,10 @@
         alert('토큰 삭제는 게임 마스터만 가능합니다.');
         return;
       }
+      const tok = tokens.find(t => t.id === tokenId);
       tokens = tokens.filter(t => t.id !== tokenId);
       renderTokens();
+      if (tok) appendChatMessage(`🗑️ [${tok.name}] 토큰이 전장에서 제거되었습니다.`);
     }
 
     let activeBubbleTokenId = null;
@@ -1134,8 +1468,8 @@
       reader.readAsDataURL(file);
     }
 
-    function spawnNewToken() {
-      let name, hp, dmg, armor, type = currentSpawnerTab;
+    function spawnNewToken(saveToCompendium = false) {
+      let name, hp, dmg, armor, info = '', type = currentSpawnerTab;
       let defaultImg = `https://api.dicebear.com/7.x/bottts/svg?seed=${Date.now()}`;
 
       if (type === 'monster') {
@@ -1143,11 +1477,15 @@
         hp = parseInt(document.getElementById('spawn-m-hp').value, 10) || 10;
         dmg = document.getElementById('spawn-m-dmg').value.trim() || 'd6';
         armor = parseInt(document.getElementById('spawn-m-armor').value, 10) || 0;
+        const habitat = document.getElementById('spawn-m-habitat').value.trim();
+        const feat = document.getElementById('spawn-m-features').value.trim();
+        info = `${habitat ? '서식지: ' + habitat : ''} ${feat ? '/ ' + feat : ''}`;
       } else if (type === 'npc') {
         name = document.getElementById('spawn-npc-name').value.trim() || '이름 모를 NPC';
         hp = parseInt(document.getElementById('spawn-npc-hp').value, 10) || 10;
         dmg = document.getElementById('spawn-npc-dmg').value.trim() || 'd4';
         armor = parseInt(document.getElementById('spawn-npc-armor').value, 10) || 0;
+        info = document.getElementById('spawn-npc-bg').value.trim();
       } else {
         name = document.getElementById('spawn-p-name').value.trim() || '새로운 동료';
         hp = parseInt(document.getElementById('spawn-p-hp').value, 10) || 20;
@@ -1161,9 +1499,8 @@
       const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - 30;
       const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - 30;
 
-      const newId = `${type}_${Date.now()}`;
       tokens.push({
-        id: newId,
+        id: `${type}_${Date.now()}`,
         name: name,
         type: type,
         x: spawnX + (Math.random() * 40 - 20),
@@ -1175,10 +1512,22 @@
         image: img
       });
 
+      if (saveToCompendium) {
+        tokenCompendium[type].push({
+          name: name,
+          hp: hp,
+          damage: dmg,
+          armor: armor,
+          image: img,
+          info: info
+        });
+        renderCompendium();
+      }
+
       renderTokens();
       uploadedTokenDataUrl = null;
       document.getElementById('token-image-preview-wrap').style.display = 'none';
-      alert(`[${name}] 토큰이 전장에 소환되었습니다!`);
+      appendChatMessage(`⚔️ [${name}] 토큰이 전장에 배치되었습니다.`);
     }
 
     const mapDropZone = document.getElementById('map-drop-zone');
@@ -1192,7 +1541,7 @@
         const reader = new FileReader();
         reader.onload = ev => {
           document.getElementById('map-image').src = ev.target.result;
-          alert('새로운 지도 이미지가 배경에 적용되었습니다!');
+          appendChatMessage('🗺️ 새로운 지도 이미지가 배경으로 설정되었습니다.');
         };
         reader.readAsDataURL(file);
       }
@@ -1204,7 +1553,7 @@
         const reader = new FileReader();
         reader.onload = ev => {
           document.getElementById('map-image').src = ev.target.result;
-          alert('새로운 지도 이미지가 배경에 적용되었습니다!');
+          appendChatMessage('🗺️ 새로운 지도 이미지가 배경으로 설정되었습니다.');
         };
         reader.readAsDataURL(file);
       }
@@ -1214,13 +1563,15 @@
       const url = document.getElementById('map-url-input').value.trim();
       if (url) {
         document.getElementById('map-image').src = url;
-        alert('입력하신 이미지 주소가 지도 배경으로 적용되었습니다!');
+        appendChatMessage('🗺️ 입력된 URL로 지도 배경이 변경되었습니다.');
       }
     }
 
     let diceInterval = null;
 
     function rollDiceSequence(diceArray, label) {
+      playDiceSound();
+
       const tray = document.getElementById('window-dice-tray');
       const resultEl = document.getElementById('window-dice-result');
       tray.innerHTML = '';
@@ -1236,7 +1587,7 @@
 
       let elapsed = 0;
       const intervalMs = 70;
-      const totalDuration = 800;
+      const totalDuration = 750;
       const isDramatic = Math.random() < 0.35;
 
       if (diceInterval) clearInterval(diceInterval);
@@ -1255,7 +1606,7 @@
               d.el.classList.remove('rolling');
               d.el.classList.add('dramatic');
             });
-            setTimeout(() => { finalizeWindowRoll(diceElements, label); }, 250);
+            setTimeout(() => { finalizeWindowRoll(diceElements, label); }, 220);
           } else {
             finalizeWindowRoll(diceElements, label);
           }
@@ -1274,14 +1625,23 @@
       const total = results.reduce((a, b) => a + b, 0);
       const resultEl = document.getElementById('window-dice-result');
 
-      let verdict = '';
-      if (diceElements.length === 2 && diceElements[0].sides === 6 && diceElements[1].sides === 6) {
-        if (total >= 10) verdict = '<span style="color:#2e7d32;">대성공 (10+) 🎉</span>';
-        else if (total >= 7) verdict = '<span style="color:#f57f17;">부분 성공 / 대가 발생 (7~9) ⚠️</span>';
-        else verdict = '<span style="color:#c62828;">실패 / GM 액션 발동 (6 이하) 💀</span>';
-      }
+      resultEl.innerHTML = `[${results.join(', ')}] = <strong>총합 ${total}</strong>`;
 
-      resultEl.innerHTML = `[${results.join(', ')}] = <strong>총합 ${total}</strong> ${verdict ? '<br>' + verdict : ''}`;
+      addDiceLog(label, results, total);
+      appendChatMessage(`🎲 <strong>[${label}]</strong> 굴림 결과: [${results.join(', ')}] = <strong>${total}</strong>`, 'dice');
+    }
+
+    function addDiceLog(label, results, total) {
+      const logBox = document.getElementById('dice-history-log');
+      const timeStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const item = document.createElement('div');
+      item.className = 'dice-log-item';
+      item.innerHTML = `<span style="color:#8b5a2b;">${timeStr}</span> <strong>${label}</strong>: [${results.join(', ')}] = <strong>${total}</strong>`;
+
+      if (logBox.innerText.includes('아직 굴린 주사위가 없습니다')) {
+        logBox.innerHTML = '';
+      }
+      logBox.prepend(item);
     }
 
     function rollCustomDice() {
@@ -1291,9 +1651,30 @@
       rollDiceSequence(diceArr, `${count}d${sides}`);
     }
 
+    function sendChatMessage() {
+      const input = document.getElementById('chat-text-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const sender = currentRole === 'gm' ? '👑 GM' : '🛡️ 플레이어';
+      appendChatMessage(`<strong>${sender}:</strong> ${text}`);
+      input.value = '';
+    }
+
+    function appendChatMessage(html, type = '') {
+      const box = document.getElementById('chat-messages-container');
+      const msg = document.createElement('div');
+      msg.className = `chat-msg ${type}`;
+      msg.innerHTML = html;
+      box.appendChild(msg);
+      box.scrollTop = box.scrollHeight;
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       updateWorldTransform();
+      renderSheetTabs();
       renderSheet();
+      renderCompendium();
       renderTokens();
     });
   </script>
