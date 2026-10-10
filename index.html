@@ -166,6 +166,10 @@
       cursor: grab; user-select: none; z-index: 50;
       transition: opacity 0.2s ease;
     }
+    .vtt-token.selected-token .token-circle {
+      outline: 3px solid #00e5ff;
+      box-shadow: 0 0 12px #00e5ff;
+    }
     .vtt-token.locked { cursor: not-allowed !important; filter: brightness(0.85); }
     .vtt-token:active:not(.locked) { cursor: grabbing; z-index: 900 !important; }
     .vtt-token.hidden-by-fog { display: none !important; }
@@ -546,7 +550,7 @@
     }
     .welcome-card {
       background: var(--parchment); border: 3px solid var(--wood-medium);
-      border-radius: 8px; padding: 22px; width: 400px;
+      border-radius: 8px; padding: 22px; width: 420px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.7);
     }
 
@@ -607,7 +611,6 @@
       display: flex; flex-direction: column; gap: 3px;
     }
 
-    /* GM Condition Applier Tool Styles */
     .gm-condition-applier {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px;
     }
@@ -632,7 +635,7 @@
         🎲 모험가 길드 입장 등록
       </h3>
       <p style="font-size:0.8rem; color:var(--ink-muted); margin-bottom:12px;">
-        세션 참여를 위한 실명과 닉네임을 설정하고, 캐릭터를 배정받거나 관전자로 입장하세요.
+        세션 참여를 위한 실명과 닉네임을 설정하고, 역할(GM, 플레이어 캐릭터, 관전자)을 선택하세요.
       </p>
 
       <div class="form-group">
@@ -718,7 +721,7 @@
       <button onclick="zoomStep(-0.15)">➖ 축소</button>
       <button onclick="resetZoomPan()">🎯 중앙 초기화</button>
       <button id="btn-player-guide-toggle" onclick="togglePlayerReachGuide()" style="background:#2e7d32; margin-left:4px;">📏 사거리 가이드 켜기</button>
-      <span style="font-size:0.72rem; color:#deb887; margin-left:6px;">※ 휠 클릭+드래그: 맵 이동 | Shift+클릭: 핑</span>
+      <span style="font-size:0.72rem; color:#deb887; margin-left:6px;">※ 휠 클릭+드래그: 맵 이동 | Shift+클릭: 핑 | 토큰 클릭: 선택</span>
     </div>
   </div>
 
@@ -895,11 +898,11 @@
         <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">🌫️ 전장의 안개 (Fog of War)</strong>
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:0.8rem;">
           <input type="checkbox" id="chk-fog-enabled" onchange="toggleFogOfWar(this.checked)">
-          <span>전장의 안개 활성화 (플레이어 시야 및 토큰 은폐)</span>
+          <span>전장의 안개 활성화 (실시간 시야 외 음영 처리 & 토큰 은폐)</span>
         </label>
         
         <div id="fog-brush-controls" style="margin-top:6px; display:none;">
-          <label style="font-size:0.75rem; font-weight:bold; color:var(--wood-dark);">안개 브러시 도구:</label>
+          <label style="font-size:0.75rem; font-weight:bold; color:var(--wood-dark);">마스터 안개 브러시 도구:</label>
           <div style="display:flex; gap:4px; margin-top:3px;">
             <button class="menu-btn" id="btn-fog-brush-off" style="flex:1;" onclick="setFogBrushMode('none')">🖐️ 이동 모드</button>
             <button class="menu-btn" id="btn-fog-brush-erase" style="flex:1;" onclick="setFogBrushMode('erase')">🧹 안개 지우개</button>
@@ -1191,6 +1194,7 @@
     let myNickname = '모험가';
     let myBoundCharId = 'char_1';
     let isSpectator = false;
+    let selectedTokenId = 'char_1'; // Currently selected token on the board
 
     let connectedUsers = [
       { nickname: 'GM', realName: '마스터', role: 'gm', boundCharId: null, charName: '마스터 (전체 제어)' },
@@ -1294,12 +1298,19 @@
     let selectedCharIndex = 0;
     let uploadedTokenDataUrl = null;
 
-    // --- Entry Modal Options & Setup ---
+    // --- Entry Modal Options (including GM role) ---
     function renderEntryModalOptions() {
       const sel = document.getElementById('entry-char-select');
       if (!sel) return;
       sel.innerHTML = '';
 
+      // Option 1: Game Master Role
+      const optGm = document.createElement('option');
+      optGm.value = 'ROLE_GM';
+      optGm.innerText = '👑 게임 마스터 (GM)로 입장';
+      sel.appendChild(optGm);
+
+      // Player characters
       characters.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
@@ -1341,17 +1352,27 @@
       const realVal = realInput ? realInput.value.trim() : '';
       const nickVal = nickInput ? nickInput.value.trim() : '';
 
-      myRealName = realVal || '익명 모험가';
+      myRealName = realVal || '익명 참가자';
       myNickname = nickVal || '모험가';
 
       const sel = document.getElementById('entry-char-select');
-      const selVal = sel ? sel.value : 'char_1';
+      const selVal = sel ? sel.value : 'ROLE_GM';
 
-      if (selVal === 'SPECTATOR') {
+      if (selVal === 'ROLE_GM') {
+        currentRole = 'gm';
+        isSpectator = false;
+        myBoundCharId = null;
+        switchRole('gm');
+      } else if (selVal === 'SPECTATOR') {
+        currentRole = 'player';
         isSpectator = true;
         myBoundCharId = null;
+        switchRole('player');
       } else if (selVal === 'NEW') {
+        currentRole = 'player';
         isSpectator = false;
+        switchRole('player');
+
         const nameInput = document.getElementById('entry-new-char-name');
         const classInput = document.getElementById('entry-new-char-class');
         const cName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : '신규 모험가';
@@ -1360,6 +1381,7 @@
         const newChar = createCharacterObj(cName, cClass);
         characters.push(newChar);
         myBoundCharId = newChar.id;
+        selectedTokenId = newChar.id;
         selectedCharIndex = characters.length - 1;
 
         tokens.push({
@@ -1378,8 +1400,11 @@
           conditions: []
         });
       } else {
+        currentRole = 'player';
         isSpectator = false;
+        switchRole('player');
         myBoundCharId = selVal;
+        selectedTokenId = selVal;
         const cIdx = characters.findIndex(c => c.id === selVal);
         if (cIdx !== -1) selectedCharIndex = cIdx;
         const tok = tokens.find(t => t.id === selVal);
@@ -1391,9 +1416,9 @@
       const userInfo = {
         nickname: myNickname,
         realName: myRealName,
-        role: isSpectator ? 'spectator' : currentRole,
+        role: currentRole === 'gm' ? 'gm' : (isSpectator ? 'spectator' : 'player'),
         boundCharId: myBoundCharId,
-        charName: isSpectator ? '관전 중' : (bChar ? bChar.name : '미배정')
+        charName: currentRole === 'gm' ? '마스터 (전체 제어)' : (isSpectator ? '관전 중' : (bChar ? bChar.name : '미배정'))
       };
 
       if (existingUserIdx !== -1) {
@@ -1403,7 +1428,7 @@
       }
 
       document.getElementById('header-user-display').innerText = `${myNickname} (${myRealName})`;
-      document.getElementById('header-bound-char').innerText = isSpectator ? '[관전자]' : (bChar ? `[${bChar.name}]` : '');
+      document.getElementById('header-bound-char').innerText = currentRole === 'gm' ? '[GM]' : (isSpectator ? '[관전자]' : (bChar ? `[${bChar.name}]` : ''));
 
       const modal = document.getElementById('welcome-modal');
       if (modal) modal.style.display = 'none';
@@ -1417,8 +1442,9 @@
       renderHandoutRecipientsCheckboxes();
       renderUsersTable();
       populateGmTargetTokenDropdown();
+      updatePlayerExploredHistory();
       redrawFog();
-      appendChatMessage(`🎉 [${myNickname} (${myRealName})]님이 세션에 입장하셨습니다. (${isSpectator ? '관전자 모드' : '캐릭터: ' + (bChar ? bChar.name : '없음')})`);
+      appendChatMessage(`🎉 [${myNickname} (${myRealName})]님이 세션에 입장하셨습니다. (역할: ${currentRole === 'gm' ? '👑 GM' : (isSpectator ? '👁️ 관전자' : '🛡️ ' + (bChar ? bChar.name : '없음'))})`);
     }
 
     function populateOwnerDropdowns() {
@@ -1471,12 +1497,11 @@
       return audioCtx;
     }
 
-    // Play subtle "Ttiririring" chime bell sound on ping
     function playPingSound() {
       try {
         const ctx = getAudioContext();
         const now = ctx.currentTime;
-        const freqs = [1046.5, 1318.5, 1567.98, 2093.0]; // C6, E6, G6, C7 arpeggio
+        const freqs = [1046.5, 1318.5, 1567.98, 2093.0];
         freqs.forEach((freq, idx) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -1647,29 +1672,42 @@
       appendChatMessage('🗑️ 스케치 펜 드로잉이 전체 지워졌습니다.');
     }
 
-    // --- Fog of War & Line of Sight Calculation ---
+    // --- Fog of War, Exploration History & Active Vision ---
     const fogCanvas = document.getElementById('fog-canvas');
     const fogCtx = fogCanvas.getContext('2d');
+
+    // 1. GM Master Mask Canvas (Opaque black fog, erased manually by GM brush)
     const fogMaskCanvas = document.createElement('canvas');
     fogMaskCanvas.width = 5000;
     fogMaskCanvas.height = 5000;
     const fogMaskCtx = fogMaskCanvas.getContext('2d');
 
+    // 2. Exploration History Canvas (Tracks wherever player tokens have traveled)
+    const fogExploredCanvas = document.createElement('canvas');
+    fogExploredCanvas.width = 5000;
+    fogExploredCanvas.height = 5000;
+    const fogExploredCtx = fogExploredCanvas.getContext('2d');
+
     function resetFullFog() {
       fogMaskCtx.fillStyle = 'rgba(0, 0, 0, 1)';
       fogMaskCtx.fillRect(0, 0, 5000, 5000);
+
+      fogExploredCtx.clearRect(0, 0, 5000, 5000);
+
+      updatePlayerExploredHistory();
       redrawFog();
+      renderTokens();
       appendChatMessage('🌫️ 전장의 안개가 전체 초기화(복원)되었습니다.');
     }
-    resetFullFog();
 
     function toggleFogOfWar(enabled) {
       isFogActive = enabled;
       document.getElementById('fog-brush-controls').style.display = enabled ? 'block' : 'none';
       if (!enabled) setFogBrushMode('none');
+      updatePlayerExploredHistory();
       redrawFog();
       renderTokens();
-      appendChatMessage(enabled ? '🌫️ 전장의 안개가 켜졌습니다. (시야 밖 토큰이 은폐됩니다)' : '☀️ 전장의 안개가 꺼졌습니다. (모든 토큰과 전장이 공개됩니다)');
+      appendChatMessage(enabled ? '🌫️ 전장의 안개가 활성화되었습니다. (실시간 시야 외 음영 및 토큰 은폐)' : '☀️ 전장의 안개가 꺼졌습니다. (모든 전장과 토큰이 공개됩니다)');
     }
 
     function setFogBrushMode(mode) {
@@ -1728,6 +1766,25 @@
       return basePx + (bonusGrids * 50);
     }
 
+    // Permanently carve out traveled areas onto the exploration history canvas
+    function updatePlayerExploredHistory() {
+      const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
+      const myChar = characters.find(c => c.id === myBoundCharId);
+
+      if (myTok && myChar && !isSpectator) {
+        const centerOffset = (myTok.size || 60) / 2;
+        const radius = getDungeonWorldVisionRadius(myChar.visionBase || '몇걸음', myChar.visionBonusGrids || 0);
+
+        fogExploredCtx.save();
+        fogExploredCtx.fillStyle = '#ffffff';
+        fogExploredCtx.beginPath();
+        fogExploredCtx.arc(myTok.x + centerOffset, myTok.y + centerOffset, radius, 0, Math.PI * 2);
+        fogExploredCtx.fill();
+        fogExploredCtx.restore();
+      }
+    }
+
+    // Redraw complete fog: Unknown (100% black) vs Previously Explored (60% darkened shadow) vs Current Active Vision (clear 0%)
     function redrawFog() {
       fogCtx.clearRect(0, 0, 5000, 5000);
       if (!isFogActive) return;
@@ -1738,15 +1795,32 @@
         fogCtx.drawImage(fogMaskCanvas, 0, 0);
         fogCtx.restore();
       } else {
+        // Step 1: Draw unrevealed GM fog (100% black)
         fogCtx.save();
         fogCtx.drawImage(fogMaskCanvas, 0, 0);
 
+        // Step 2: Invert previously explored player areas to semi-transparent darkened fog (alpha ~0.62)
+        fogCtx.globalCompositeOperation = 'destination-out';
+        fogCtx.drawImage(fogExploredCanvas, 0, 0);
+
+        // Re-overlay semi-dark shadow over explored areas
+        fogCtx.globalCompositeOperation = 'source-over';
+        fogCtx.save();
+        fogCtx.globalAlpha = 0.62;
+        fogCtx.fillStyle = '#080503';
+        fogCtx.beginPath();
+        fogCtx.rect(0, 0, 5000, 5000);
+        fogCtx.fill();
+        fogCtx.restore();
+
+        // Step 3: Fully clear current real-time active vision (100% bright, 0% fog)
         const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
         const myChar = characters.find(c => c.id === myBoundCharId);
 
         if (myTok && myChar && !isSpectator) {
           const centerOffset = (myTok.size || 60) / 2;
           const radius = getDungeonWorldVisionRadius(myChar.visionBase || '몇걸음', myChar.visionBonusGrids || 0);
+
           fogCtx.globalCompositeOperation = 'destination-out';
           const grad = fogCtx.createRadialGradient(myTok.x + centerOffset, myTok.y + centerOffset, radius * 0.75, myTok.x + centerOffset, myTok.y + centerOffset, radius);
           grad.addColorStop(0, 'rgba(0,0,0,1)');
@@ -1757,6 +1831,7 @@
           fogCtx.arc(myTok.x + centerOffset, myTok.y + centerOffset, radius, 0, Math.PI * 2);
           fogCtx.fill();
         }
+
         fogCtx.restore();
       }
     }
@@ -2231,8 +2306,11 @@
 
     function selectSheetChar(idx) {
       selectedCharIndex = idx;
+      const c = characters[idx];
+      if (c) selectedTokenId = c.id;
       renderSheetTabs();
       renderSheet();
+      renderTokens();
     }
 
     function deleteCharacterSheet(idx) {
@@ -2367,12 +2445,12 @@
     }
     function updateCharVisionBase(charIdx, val) {
       characters[charIdx].visionBase = val;
-      renderSheet(); redrawFog(); renderTokens();
+      renderSheet(); updatePlayerExploredHistory(); redrawFog(); renderTokens();
     }
     function updateCharVisionBonus(charIdx, val) {
       const n = parseInt(val, 10) || 0;
       characters[charIdx].visionBonusGrids = n;
-      renderSheet(); redrawFog(); renderTokens();
+      renderSheet(); updatePlayerExploredHistory(); redrawFog(); renderTokens();
     }
     function handleSheetAvatarUpload(e) {
       if (e.target.files.length > 0) applyAvatarFile(e.target.files[0]);
@@ -2509,7 +2587,31 @@
       appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 전장에 소환되었습니다. (크기: ${tokenSize}px)`);
     }
 
-    // --- Token Rendering with Dynamic Size & Fog Visibility ---
+    // --- Token Selection & Range Guide Logic ---
+    function selectTokenById(tokId) {
+      selectedTokenId = tokId;
+      const t = tokens.find(tok => tok.id === tokId);
+      if (!t) return;
+
+      // If token belongs to a player character, sync character sheet window
+      const charIdx = characters.findIndex(c => c.id === tokId || c.name === t.name);
+      if (charIdx !== -1) {
+        selectedCharIndex = charIdx;
+        renderSheetTabs();
+        renderSheet();
+      }
+
+      // If GM, sync target dropdown in GM toolbox
+      const gmSelect = document.getElementById('gm-target-token-select');
+      if (gmSelect && tokens.some(tok => tok.id === tokId)) {
+        gmSelect.value = tokId;
+        renderGmConditionApplierButtons();
+      }
+
+      renderTokens();
+    }
+
+    // --- Token Rendering with Dynamic Size, Selection, and Active Vision / GM Erase check ---
     function renderTokens() {
       const layer = document.getElementById('tokens-layer');
       layer.innerHTML = '';
@@ -2523,24 +2625,45 @@
         const el = document.createElement('div');
         const canControl = currentRole === 'gm' || tok.owner === myNickname;
         const isMyBoundChar = tok.id === myBoundCharId || tok.owner === myNickname;
+        const isCurrentlySelected = tok.id === selectedTokenId;
         const tokSize = tok.size || 60;
         const tokCenterOffset = tokSize / 2;
 
+        // Vision Visibility Logic:
+        // Visible if:
+        // 1) Current role is GM
+        // 2) It is the player's own bound token
+        // 3) Token center falls within player's live vision radius
+        // 4) Area has been manually erased/uncovered by GM brush
         let isVisibleInFog = true;
         if (isFogActive && currentRole !== 'gm') {
           if (isSpectator) {
             isVisibleInFog = false;
           } else if (isMyBoundChar) {
             isVisibleInFog = true;
-          } else if (myTok) {
-            const dist = Math.hypot((tok.x + tokCenterOffset) - (myTok.x + myTokenCenterOffset), (tok.y + tokCenterOffset) - (myTok.y + myTokenCenterOffset));
-            isVisibleInFog = dist <= visionRadius;
           } else {
-            isVisibleInFog = false;
+            let inPlayerVision = false;
+            if (myTok) {
+              const dist = Math.hypot((tok.x + tokCenterOffset) - (myTok.x + myTokenCenterOffset), (tok.y + tokCenterOffset) - (myTok.y + myTokenCenterOffset));
+              inPlayerVision = dist <= visionRadius;
+            }
+
+            // Check if GM unmasked this coordinate on fogMaskCanvas
+            let inGmUncoveredZone = false;
+            try {
+              const pixelData = fogMaskCtx.getImageData(Math.floor(tok.x + tokCenterOffset), Math.floor(tok.y + tokCenterOffset), 1, 1).data;
+              // If pixel alpha is 0 on GM mask, it was manually cleared by GM eraser
+              inGmUncoveredZone = (pixelData[3] === 0);
+            } catch (err) {}
+
+            isVisibleInFog = inPlayerVision || inGmUncoveredZone;
           }
         }
 
-        el.className = `vtt-token ${canControl ? '' : 'locked'} ${!isVisibleInFog ? 'hidden-by-fog' : ''}`;
+        // Show reach guide on the selected token if guide is toggled ON
+        const showRings = showPlayerGuide && isCurrentlySelected;
+
+        el.className = `vtt-token ${canControl ? '' : 'locked'} ${!isVisibleInFog ? 'hidden-by-fog' : ''} ${isCurrentlySelected ? 'selected-token' : ''}`;
         el.id = `vtt-tok-${tok.id}`;
         el.style.left = `${tok.x}px`;
         el.style.top = `${tok.y}px`;
@@ -2548,7 +2671,6 @@
         el.style.height = `${tokSize}px`;
 
         const hpPct = Math.max(0, Math.min(100, Math.round((tok.hp / tok.maxHp) * 100)));
-        const showRings = showPlayerGuide && isMyBoundChar;
 
         let conditionsHtml = '';
         if (tok.conditions && tok.conditions.length > 0) {
@@ -2597,12 +2719,18 @@
           <button class="token-del-btn" onclick="removeToken('${tok.id}')" title="토큰 제거">×</button>
         `;
 
+        // Click to select token and focus sheet/guide
+        el.addEventListener('click', (e) => {
+          if (e.target.closest('.token-bubble') || e.target.closest('.token-del-btn') || e.target.closest('.condition-badge')) return;
+          selectTokenById(tok.id);
+        });
+
         if (canControl) {
           attachTokenDraggable(el, tok);
         } else {
           el.addEventListener('mousedown', (e) => {
-            if (e.button === 0) {
-              appendChatMessage(`🚫 [${tok.name}] 토큰은 조종 권한(${tok.owner || 'GM'})이 없습니다.`);
+            if (e.button === 0 && !e.target.closest('.token-bubble')) {
+              appendChatMessage(`ℹ️ [${tok.name}] 토큰 선택됨 (조종 권한: ${tok.owner || 'GM'})`);
             }
           });
         }
@@ -2616,7 +2744,7 @@
       let initialTokenX, initialTokenY;
 
       element.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return; // Only drag tokens with Left Click
+        if (e.button !== 0) return;
         if (e.target.closest('.token-bubble') || e.target.closest('.token-del-btn') || e.target.closest('.condition-badge')) return;
         isDragging = true;
         startMouseX = e.clientX;
@@ -2626,6 +2754,7 @@
         e.stopPropagation();
 
         element.style.zIndex = 1000;
+        selectTokenById(tokenObj.id);
 
         function onMouseMove(moveEvent) {
           if (!isDragging) return;
@@ -2637,6 +2766,7 @@
           element.style.top = `${tokenObj.y}px`;
 
           if (isFogActive && (tokenObj.id === myBoundCharId || tokenObj.owner === myNickname)) {
+            updatePlayerExploredHistory();
             redrawFog();
             renderTokens();
           }
@@ -2647,8 +2777,11 @@
           element.style.zIndex = 50;
           window.removeEventListener('mousemove', onMouseMove);
           window.removeEventListener('mouseup', onMouseUp);
-          redrawFog();
-          renderTokens();
+          if (isFogActive) {
+            updatePlayerExploredHistory();
+            redrawFog();
+            renderTokens();
+          }
         }
 
         window.addEventListener('mousemove', onMouseMove);
@@ -3028,7 +3161,7 @@
 
     function exportSessionData() {
       const sessionData = {
-        version: '1.3',
+        version: '1.4',
         timestamp: new Date().toISOString(),
         characters: characters,
         tokens: tokens,
@@ -3076,6 +3209,7 @@
             renderHandoutRecipientsCheckboxes();
             renderUsersTable();
             populateGmTargetTokenDropdown();
+            updatePlayerExploredHistory();
             redrawFog();
             appendChatMessage(`📂 세션 백업 파일 [${file.name}]을 성공적으로 복원했습니다!`);
           } catch (err) {
@@ -3209,7 +3343,7 @@
       renderUsersTable();
       populateGmTargetTokenDropdown();
       renderCustomSfxList();
-      redrawFog();
+      resetFullFog();
     });
   </script>
 </body>
