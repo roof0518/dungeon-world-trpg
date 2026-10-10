@@ -98,9 +98,9 @@
       position: absolute; top: 48px; left: 0; right: 0; bottom: 0;
       background: #140f0a; overflow: hidden; cursor: default;
     }
-    #vtt-viewport.panning { cursor: grab; }
-    #vtt-viewport.panning:active { cursor: grabbing; }
+    #vtt-viewport.panning { cursor: grabbing !important; }
     #vtt-viewport.drawing { cursor: crosshair; }
+    #vtt-viewport.erasing { cursor: cell; }
 
     #vtt-world {
       position: absolute; top: 0; left: 0;
@@ -162,11 +162,13 @@
     }
 
     .vtt-token {
-      position: absolute; width: 60px; height: 60px;
+      position: absolute;
       cursor: grab; user-select: none; z-index: 50;
+      transition: opacity 0.2s ease;
     }
     .vtt-token.locked { cursor: not-allowed !important; filter: brightness(0.85); }
     .vtt-token:active:not(.locked) { cursor: grabbing; z-index: 900 !important; }
+    .vtt-token.hidden-by-fog { display: none !important; }
 
     .reach-guide-container {
       display: none; position: absolute; top: 50%; left: 50%;
@@ -187,18 +189,18 @@
     }
 
     .token-conditions-bar {
-      position: absolute; top: -42px; left: 50%;
+      position: absolute; top: -44px; left: 50%;
       transform: translateX(-50%); display: flex; gap: 3px; z-index: 65;
     }
     .condition-badge {
-      width: 18px; height: 18px; border-radius: 50%;
+      width: 20px; height: 20px; border-radius: 50%;
       display: flex; justify-content: center; align-items: center;
-      font-size: 0.65rem; border: 1px solid #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.6); cursor: pointer; position: relative;
+      font-size: 0.72rem; border: 1px solid #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.6); cursor: pointer; position: relative;
     }
     .condition-badge:hover::after {
       content: attr(data-cond-name);
-      position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
       background: rgba(0,0,0,0.9); color: #fff; padding: 2px 6px;
       font-size: 0.65rem; white-space: nowrap; border-radius: 3px; pointer-events: none;
     }
@@ -292,12 +294,14 @@
 
     #sheet-window { top: 60px; left: 20px; width: 480px; height: 600px; }
     #dice-window { top: 60px; right: 20px; width: 340px; height: 460px; }
-    #spawner-window { top: 120px; left: 520px; width: 380px; height: 500px; display: none; }
+    #spawner-window { top: 120px; left: 520px; width: 390px; height: 530px; display: none; }
     #compendium-window { top: 100px; left: 250px; width: 540px; height: 500px; display: none; }
     #map-window { top: 140px; left: 320px; width: 380px; height: 440px; display: none; }
-    #gm-toolbox-window { top: 120px; left: 360px; width: 400px; height: 520px; display: none; }
-    #handouts-box-window { top: 140px; left: 420px; width: 420px; height: 480px; display: none; }
-    #draw-tools-window { top: 60px; left: 520px; width: 300px; height: 260px; display: none; }
+    #gm-toolbox-window { top: 120px; left: 360px; width: 420px; height: 560px; display: none; }
+    #handouts-box-window { top: 140px; left: 420px; width: 440px; height: 520px; display: none; }
+    #draw-tools-window { top: 60px; left: 520px; width: 320px; height: 290px; display: none; }
+    #sfx-window { top: 200px; right: 80px; width: 340px; height: 420px; display: none; }
+    #users-window { top: 100px; left: 600px; width: 380px; height: 380px; display: none; }
 
     .char-tab-bar {
       display: flex; gap: 6px; margin-bottom: 10px;
@@ -542,7 +546,7 @@
     }
     .welcome-card {
       background: var(--parchment); border: 3px solid var(--wood-medium);
-      border-radius: 8px; padding: 22px; width: 380px;
+      border-radius: 8px; padding: 22px; width: 400px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.7);
     }
 
@@ -571,6 +575,52 @@
     }
     .gm-cheat-item strong { color: var(--wood-dark); font-size: 0.82rem; }
     .gm-cheat-item p { font-size: 0.76rem; color: var(--ink-muted); margin-top: 2px; }
+
+    .sfx-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 12px;
+    }
+    .sfx-btn {
+      background: linear-gradient(to bottom, #deb887, #ad7845);
+      border: 1px solid #fff; color: #2b1704; padding: 8px;
+      border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .sfx-btn:hover { background: linear-gradient(to bottom, #edd2a8, #c58c54); }
+
+    .users-table {
+      width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left;
+    }
+    .users-table th, .users-table td {
+      padding: 6px 8px; border-bottom: 1px solid #caa372;
+    }
+    .users-table th { background: #ebd8c0; color: var(--wood-dark); }
+    .user-badge-role {
+      display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: bold;
+    }
+    .user-badge-role.gm { background: var(--brass); color: #231205; }
+    .user-badge-role.player { background: var(--green); color: white; }
+    .user-badge-role.spectator { background: #78909c; color: white; }
+
+    .checkbox-list-box {
+      max-height: 90px; overflow-y: auto; background: #fff;
+      border: 1px solid #caa372; border-radius: 4px; padding: 4px 8px;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+
+    /* GM Condition Applier Tool Styles */
+    .gm-condition-applier {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px;
+    }
+    .gm-cond-btn {
+      background: #ebd8c0; border: 1px solid #caa372; border-radius: 4px;
+      padding: 4px 2px; font-size: 0.72rem; cursor: pointer; display: flex;
+      flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      transition: all 0.15s;
+    }
+    .gm-cond-btn:hover { background: #deb887; }
+    .gm-cond-btn.active {
+      background: #7c4c23; color: white; border-color: #381f08; font-weight: bold;
+    }
   </style>
 </head>
 <body class="player-mode">
@@ -579,24 +629,25 @@
   <div class="modal-overlay" id="welcome-modal">
     <div class="welcome-card">
       <h3 style="color:var(--wood-dark); margin-bottom:8px; border-bottom:1px solid var(--parchment-border); padding-bottom:6px;">
-        🎲 모험가 길드 입장
+        🎲 모험가 길드 입장 등록
       </h3>
-      <p style="font-size:0.82rem; color:var(--ink-muted); margin-bottom:12px;">
-        세션에서 사용할 닉네임을 정하고 조종할 캐릭터를 선택하거나 새로 생성하세요.
+      <p style="font-size:0.8rem; color:var(--ink-muted); margin-bottom:12px;">
+        세션 참여를 위한 실명과 닉네임을 설정하고, 캐릭터를 배정받거나 관전자로 입장하세요.
       </p>
 
       <div class="form-group">
-        <label>플레이어 닉네임</label>
-        <input type="text" id="entry-nickname" placeholder="예: 모험가A, 김철수">
+        <label>실명 (본명)</label>
+        <input type="text" id="entry-realname" placeholder="예: 홍길동">
       </div>
 
       <div class="form-group">
-        <label>귀속할 캐릭터 선택</label>
-        <select id="entry-char-select">
-          <option value="char_1">김점순 (드루이드)</option>
-          <option value="char_2">녹티엘 (전사)</option>
-          <option value="NEW">+ 새 캐릭터 바로 생성하기</option>
-        </select>
+        <label>플레이어 닉네임 (세션 표시명)</label>
+        <input type="text" id="entry-nickname" placeholder="예: 모험가A, 점순러버">
+      </div>
+
+      <div class="form-group">
+        <label>참여 역할 및 캐릭터 선택</label>
+        <select id="entry-char-select"></select>
       </div>
 
       <div id="new-char-entry-fields" style="display:none; background:#f7eedf; padding:8px; border-radius:6px; margin-bottom:8px;">
@@ -623,6 +674,8 @@
         <button class="menu-btn" id="btn-toggle-spawner" onclick="toggleWindow('spawner-window')">➕ 토큰 생성기</button>
         <button class="menu-btn" id="btn-toggle-compendium" onclick="toggleWindow('compendium-window')" style="display:none;">📖 토큰 도감 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-gm-toolbox" onclick="toggleWindow('gm-toolbox-window')" style="display:none;">🧰 마스터 도구함 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
+        <button class="menu-btn" id="btn-toggle-sfx" onclick="toggleWindow('sfx-window')" style="display:none;">🔊 효과음 패널 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
+        <button class="menu-btn" id="btn-toggle-users" onclick="toggleWindow('users-window')" style="display:none;">👥 접속자 명단 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-handouts-box" onclick="toggleWindow('handouts-box-window')">📁 단서 보관함</button>
         <button class="menu-btn" id="btn-toggle-draw" onclick="toggleWindow('draw-tools-window')">✏️ 스케치 펜</button>
         <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 맵 배경 설정</button>
@@ -665,7 +718,7 @@
       <button onclick="zoomStep(-0.15)">➖ 축소</button>
       <button onclick="resetZoomPan()">🎯 중앙 초기화</button>
       <button id="btn-player-guide-toggle" onclick="togglePlayerReachGuide()" style="background:#2e7d32; margin-left:4px;">📏 사거리 가이드 켜기</button>
-      <span style="font-size:0.72rem; color:#deb887; margin-left:6px;">※ Shift+클릭: 탁자 핑</span>
+      <span style="font-size:0.72rem; color:#deb887; margin-left:6px;">※ 휠 클릭+드래그: 맵 이동 | Shift+클릭: 핑</span>
     </div>
   </div>
 
@@ -750,7 +803,7 @@
       </div>
 
       <div id="spawner-form-monster">
-        <div class="form-group"><label>몬스터 이름</label><input type="text" id="spawn-m-name" placeholder="예: 와이번, 오크 전사"></div>
+        <div class="form-group"><label>몬스터 이름</label><input type="text" id="spawn-m-name" placeholder="예: 와이번, 오크 대족장"></div>
         <div style="display:flex; gap:6px;">
           <div class="form-group" style="flex:1;"><label>HP</label><input type="number" id="spawn-m-hp" value="10"></div>
           <div class="form-group" style="flex:1;"><label>피해량</label><input type="text" id="spawn-m-dmg" value="d6"></div>
@@ -780,7 +833,18 @@
         </div>
       </div>
 
+      <!-- Token Size Selection for Boss/Large monsters -->
       <div class="form-group" style="margin-top:6px;">
+        <label>📐 토큰 크기 (전장 격자 기준)</label>
+        <select id="spawn-token-size">
+          <option value="60">일반 / 소형 (1×1칸 - 60px)</option>
+          <option value="110">대형 네임드 (2×2칸 - 110px)</option>
+          <option value="160">거대 보스 (3×3칸 - 160px)</option>
+          <option value="210">초거대 괴수 (4×4칸 - 210px)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label>조종 권한 부여 (플레이어 닉네임 선택)</label>
         <select id="spawn-owner-select"></select>
       </div>
@@ -807,18 +871,31 @@
   <!-- FLOATING WINDOW 5: GM Toolbox -->
   <div class="floating-window" id="gm-toolbox-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'gm-toolbox-window')">
-      <div class="window-title">🧰 마스터 도구함 (안개 / 컨닝페이퍼 / 백업)</div>
+      <div class="window-title">🧰 마스터 도구함 (상태이상 / 안개 / 컨닝페이퍼)</div>
       <div class="window-actions">
         <button class="win-btn" onclick="minimizeWindow('gm-toolbox-window')" title="최소화">_</button>
         <button class="win-btn" onclick="toggleWindow('gm-toolbox-window')" title="닫기">×</button>
       </div>
     </div>
     <div class="window-content">
+      <!-- Remote Status Condition Applier for GM -->
+      <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
+        <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">⚠️ 상태이상 원격 부여 및 관리</strong>
+        <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:6px;">플레이어 또는 몬스터 토큰을 선택하고 상태이상을 클릭하여 즉시 토글 부착합니다.</p>
+        
+        <div class="form-group" style="margin-bottom:6px;">
+          <label>대상 토큰 선택:</label>
+          <select id="gm-target-token-select" onchange="renderGmConditionApplierButtons()"></select>
+        </div>
+
+        <div class="gm-condition-applier" id="gm-conditions-btn-container"></div>
+      </div>
+
       <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
         <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">🌫️ 전장의 안개 (Fog of War)</strong>
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; font-size:0.8rem;">
           <input type="checkbox" id="chk-fog-enabled" onchange="toggleFogOfWar(this.checked)">
-          <span>전장의 안개 활성화 (플레이어 시야 제한)</span>
+          <span>전장의 안개 활성화 (플레이어 시야 및 토큰 은폐)</span>
         </label>
         
         <div id="fog-brush-controls" style="margin-top:6px; display:none;">
@@ -838,7 +915,7 @@
 
       <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
         <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">📖 던전월드 마스터 액션 (컨닝페이퍼)</strong>
-        <div style="max-height:140px; overflow-y:auto; padding-right:4px;">
+        <div style="max-height:120px; overflow-y:auto; padding-right:4px;">
           <div class="gm-cheat-item">
             <strong>1. 다가오는 위험의 징조를 보여준다</strong>
             <p>천장이 삐걱거리거나 적들의 발소리가 가까워진다.</p>
@@ -878,6 +955,65 @@
     </div>
   </div>
 
+  <!-- FLOATING WINDOW: GM Sound Effects (SFX) -->
+  <div class="floating-window" id="sfx-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'sfx-window')">
+      <div class="window-title">🔊 마스터 효과음 (SFX) 패널</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('sfx-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('sfx-window')" title="닫기">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <strong style="color:var(--wood-dark); font-size:0.8rem; display:block; margin-bottom:6px;">⚡ 기본 내장 효과음</strong>
+      <div class="sfx-grid">
+        <button class="sfx-btn" onclick="playBuiltinSfx('sword')">⚔️ 검격 (칼 부딪힘)</button>
+        <button class="sfx-btn" onclick="playBuiltinSfx('magic')">💥 마법 폭발</button>
+        <button class="sfx-btn" onclick="playBuiltinSfx('monster')">👹 괴물 포효</button>
+        <button class="sfx-btn" onclick="playBuiltinSfx('door')">🚪 육중한 문 열림</button>
+      </div>
+
+      <div style="background:#f7eedf; padding:8px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
+        <strong style="color:var(--wood-dark); font-size:0.8rem; display:block; margin-bottom:4px;">➕ 커스텀 음성 / 효과음 업로드</strong>
+        <div class="form-group"><label>효과음 이름</label><input type="text" id="sfx-custom-name" placeholder="예: 함정 발동, 승리 나팔"></div>
+        <div class="form-group"><label>오디오 파일 (mp3, wav 등)</label><input type="file" id="sfx-custom-file" accept="audio/*" style="font-size:0.75rem;"></div>
+        <button class="btn-create" onclick="addCustomSfx()">효과음 목록에 추가</button>
+      </div>
+
+      <strong style="color:var(--wood-dark); font-size:0.8rem; display:block; margin-bottom:6px;">📂 등록된 사용자 효과음</strong>
+      <div id="custom-sfx-list" style="display:flex; flex-direction:column; gap:4px;">
+        <div style="color:var(--ink-muted); font-size:0.75rem;">등록된 커스텀 효과음이 없습니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING WINDOW: Connected Users List -->
+  <div class="floating-window" id="users-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'users-window')">
+      <div class="window-title">👥 세션 접속자 명단 (GM 관리)</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('users-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('users-window')" title="닫기">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:8px;">
+        현재 세션에 참가 등록된 모험가 및 관전자 목록입니다.
+      </p>
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>닉네임</th>
+            <th>실명</th>
+            <th>구분</th>
+            <th>배정 캐릭터</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- FLOATING WINDOW 6: Handout Library Box -->
   <div class="floating-window" id="handouts-box-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'handouts-box-window')">
@@ -888,14 +1024,20 @@
       </div>
     </div>
     <div class="window-content">
-      <div style="background:#f7eedf; padding:8px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
-        <strong style="color:var(--wood-dark); font-size:0.8rem; display:block; margin-bottom:4px;">➕ 새 단서 / 메모 추가</strong>
+      <div id="handout-create-section" style="background:#f7eedf; padding:8px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
+        <strong style="color:var(--wood-dark); font-size:0.8rem; display:block; margin-bottom:4px;">➕ 새 단서 / 메모 추가 및 대상 공유</strong>
         <div class="form-group"><label>제목</label><input type="text" id="lib-handout-title" placeholder="예: 낡은 일기장 쪽지"></div>
         <div class="form-group"><label>내용</label><textarea id="lib-handout-text" rows="2" placeholder="단서 텍스트 입력..."></textarea></div>
         <div class="form-group"><label>이미지 첨부</label><input type="file" id="lib-handout-file" accept="image/*" style="font-size:0.75rem;"></div>
-        <button class="btn-create" onclick="addHandoutToLibrary()">보관함에 저장 및 팝업 공유</button>
+        
+        <div class="form-group">
+          <label>공유 대상자 선택 (다중 선택 가능):</label>
+          <div class="checkbox-list-box" id="handout-recipients-list"></div>
+        </div>
+
+        <button class="btn-create" onclick="addHandoutToLibrary()">단서 저장 및 선택 대상에게 공유</button>
       </div>
-      <strong style="color:var(--wood-dark); font-size:0.8rem; display:block; margin-bottom:6px;">📜 보관된 단서 목록:</strong>
+      <strong style="color:var(--wood-dark); font-size:0.8rem; display:block; margin-bottom:6px;">📜 내가 열람 가능한 단서 목록:</strong>
       <div id="handout-library-list"></div>
     </div>
   </div>
@@ -903,25 +1045,26 @@
   <!-- FLOATING WINDOW 7: Sketch / Drawing Tools -->
   <div class="floating-window" id="draw-tools-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'draw-tools-window')">
-      <div class="window-title">✏️ 간이 스케치 & 펜 도구</div>
+      <div class="window-title">✏️ 간이 스케치 & 펜/지우개 도구</div>
       <div class="window-actions">
         <button class="win-btn" onclick="minimizeWindow('draw-tools-window')" title="최소화">_</button>
         <button class="win-btn" onclick="toggleWindow('draw-tools-window')" title="닫기">×</button>
       </div>
     </div>
     <div class="window-content">
-      <div style="display:flex; gap:6px; margin-bottom:8px;">
-        <button class="menu-btn" id="btn-draw-mode" style="flex:1;" onclick="toggleDrawMode()">✏️ 그리기 ON/OFF</button>
+      <div style="display:flex; gap:4px; margin-bottom:8px;">
+        <button class="menu-btn" id="btn-draw-mode" style="flex:1;" onclick="setDrawMode('draw')">✏️ 펜 그리기</button>
+        <button class="menu-btn" id="btn-erase-mode" style="flex:1;" onclick="setDrawMode('erase')">🧹 부분 지우개</button>
         <button class="menu-btn" style="flex:1; background:#c62828;" onclick="clearDrawCanvas()">🗑️ 전체 지우기</button>
       </div>
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:0.8rem;">
         <label>펜 색상:</label>
         <input type="color" id="draw-color" value="#ffeb3b" style="cursor:pointer; width:36px; height:24px; border:none;">
-        <label style="margin-left:auto;">굵기:</label>
-        <input type="range" id="draw-width" min="2" max="20" value="4" style="width:80px;">
+        <label style="margin-left:auto;">굵기/크기:</label>
+        <input type="range" id="draw-width" min="2" max="40" value="6" style="width:80px;">
       </div>
       <p style="font-size:0.72rem; color:var(--ink-muted);">
-        * 마스터와 플레이어 모두 맵 위에 화살표, X 표시, 경로를 낙서하고 의사소통할 수 있습니다.
+        * 펜으로 경로를 그리고, 부분 지우개로 잘못 그린 선만 쓱쓱 지우거나 전체 지우기를 할 수 있습니다.
       </p>
     </div>
   </div>
@@ -1044,14 +1187,20 @@
   </div>
 
   <script>
+    let myRealName = '';
     let myNickname = '모험가';
     let myBoundCharId = 'char_1';
-    let sessionUsers = ['모험가', 'GM'];
-    let showPlayerGuide = false;
+    let isSpectator = false;
 
+    let connectedUsers = [
+      { nickname: 'GM', realName: '마스터', role: 'gm', boundCharId: null, charName: '마스터 (전체 제어)' },
+      { nickname: '모험가', realName: '홍길동', role: 'player', boundCharId: 'char_1', charName: '김점순' }
+    ];
+
+    let showPlayerGuide = false;
     let isFogActive = false;
     let fogBrushMode = 'none';
-    let isDrawingActive = false;
+    let drawToolMode = 'none';
 
     const STATUS_CONDITIONS = [
       { key: 'stun', name: '기절', icon: '💫', color: '#ffb300' },
@@ -1115,60 +1264,94 @@
 
     let tokenCompendium = {
       player: [
-        { name: '김점순', hp: 14, damage: 'd6', armor: 1, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=jeomsoon', info: '엘프 드루이드' },
-        { name: '녹티엘', hp: 25, damage: 'd10', armor: 1, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=noctiel', info: '엘프 전사' }
+        { name: '김점순', hp: 14, damage: 'd6', armor: 1, size: 60, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=jeomsoon', info: '엘프 드루이드' },
+        { name: '녹티엘', hp: 25, damage: 'd10', armor: 1, size: 60, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=noctiel', info: '엘프 전사' }
       ],
       npc: [
-        { name: '김팽덕', hp: 12, damage: 'd4', armor: 0, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok', info: '동막골 경계 감시자' },
-        { name: '최나리', hp: 10, damage: 'd4', armor: 0, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=nari', info: '약초꾼 견습생' }
+        { name: '김팽덕', hp: 12, damage: 'd4', armor: 0, size: 60, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok', info: '동막골 경계 감시자' },
+        { name: '최나리', hp: 10, damage: 'd4', armor: 0, size: 60, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=nari', info: '약초꾼 견습생' }
       ],
       monster: [
-        { name: '고블린 정찰병', hp: 6, damage: 'd6', armor: 1, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', info: '서식지: 동굴 / 전리품: 단검' },
-        { name: '흑마법사 발토', hp: 16, damage: 'd8+2', armor: 0, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=wizard', info: '특징: 암흑 마법 연쇄' }
+        { name: '고블린 정찰병', hp: 6, damage: 'd6', armor: 1, size: 60, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', info: '서식지: 동굴 / 전리품: 단검' },
+        { name: '흑마법사 발토', hp: 16, damage: 'd8+2', armor: 0, size: 60, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=wizard', info: '특징: 암흑 마법 연쇄' },
+        { name: '화염의 베히모스', hp: 35, damage: 'd12+3', armor: 3, size: 160, image: 'https://api.dicebear.com/7.x/bottts/svg?seed=behemoth', info: '보스 / 3x3 거대 괴수' }
       ]
     };
 
     let tokens = [
-      { id: 'char_1', name: '김점순', type: 'player', owner: '모험가', x: 750, y: 750, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage, conditions: [] },
-      { id: 'char_2', name: '녹티엘', type: 'player', owner: 'GM', x: 830, y: 750, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage, conditions: [] },
-      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', owner: 'GM', x: 1050, y: 720, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', conditions: [] },
-      { id: 'npc_1', name: '김팽덕', type: 'npc', owner: 'GM', x: 670, y: 750, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok', conditions: [] }
+      { id: 'char_1', name: '김점순', type: 'player', owner: '모험가', x: 750, y: 750, size: 60, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage, conditions: [] },
+      { id: 'char_2', name: '녹티엘', type: 'player', owner: 'GM', x: 830, y: 750, size: 60, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage, conditions: [] },
+      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', owner: 'GM', x: 1050, y: 720, size: 60, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', conditions: [] },
+      { id: 'npc_1', name: '김팽덕', type: 'npc', owner: 'GM', x: 670, y: 750, size: 60, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok', conditions: [] }
     ];
 
     let handoutsLibrary = [
-      { id: 'h_1', title: '동막골 족장의 쪽지', text: '500년 만에 바깥세상으로 떠난 점순아, 부디 몸조심하거라. 인간들은 믿을 게 못 된다.', image: '' }
+      { id: 'h_1', title: '동막골 족장의 쪽지', text: '500년 만에 바깥세상으로 떠난 점순아, 부디 몸조심하거라. 인간들은 믿을 게 못 된다.', image: '', recipients: ['ALL'] }
     ];
 
+    let customSfxList = [];
     let currentRole = 'player';
     let selectedCharIndex = 0;
     let uploadedTokenDataUrl = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const charSelect = document.getElementById('entry-char-select');
-      if (charSelect) {
-        charSelect.addEventListener('change', function() {
-          const newFields = document.getElementById('new-char-entry-fields');
-          if (newFields) newFields.style.display = this.value === 'NEW' ? 'block' : 'none';
-        });
-      }
-    });
+    // --- Entry Modal Options & Setup ---
+    function renderEntryModalOptions() {
+      const sel = document.getElementById('entry-char-select');
+      if (!sel) return;
+      sel.innerHTML = '';
+
+      characters.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        const takenByUser = connectedUsers.find(u => u.boundCharId === c.id && u.nickname !== myNickname);
+        if (takenByUser) {
+          opt.innerText = `🛡️ ${c.name} (${c.class}) - [${takenByUser.nickname} 선택됨 / 선택 불가]`;
+          opt.disabled = true;
+        } else {
+          opt.innerText = `🛡️ ${c.name} (${c.class})`;
+        }
+        sel.appendChild(opt);
+      });
+
+      const optNew = document.createElement('option');
+      optNew.value = 'NEW';
+      optNew.innerText = '➕ 새 캐릭터 바로 생성하기';
+      sel.appendChild(optNew);
+
+      const optSpectator = document.createElement('option');
+      optSpectator.value = 'SPECTATOR';
+      optSpectator.innerText = '👁️ 관전자 (Spectator)로 입장';
+      sel.appendChild(optSpectator);
+
+      sel.addEventListener('change', function() {
+        const newFields = document.getElementById('new-char-entry-fields');
+        if (newFields) newFields.style.display = this.value === 'NEW' ? 'block' : 'none';
+      });
+    }
 
     function reopenEntryModal() {
+      renderEntryModalOptions();
       const modal = document.getElementById('welcome-modal');
       if (modal) modal.style.display = 'flex';
     }
 
     function finishEntry() {
+      const realInput = document.getElementById('entry-realname');
       const nickInput = document.getElementById('entry-nickname');
+      const realVal = realInput ? realInput.value.trim() : '';
       const nickVal = nickInput ? nickInput.value.trim() : '';
 
+      myRealName = realVal || '익명 모험가';
       myNickname = nickVal || '모험가';
-      if (!sessionUsers.includes(myNickname)) sessionUsers.push(myNickname);
 
       const sel = document.getElementById('entry-char-select');
       const selVal = sel ? sel.value : 'char_1';
 
-      if (selVal === 'NEW') {
+      if (selVal === 'SPECTATOR') {
+        isSpectator = true;
+        myBoundCharId = null;
+      } else if (selVal === 'NEW') {
+        isSpectator = false;
         const nameInput = document.getElementById('entry-new-char-name');
         const classInput = document.getElementById('entry-new-char-class');
         const cName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : '신규 모험가';
@@ -1186,6 +1369,7 @@
           owner: myNickname,
           x: 750 + Math.random() * 50,
           y: 750 + Math.random() * 50,
+          size: 60,
           hp: newChar.hp,
           maxHp: newChar.maxHp,
           armor: newChar.armor,
@@ -1194,6 +1378,7 @@
           conditions: []
         });
       } else {
+        isSpectator = false;
         myBoundCharId = selVal;
         const cIdx = characters.findIndex(c => c.id === selVal);
         if (cIdx !== -1) selectedCharIndex = cIdx;
@@ -1201,9 +1386,24 @@
         if (tok) tok.owner = myNickname;
       }
 
-      document.getElementById('header-user-display').innerText = myNickname;
+      const existingUserIdx = connectedUsers.findIndex(u => u.nickname === myNickname);
       const bChar = characters.find(c => c.id === myBoundCharId);
-      document.getElementById('header-bound-char').innerText = bChar ? `[${bChar.name}]` : '';
+      const userInfo = {
+        nickname: myNickname,
+        realName: myRealName,
+        role: isSpectator ? 'spectator' : currentRole,
+        boundCharId: myBoundCharId,
+        charName: isSpectator ? '관전 중' : (bChar ? bChar.name : '미배정')
+      };
+
+      if (existingUserIdx !== -1) {
+        connectedUsers[existingUserIdx] = userInfo;
+      } else {
+        connectedUsers.push(userInfo);
+      }
+
+      document.getElementById('header-user-display').innerText = `${myNickname} (${myRealName})`;
+      document.getElementById('header-bound-char').innerText = isSpectator ? '[관전자]' : (bChar ? `[${bChar.name}]` : '');
 
       const modal = document.getElementById('welcome-modal');
       if (modal) modal.style.display = 'none';
@@ -1214,8 +1414,11 @@
       renderCompendium();
       renderTokens();
       renderHandoutsLibrary();
+      renderHandoutRecipientsCheckboxes();
+      renderUsersTable();
+      populateGmTargetTokenDropdown();
       redrawFog();
-      appendChatMessage(`🎉 [${myNickname}]님이 접속하셨습니다. (조종 캐릭터: ${bChar ? bChar.name : '없음'})`);
+      appendChatMessage(`🎉 [${myNickname} (${myRealName})]님이 세션에 입장하셨습니다. (${isSpectator ? '관전자 모드' : '캐릭터: ' + (bChar ? bChar.name : '없음')})`);
     }
 
     function populateOwnerDropdowns() {
@@ -1228,17 +1431,74 @@
         gmOpt.innerText = '👑 GM (게임 마스터)';
         s.appendChild(gmOpt);
 
-        sessionUsers.forEach(u => {
-          if (u === 'GM') return;
+        connectedUsers.forEach(u => {
+          if (u.nickname === 'GM') return;
           const opt = document.createElement('option');
-          opt.value = u;
-          opt.innerText = `👤 ${u}`;
+          opt.value = u.nickname;
+          opt.innerText = `👤 ${u.nickname} (${u.realName})`;
           s.appendChild(opt);
         });
       });
     }
 
+    function renderUsersTable() {
+      const tbody = document.getElementById('users-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      connectedUsers.forEach(u => {
+        const tr = document.createElement('tr');
+        let roleBadge = '';
+        if (u.role === 'gm') roleBadge = '<span class="user-badge-role gm">GM</span>';
+        else if (u.role === 'spectator') roleBadge = '<span class="user-badge-role spectator">관전자</span>';
+        else roleBadge = '<span class="user-badge-role player">플레이어</span>';
+
+        tr.innerHTML = `
+          <td><strong>${u.nickname}</strong></td>
+          <td>${u.realName || '-'}</td>
+          <td>${roleBadge}</td>
+          <td>${u.charName || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- Web Audio Synthesis (Dice, SFX, and PING Sound) ---
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    // Play subtle "Ttiririring" chime bell sound on ping
+    function playPingSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const freqs = [1046.5, 1318.5, 1567.98, 2093.0]; // C6, E6, G6, C7 arpeggio
+        freqs.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const noteTime = now + (idx * 0.055);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, noteTime);
+          
+          gain.gain.setValueAtTime(0.18, noteTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.35);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start(noteTime);
+          osc.stop(noteTime + 0.38);
+        });
+      } catch (err) {}
+    }
+
     function triggerPing(worldX, worldY) {
+      playPingSound();
+
       const world = document.getElementById('vtt-world');
       const ping = document.createElement('div');
       ping.className = 'ping-circle';
@@ -1250,23 +1510,101 @@
       appendChatMessage(`📍 [${myNickname}]님이 위치를 핑했습니다.`);
     }
 
+    // --- GM Condition Applier Functions ---
+    function populateGmTargetTokenDropdown() {
+      const select = document.getElementById('gm-target-token-select');
+      if (!select) return;
+      const currentSelected = select.value;
+      select.innerHTML = '';
+
+      tokens.forEach(tok => {
+        const opt = document.createElement('option');
+        opt.value = tok.id;
+        const typeTag = tok.type === 'player' ? '🛡️' : (tok.type === 'monster' ? '👹' : '👤');
+        opt.innerText = `${typeTag} ${tok.name} (소유: ${tok.owner || '공용'})`;
+        select.appendChild(opt);
+      });
+
+      if (currentSelected && tokens.some(t => t.id === currentSelected)) {
+        select.value = currentSelected;
+      }
+      renderGmConditionApplierButtons();
+    }
+
+    function renderGmConditionApplierButtons() {
+      const container = document.getElementById('gm-conditions-btn-container');
+      const select = document.getElementById('gm-target-token-select');
+      if (!container || !select) return;
+      container.innerHTML = '';
+
+      const targetId = select.value;
+      const targetToken = tokens.find(t => t.id === targetId);
+      if (!targetToken) {
+        container.innerHTML = '<span style="grid-column:span 4; font-size:0.75rem; color:var(--ink-muted);">배치된 토큰이 없습니다.</span>';
+        return;
+      }
+
+      STATUS_CONDITIONS.forEach(cond => {
+        const hasCond = targetToken.conditions && targetToken.conditions.includes(cond.key);
+        const btn = document.createElement('button');
+        btn.className = `gm-cond-btn ${hasCond ? 'active' : ''}`;
+        btn.innerHTML = `<span>${cond.icon}</span><span>${cond.name}</span>`;
+        btn.title = `${targetToken.name}에게 [${cond.name}] 상태 부여/해제`;
+        btn.onclick = () => toggleConditionOnTargetToken(targetToken.id, cond.key, cond.name);
+        container.appendChild(btn);
+      });
+    }
+
+    function toggleConditionOnTargetToken(tokenId, condKey, condName) {
+      const tok = tokens.find(t => t.id === tokenId);
+      if (!tok) return;
+
+      if (!tok.conditions) tok.conditions = [];
+      const idx = tok.conditions.indexOf(condKey);
+      let isAdded = false;
+
+      if (idx !== -1) {
+        tok.conditions.splice(idx, 1);
+        isAdded = false;
+      } else {
+        tok.conditions.push(condKey);
+        isAdded = true;
+      }
+
+      renderTokens();
+      renderGmConditionApplierButtons();
+      appendChatMessage(`⚠️ [GM] <strong>${tok.name}</strong> 토큰의 상태이상 [${condName}] ${isAdded ? '부여' : '해제'}`);
+    }
+
+    // --- Sketch Pen & Eraser Logic ---
     const drawCanvas = document.getElementById('drawing-canvas');
     const drawCtx = drawCanvas.getContext('2d');
     let isDrawing = false;
     let lastDrawX, lastDrawY;
 
-    function toggleDrawMode() {
-      isDrawingActive = !isDrawingActive;
-      const btn = document.getElementById('btn-draw-mode');
+    function setDrawMode(mode) {
+      const btnDraw = document.getElementById('btn-draw-mode');
+      const btnErase = document.getElementById('btn-erase-mode');
       const vp = document.getElementById('vtt-viewport');
-      drawCanvas.style.pointerEvents = isDrawingActive ? 'auto' : 'none';
-      vp.classList.toggle('drawing', isDrawingActive);
-      btn.style.background = isDrawingActive ? '#edd8bf' : '';
-      btn.innerText = isDrawingActive ? '✏️ 그리기 활성화됨' : '✏️ 그리기 ON/OFF';
+
+      if (drawToolMode === mode) {
+        drawToolMode = 'none';
+      } else {
+        drawToolMode = mode;
+      }
+
+      const isActive = drawToolMode !== 'none';
+      drawCanvas.style.pointerEvents = isActive ? 'auto' : 'none';
+
+      vp.classList.toggle('drawing', drawToolMode === 'draw');
+      vp.classList.toggle('erasing', drawToolMode === 'erase');
+
+      btnDraw.classList.toggle('active-toggle', drawToolMode === 'draw');
+      btnErase.classList.toggle('active-toggle', drawToolMode === 'erase');
     }
 
     drawCanvas.addEventListener('mousedown', (e) => {
-      if (!isDrawingActive) return;
+      if (drawToolMode === 'none' || e.button !== 0) return;
       isDrawing = true;
       const rect = viewport.getBoundingClientRect();
       lastDrawX = (e.clientX - rect.left - panX) / zoomLevel;
@@ -1274,20 +1612,29 @@
     });
 
     window.addEventListener('mousemove', (e) => {
-      if (!isDrawing || !isDrawingActive) return;
+      if (!isDrawing || drawToolMode === 'none') return;
       const rect = viewport.getBoundingClientRect();
       const curX = (e.clientX - rect.left - panX) / zoomLevel;
       const curY = (e.clientY - rect.top - panY) / zoomLevel;
 
-      drawCtx.strokeStyle = document.getElementById('draw-color').value;
-      drawCtx.lineWidth = parseInt(document.getElementById('draw-width').value, 10);
+      drawCtx.save();
+      const w = parseInt(document.getElementById('draw-width').value, 10) || 6;
+      drawCtx.lineWidth = drawToolMode === 'erase' ? w * 2.5 : w;
       drawCtx.lineCap = 'round';
       drawCtx.lineJoin = 'round';
+
+      if (drawToolMode === 'erase') {
+        drawCtx.globalCompositeOperation = 'destination-out';
+      } else {
+        drawCtx.globalCompositeOperation = 'source-over';
+        drawCtx.strokeStyle = document.getElementById('draw-color').value;
+      }
 
       drawCtx.beginPath();
       drawCtx.moveTo(lastDrawX, lastDrawY);
       drawCtx.lineTo(curX, curY);
       drawCtx.stroke();
+      drawCtx.restore();
 
       lastDrawX = curX;
       lastDrawY = curY;
@@ -1297,9 +1644,10 @@
 
     function clearDrawCanvas() {
       drawCtx.clearRect(0, 0, 5000, 5000);
-      appendChatMessage('🗑️ 스케치 펜 드로잉이 지워졌습니다.');
+      appendChatMessage('🗑️ 스케치 펜 드로잉이 전체 지워졌습니다.');
     }
 
+    // --- Fog of War & Line of Sight Calculation ---
     const fogCanvas = document.getElementById('fog-canvas');
     const fogCtx = fogCanvas.getContext('2d');
     const fogMaskCanvas = document.createElement('canvas');
@@ -1320,7 +1668,8 @@
       document.getElementById('fog-brush-controls').style.display = enabled ? 'block' : 'none';
       if (!enabled) setFogBrushMode('none');
       redrawFog();
-      appendChatMessage(enabled ? '🌫️ 전장의 안개가 켜졌습니다. (플레이어 시야가 제한됩니다)' : '☀️ 전장의 안개가 꺼졌습니다. (전체 전장이 공개됩니다)');
+      renderTokens();
+      appendChatMessage(enabled ? '🌫️ 전장의 안개가 켜졌습니다. (시야 밖 토큰이 은폐됩니다)' : '☀️ 전장의 안개가 꺼졌습니다. (모든 토큰과 전장이 공개됩니다)');
     }
 
     function setFogBrushMode(mode) {
@@ -1334,7 +1683,7 @@
 
     let isBrushingFog = false;
     fogCanvas.addEventListener('mousedown', (e) => {
-      if (!isFogActive || currentRole !== 'gm' || fogBrushMode === 'none') return;
+      if (!isFogActive || currentRole !== 'gm' || fogBrushMode === 'none' || e.button !== 0) return;
       isBrushingFog = true;
       applyFogBrushAt(e);
     });
@@ -1367,6 +1716,7 @@
       }
       fogMaskCtx.restore();
       redrawFog();
+      renderTokens();
     }
 
     function getDungeonWorldVisionRadius(visionBase, bonusGrids) {
@@ -1394,16 +1744,17 @@
         const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
         const myChar = characters.find(c => c.id === myBoundCharId);
 
-        if (myTok && myChar) {
+        if (myTok && myChar && !isSpectator) {
+          const centerOffset = (myTok.size || 60) / 2;
           const radius = getDungeonWorldVisionRadius(myChar.visionBase || '몇걸음', myChar.visionBonusGrids || 0);
           fogCtx.globalCompositeOperation = 'destination-out';
-          const grad = fogCtx.createRadialGradient(myTok.x + 30, myTok.y + 30, radius * 0.7, myTok.x + 30, myTok.y + 30, radius);
+          const grad = fogCtx.createRadialGradient(myTok.x + centerOffset, myTok.y + centerOffset, radius * 0.75, myTok.x + centerOffset, myTok.y + centerOffset, radius);
           grad.addColorStop(0, 'rgba(0,0,0,1)');
           grad.addColorStop(1, 'rgba(0,0,0,0)');
 
           fogCtx.fillStyle = grad;
           fogCtx.beginPath();
-          fogCtx.arc(myTok.x + 30, myTok.y + 30, radius, 0, Math.PI * 2);
+          fogCtx.arc(myTok.x + centerOffset, myTok.y + centerOffset, radius, 0, Math.PI * 2);
           fogCtx.fill();
         }
         fogCtx.restore();
@@ -1416,14 +1767,6 @@
       btn.innerText = showPlayerGuide ? '📏 사거리 가이드 끄기' : '📏 사거리 가이드 켜기';
       btn.style.background = showPlayerGuide ? '#c62828' : '#2e7d32';
       renderTokens();
-    }
-
-    // --- Audio Synthesis ---
-    let audioCtx = null;
-    function getAudioContext() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      return audioCtx;
     }
 
     function playDiceSound() {
@@ -1459,6 +1802,134 @@
       } catch (err) {}
     }
 
+    function playBuiltinSfx(type) {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        if (type === 'sword') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(1400, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.25);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.3);
+          appendChatMessage('⚔️ [GM 효과음] 챙강! 날카로운 칼날이 부딪혔습니다.');
+        } else if (type === 'magic') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(40, now + 0.6);
+          gain.gain.setValueAtTime(0.6, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.7);
+          appendChatMessage('💥 [GM 효과음] 콰아앙! 화염 마법이 폭발합니다.');
+        } else if (type === 'monster') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(90, now);
+          osc.frequency.linearRampToValueAtTime(260, now + 0.2);
+          osc.frequency.exponentialRampToValueAtTime(60, now + 0.7);
+          gain.gain.setValueAtTime(0.45, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.75);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.8);
+          appendChatMessage('👹 [GM 효과음] 크아아악! 어둠 속에서 괴물이 포효합니다.');
+        } else if (type === 'door') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(80, now);
+          osc.frequency.linearRampToValueAtTime(120, now + 0.4);
+          osc.frequency.linearRampToValueAtTime(70, now + 0.9);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.95);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 1.0);
+          appendChatMessage('🚪 [GM 효과음] 끼이익... 둔탁한 던전 문이 열립니다.');
+        }
+      } catch (e) {}
+    }
+
+    function addCustomSfx() {
+      const nameInput = document.getElementById('sfx-custom-name');
+      const fileInput = document.getElementById('sfx-custom-file');
+      const name = nameInput.value.trim() || '효과음 ' + (customSfxList.length + 1);
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('업로드할 음성/효과음 오디오 파일을 선택해주세요.');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const audioUrl = URL.createObjectURL(file);
+      customSfxList.push({ name, url: audioUrl });
+      renderCustomSfxList();
+      nameInput.value = '';
+      fileInput.value = '';
+      appendChatMessage(`🔊 새로운 커스텀 효과음 [${name}]이(가) 등록되었습니다.`);
+    }
+
+    function renderCustomSfxList() {
+      const container = document.getElementById('custom-sfx-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (customSfxList.length === 0) {
+        container.innerHTML = '<div style="color:var(--ink-muted); font-size:0.75rem;">등록된 커스텀 효과음이 없습니다.</div>';
+        return;
+      }
+
+      customSfxList.forEach((sfx, idx) => {
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.style.background = '#f7eedf';
+        item.style.padding = '4px 8px';
+        item.style.borderRadius = '4px';
+        item.style.border = '1px solid #caa372';
+
+        item.innerHTML = `
+          <strong style="font-size:0.78rem;">🎵 ${sfx.name}</strong>
+          <div style="display:flex; gap:4px;">
+            <button class="win-btn" style="width:auto; padding:2px 8px;" onclick="playCustomSfx(${idx})">▶ 재생</button>
+            <button class="win-btn" style="background:#c62828;" onclick="deleteCustomSfx(${idx})">×</button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function playCustomSfx(idx) {
+      const sfx = customSfxList[idx];
+      if (sfx) {
+        const audio = new Audio(sfx.url);
+        audio.play();
+        appendChatMessage(`🔊 [GM 효과음] ${sfx.name} 재생`);
+      }
+    }
+
+    function deleteCustomSfx(idx) {
+      customSfxList.splice(idx, 1);
+      renderCustomSfxList();
+    }
+
+    // --- BGM Logic ---
     let bgmIsPlaying = false;
     let bgmTimer = null;
     let customAudioElement = null;
@@ -1552,7 +2023,7 @@
     function toggleGridOnTop(isOnTop) { document.getElementById('grid-overlay').classList.toggle('on-top', isOnTop); }
     function toggleGridVisible(isVisible) { document.getElementById('grid-overlay').classList.toggle('hidden', !isVisible); }
 
-    // --- Viewport Zoom & Pan ---
+    // --- Viewport Zoom & Pan (Standardized to Wheel Button Click + Drag) ---
     let zoomLevel = 1.0;
     let panX = -450;
     let panY = -450;
@@ -1595,7 +2066,9 @@
       updateWorldTransform();
     }, { passive: false });
 
+    // Panning is strictly triggered by Middle Mouse Button (Wheel Click: button 1)
     viewport.addEventListener('mousedown', (e) => {
+      // Shift + Left Click: Tabletop Ping with Chime Sound
       if (e.shiftKey && e.button === 0) {
         const rect = viewport.getBoundingClientRect();
         const worldX = (e.clientX - rect.left - panX) / zoomLevel;
@@ -1604,10 +2077,8 @@
         return;
       }
 
-      if (isDrawingActive) return;
-      if (e.target.closest('#fog-canvas') && isFogActive && currentRole === 'gm' && fogBrushMode !== 'none') return;
-
-      if (e.button === 2 || e.target.id === 'vtt-world' || e.target.id === 'vtt-viewport' || e.target.id === 'grid-overlay' || e.target.id === 'map-background-layer' || e.target.id === 'map-image') {
+      if (e.button === 1) { // Middle click (wheel button)
+        e.preventDefault();
         isPanning = true;
         panStartX = e.clientX - panX;
         panStartY = e.clientY - panY;
@@ -1622,9 +2093,15 @@
       updateWorldTransform();
     });
 
-    window.addEventListener('mouseup', () => {
-      isPanning = false;
-      viewport.classList.remove('panning');
+    window.addEventListener('mouseup', (e) => {
+      if (e.button === 1 || isPanning) {
+        isPanning = false;
+        viewport.classList.remove('panning');
+      }
+    });
+
+    viewport.addEventListener('auxclick', (e) => {
+      if (e.button === 1) e.preventDefault(); // Prevent autoscroll icon on wheel click
     });
 
     viewport.addEventListener('contextmenu', e => e.preventDefault());
@@ -1640,6 +2117,8 @@
         'spawner-window': 'btn-toggle-spawner',
         'compendium-window': 'btn-toggle-compendium',
         'gm-toolbox-window': 'btn-toggle-gm-toolbox',
+        'sfx-window': 'btn-toggle-sfx',
+        'users-window': 'btn-toggle-users',
         'handouts-box-window': 'btn-toggle-handouts-box',
         'draw-tools-window': 'btn-toggle-draw',
         'map-window': 'btn-toggle-map'
@@ -1677,13 +2156,20 @@
       document.getElementById('role-btn-player').classList.toggle('active', role === 'player');
       document.getElementById('role-btn-gm').classList.toggle('active', role === 'gm');
 
-      document.getElementById('btn-toggle-compendium').style.display = role === 'gm' ? 'flex' : 'none';
-      document.getElementById('btn-toggle-gm-toolbox').style.display = role === 'gm' ? 'flex' : 'none';
+      const isGm = role === 'gm';
+      document.getElementById('btn-toggle-compendium').style.display = isGm ? 'flex' : 'none';
+      document.getElementById('btn-toggle-gm-toolbox').style.display = isGm ? 'flex' : 'none';
+      document.getElementById('btn-toggle-sfx').style.display = isGm ? 'flex' : 'none';
+      document.getElementById('btn-toggle-users').style.display = isGm ? 'flex' : 'none';
+      document.getElementById('handout-create-section').style.display = isGm ? 'block' : 'none';
 
       renderSheetTabs();
       renderSheet();
       renderCompendium();
       renderTokens();
+      renderHandoutsLibrary();
+      renderUsersTable();
+      populateGmTargetTokenDropdown();
       redrawFog();
     }
 
@@ -1764,6 +2250,7 @@
         renderSheetTabs();
         renderSheet();
         renderTokens();
+        populateGmTargetTokenDropdown();
         redrawFog();
         appendChatMessage(`🗑️ [${c.name}] 캐릭터 시트가 삭제되었습니다.`);
       }
@@ -1966,11 +2453,12 @@
         tokenCompendium[cat.key].forEach((item, itemIdx) => {
           const card = document.createElement('div');
           card.className = 'compendium-card';
+          const sizeText = item.size ? `${item.size}px` : '60px';
           card.innerHTML = `
             <button class="compendium-del-btn" onclick="deleteCompendiumItem('${cat.key}', ${itemIdx})" title="도감에서 삭제">×</button>
             <img src="${item.image}" class="compendium-img">
             <div class="compendium-info">
-              <strong>${item.name}</strong><br>
+              <strong>${item.name}</strong> <span style="font-size:0.65rem; color:#8b5a2b;">(${sizeText})</span><br>
               HP: ${item.hp} | 피해: ${item.damage} | 장갑: ${item.armor}<br>
               <span style="color:var(--ink-muted);">${item.info || ''}</span>
             </div>
@@ -1997,14 +2485,16 @@
       if (!item) return;
 
       const viewRect = viewport.getBoundingClientRect();
-      const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - 30;
-      const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - 30;
+      const tokenSize = item.size || 60;
+      const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - (tokenSize / 2);
+      const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - (tokenSize / 2);
 
       tokens.push({
         id: `${category}_${Date.now()}`,
         name: item.name,
         type: category,
         owner: 'GM',
+        size: tokenSize,
         x: spawnX + (Math.random() * 40 - 20),
         y: spawnY + (Math.random() * 40 - 20),
         hp: item.hp,
@@ -2015,22 +2505,47 @@
         conditions: []
       });
       renderTokens();
-      appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 전장에 소환되었습니다.`);
+      populateGmTargetTokenDropdown();
+      appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 전장에 소환되었습니다. (크기: ${tokenSize}px)`);
     }
 
+    // --- Token Rendering with Dynamic Size & Fog Visibility ---
     function renderTokens() {
       const layer = document.getElementById('tokens-layer');
       layer.innerHTML = '';
+
+      const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
+      const myChar = characters.find(c => c.id === myBoundCharId);
+      const myTokenCenterOffset = myTok ? (myTok.size || 60) / 2 : 30;
+      const visionRadius = (myChar && !isSpectator) ? getDungeonWorldVisionRadius(myChar.visionBase || '몇걸음', myChar.visionBonusGrids || 0) : 0;
 
       tokens.forEach(tok => {
         const el = document.createElement('div');
         const canControl = currentRole === 'gm' || tok.owner === myNickname;
         const isMyBoundChar = tok.id === myBoundCharId || tok.owner === myNickname;
+        const tokSize = tok.size || 60;
+        const tokCenterOffset = tokSize / 2;
 
-        el.className = `vtt-token ${canControl ? '' : 'locked'}`;
+        let isVisibleInFog = true;
+        if (isFogActive && currentRole !== 'gm') {
+          if (isSpectator) {
+            isVisibleInFog = false;
+          } else if (isMyBoundChar) {
+            isVisibleInFog = true;
+          } else if (myTok) {
+            const dist = Math.hypot((tok.x + tokCenterOffset) - (myTok.x + myTokenCenterOffset), (tok.y + tokCenterOffset) - (myTok.y + myTokenCenterOffset));
+            isVisibleInFog = dist <= visionRadius;
+          } else {
+            isVisibleInFog = false;
+          }
+        }
+
+        el.className = `vtt-token ${canControl ? '' : 'locked'} ${!isVisibleInFog ? 'hidden-by-fog' : ''}`;
         el.id = `vtt-tok-${tok.id}`;
         el.style.left = `${tok.x}px`;
         el.style.top = `${tok.y}px`;
+        el.style.width = `${tokSize}px`;
+        el.style.height = `${tokSize}px`;
 
         const hpPct = Math.max(0, Math.min(100, Math.round((tok.hp / tok.maxHp) * 100)));
         const showRings = showPlayerGuide && isMyBoundChar;
@@ -2085,8 +2600,10 @@
         if (canControl) {
           attachTokenDraggable(el, tok);
         } else {
-          el.addEventListener('mousedown', () => {
-            appendChatMessage(`🚫 [${tok.name}] 토큰은 조종 권한(${tok.owner || 'GM'})이 없습니다.`);
+          el.addEventListener('mousedown', (e) => {
+            if (e.button === 0) {
+              appendChatMessage(`🚫 [${tok.name}] 토큰은 조종 권한(${tok.owner || 'GM'})이 없습니다.`);
+            }
           });
         }
         layer.appendChild(el);
@@ -2099,6 +2616,7 @@
       let initialTokenX, initialTokenY;
 
       element.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // Only drag tokens with Left Click
         if (e.target.closest('.token-bubble') || e.target.closest('.token-del-btn') || e.target.closest('.condition-badge')) return;
         isDragging = true;
         startMouseX = e.clientX;
@@ -2120,6 +2638,7 @@
 
           if (isFogActive && (tokenObj.id === myBoundCharId || tokenObj.owner === myNickname)) {
             redrawFog();
+            renderTokens();
           }
         }
 
@@ -2129,6 +2648,7 @@
           window.removeEventListener('mousemove', onMouseMove);
           window.removeEventListener('mouseup', onMouseUp);
           redrawFog();
+          renderTokens();
         }
 
         window.addEventListener('mousemove', onMouseMove);
@@ -2144,6 +2664,7 @@
       const tok = tokens.find(t => t.id === tokenId);
       tokens = tokens.filter(t => t.id !== tokenId);
       renderTokens();
+      populateGmTargetTokenDropdown();
       redrawFog();
       if (tok) appendChatMessage(`🗑️ [${tok.name}] 토큰이 전장에서 제거되었습니다.`);
     }
@@ -2243,6 +2764,7 @@
       closeBubbleModal();
       renderSheet();
       renderTokens();
+      renderGmConditionApplierButtons();
     }
 
     let currentSpawnerTab = 'monster';
@@ -2305,13 +2827,16 @@
 
       const img = uploadedTokenDataUrl || defaultImg;
       const owner = document.getElementById('spawn-owner-select').value || 'GM';
+      const sizeVal = parseInt(document.getElementById('spawn-token-size').value, 10) || 60;
+
       const viewRect = viewport.getBoundingClientRect();
-      const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - 30;
-      const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - 30;
+      const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - (sizeVal / 2);
+      const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - (sizeVal / 2);
 
       tokens.push({
         id: `${type}_${Date.now()}`,
         name: name, type: type, owner: owner,
+        size: sizeVal,
         x: spawnX + (Math.random() * 40 - 20),
         y: spawnY + (Math.random() * 40 - 20),
         hp: hp, maxHp: hp, armor: armor, damage: dmg,
@@ -2319,15 +2844,16 @@
       });
 
       if (saveToCompendium) {
-        tokenCompendium[type].push({ name, hp, damage: dmg, armor, image: img, info });
+        tokenCompendium[type].push({ name, hp, damage: dmg, armor, size: sizeVal, image: img, info });
         renderCompendium();
       }
 
       renderTokens();
+      populateGmTargetTokenDropdown();
       redrawFog();
       uploadedTokenDataUrl = null;
       document.getElementById('token-image-preview-wrap').style.display = 'none';
-      appendChatMessage(`⚔️ [${name}] 토큰이 전장에 배치되었습니다. (조종 권한: ${owner})`);
+      appendChatMessage(`⚔️ [${name}] 토큰이 전장에 배치되었습니다. (크기: ${sizeVal}px / 조종 권한: ${owner})`);
     }
 
     let pendingMapImageSrc = null;
@@ -2379,22 +2905,61 @@
       appendChatMessage(`🗺️ 지도가 ${gridW}×${gridH} 칸(${targetWidth}×${targetHeight}px) 크기에 맞춰 조정되었습니다.`);
     }
 
+    // --- Handouts and Multiple Recipients Sharing ---
+    function renderHandoutRecipientsCheckboxes() {
+      const container = document.getElementById('handout-recipients-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const allLabel = document.createElement('label');
+      allLabel.style.display = 'flex';
+      allLabel.style.alignItems = 'center';
+      allLabel.style.gap = '4px';
+      allLabel.style.fontSize = '0.75rem';
+      allLabel.innerHTML = `<input type="checkbox" value="ALL" checked> <strong>🌐 전체 플레이어 공유</strong>`;
+      container.appendChild(allLabel);
+
+      connectedUsers.forEach(u => {
+        if (u.nickname === 'GM') return;
+        const l = document.createElement('label');
+        l.style.display = 'flex';
+        l.style.alignItems = 'center';
+        l.style.gap = '4px';
+        l.style.fontSize = '0.75rem';
+        l.innerHTML = `<input type="checkbox" class="handout-user-chk" value="${u.nickname}"> 👤 ${u.nickname} (${u.realName})`;
+        container.appendChild(l);
+      });
+    }
+
     function renderHandoutsLibrary() {
       const list = document.getElementById('handout-library-list');
       if (!list) return;
       list.innerHTML = '';
 
-      handoutsLibrary.forEach((h, idx) => {
+      const visibleHandouts = handoutsLibrary.filter(h => {
+        if (currentRole === 'gm') return true;
+        if (!h.recipients || h.recipients.includes('ALL')) return true;
+        return h.recipients.includes(myNickname);
+      });
+
+      if (visibleHandouts.length === 0) {
+        list.innerHTML = '<div style="color:var(--ink-muted); font-size:0.75rem;">보관되거나 전달받은 단서가 없습니다.</div>';
+        return;
+      }
+
+      visibleHandouts.forEach((h, idx) => {
         const card = document.createElement('div');
         card.className = 'handout-item-card';
+        const recipText = h.recipients && h.recipients.includes('ALL') ? '전체 공개' : `수신: ${(h.recipients || []).join(', ')}`;
         card.innerHTML = `
           <div>
             <strong>${h.title}</strong>
             <div style="font-size:0.72rem; color:var(--ink-muted);">${h.text ? h.text.substring(0, 26) + '...' : '(텍스트 없음)'}</div>
+            <div style="font-size:0.68rem; color:#8b5a2b;">${recipText}</div>
           </div>
           <div style="display:flex; gap:4px;">
-            <button class="win-btn" style="width:auto; padding:2px 8px;" onclick="viewHandout(${idx})">열람</button>
-            <button class="win-btn" style="background:#c62828;" onclick="deleteHandout(${idx})">×</button>
+            <button class="win-btn" style="width:auto; padding:2px 8px;" onclick="viewHandout('${h.id}')">열람</button>
+            ${currentRole === 'gm' ? `<button class="win-btn" style="background:#c62828;" onclick="deleteHandout('${h.id}')">×</button>` : ''}
           </div>
         `;
         list.appendChild(card);
@@ -2406,12 +2971,22 @@
       const text = document.getElementById('lib-handout-text').value.trim();
       const fileInput = document.getElementById('lib-handout-file');
 
+      const recipients = [];
+      const allChk = document.querySelector('#handout-recipients-list input[value="ALL"]');
+      if (allChk && allChk.checked) {
+        recipients.push('ALL');
+      } else {
+        document.querySelectorAll('#handout-recipients-list .handout-user-chk:checked').forEach(chk => {
+          recipients.push(chk.value);
+        });
+      }
+
       function saveHandout(imgData) {
-        const newH = { id: 'h_' + Date.now(), title, text, image: imgData };
+        const newH = { id: 'h_' + Date.now(), title, text, image: imgData, recipients };
         handoutsLibrary.push(newH);
         renderHandoutsLibrary();
         showHandoutModal(newH.title, newH.text, newH.image);
-        appendChatMessage(`📜 새로운 단서 [${newH.title}]이(가) 보관함에 추가되고 공유되었습니다.`);
+        appendChatMessage(`📜 새로운 단서 [${newH.title}]이(가) 등록되었습니다. (공유 대상: ${recipients.includes('ALL') ? '전체' : recipients.join(', ')})`);
       }
 
       if (fileInput.files.length > 0) {
@@ -2423,14 +2998,14 @@
       }
     }
 
-    function viewHandout(idx) {
-      const h = handoutsLibrary[idx];
+    function viewHandout(id) {
+      const h = handoutsLibrary.find(x => x.id === id);
       if (h) showHandoutModal(h.title, h.text, h.image);
     }
 
-    function deleteHandout(idx) {
-      if (confirm(`정말로 [${handoutsLibrary[idx].title}] 단서를 삭제하시겠습니까?`)) {
-        handoutsLibrary.splice(idx, 1);
+    function deleteHandout(id) {
+      if (confirm(`정말로 이 단서를 삭제하시겠습니까?`)) {
+        handoutsLibrary = handoutsLibrary.filter(x => x.id !== id);
         renderHandoutsLibrary();
       }
     }
@@ -2453,12 +3028,13 @@
 
     function exportSessionData() {
       const sessionData = {
-        version: '1.0',
+        version: '1.3',
         timestamp: new Date().toISOString(),
         characters: characters,
         tokens: tokens,
         tokenCompendium: tokenCompendium,
         handoutsLibrary: handoutsLibrary,
+        connectedUsers: connectedUsers,
         mapSettings: {
           src: document.getElementById('map-image').src,
           gridW: document.getElementById('map-grid-w').value,
@@ -2485,6 +3061,7 @@
             if (data.tokens) tokens = data.tokens;
             if (data.tokenCompendium) tokenCompendium = data.tokenCompendium;
             if (data.handoutsLibrary) handoutsLibrary = data.handoutsLibrary;
+            if (data.connectedUsers) connectedUsers = data.connectedUsers;
             if (data.mapSettings) {
               document.getElementById('map-image').src = data.mapSettings.src;
               document.getElementById('map-grid-w').value = data.mapSettings.gridW;
@@ -2496,6 +3073,9 @@
             renderCompendium();
             renderTokens();
             renderHandoutsLibrary();
+            renderHandoutRecipientsCheckboxes();
+            renderUsersTable();
+            populateGmTargetTokenDropdown();
             redrawFog();
             appendChatMessage(`📂 세션 백업 파일 [${file.name}]을 성공적으로 복원했습니다!`);
           } catch (err) {
@@ -2564,18 +3144,25 @@
       const total = results.reduce((a, b) => a + b, 0);
       const resultEl = document.getElementById('window-dice-result');
 
-      resultEl.innerHTML = `[${results.join(', ')}] = <strong>총합 ${total}</strong>`;
+      let outcomeTag = '';
+      if (label === '2d6') {
+        if (total >= 10) outcomeTag = ' <span style="color:#2e7d32; font-weight:bold;">[10+ 대성공]</span>';
+        else if (total >= 7) outcomeTag = ' <span style="color:#f57c00; font-weight:bold;">[7~9 부분 성공]</span>';
+        else outcomeTag = ' <span style="color:#c62828; font-weight:bold;">[6- 실패 (GM 액션 & XP+1)]</span>';
+      }
 
-      addDiceLog(label, results, total);
-      appendChatMessage(`🎲 <strong>[${myNickname}]</strong> ${label} 굴림: [${results.join(', ')}] = <strong>${total}</strong>`, 'dice');
+      resultEl.innerHTML = `[${results.join(', ')}] = <strong>총합 ${total}</strong>${outcomeTag}`;
+
+      addDiceLog(label, results, total, outcomeTag);
+      appendChatMessage(`🎲 <strong>[${myNickname}]</strong> ${label} 굴림: [${results.join(', ')}] = <strong>${total}</strong>${outcomeTag}`, 'dice');
     }
 
-    function addDiceLog(label, results, total) {
+    function addDiceLog(label, results, total, outcomeTag = '') {
       const logBox = document.getElementById('dice-history-log');
       const timeStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       const item = document.createElement('div');
       item.className = 'dice-log-item';
-      item.innerHTML = `<span style="color:#8b5a2b;">${timeStr}</span> <strong>${label}</strong>: [${results.join(', ')}] = <strong>${total}</strong>`;
+      item.innerHTML = `<span style="color:#8b5a2b;">${timeStr}</span> <strong>${label}</strong>: [${results.join(', ')}] = <strong>${total}</strong>${outcomeTag}`;
 
       if (logBox.innerText.includes('아직 굴린 주사위가 없습니다')) {
         logBox.innerHTML = '';
@@ -2595,7 +3182,7 @@
       const text = input.value.trim();
       if (!text) return;
 
-      const senderTag = currentRole === 'gm' ? `👑 GM (${myNickname})` : `🛡️ ${myNickname}`;
+      const senderTag = currentRole === 'gm' ? `👑 GM (${myNickname})` : (isSpectator ? `👁️ 관전자 (${myNickname})` : `🛡️ ${myNickname}`);
       appendChatMessage(`<strong>${senderTag}:</strong> ${text}`);
       input.value = '';
     }
@@ -2611,12 +3198,17 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       updateWorldTransform();
+      renderEntryModalOptions();
       populateOwnerDropdowns();
       renderSheetTabs();
       renderSheet();
       renderCompendium();
       renderTokens();
       renderHandoutsLibrary();
+      renderHandoutRecipientsCheckboxes();
+      renderUsersTable();
+      populateGmTargetTokenDropdown();
+      renderCustomSfxList();
       redrawFog();
     });
   </script>
