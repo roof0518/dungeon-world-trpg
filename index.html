@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>던전월드 TRPG Roll20형 VTT 전장</title>
+  <title>던전월드 TRPG Roll20형 VTT 전장 (3구역 맵 분할 & 포탈 텔레포트)</title>
   <!-- WebRTC P2P Sync Library -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
@@ -21,6 +21,7 @@
       --red: #a82824;
       --green: #2e7d32;
       --blue: #1976d2;
+      --purple: #6a1b9a;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -104,7 +105,7 @@
 
     #vtt-viewport {
       position: absolute; top: 48px; left: 0; right: 0; bottom: 0;
-      background: #140f0a; overflow: hidden; cursor: default;
+      background: #120e0a; overflow: hidden; cursor: default;
     }
     #vtt-viewport.panning { cursor: grabbing !important; }
     #vtt-viewport.drawing { cursor: crosshair; }
@@ -112,36 +113,64 @@
 
     #vtt-world {
       position: absolute; top: 0; left: 0;
-      width: 5000px; height: 5000px; transform-origin: 0 0;
+      width: 5500px; height: 5000px; transform-origin: 0 0;
       will-change: transform;
     }
 
-    #grid-overlay {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
+    /* 3-Zone Map Background System */
+    .map-zone-wrapper {
+      position: absolute;
+      border: 3px solid var(--parchment-border);
+      border-radius: 8px;
+      box-shadow: 0 12px 45px rgba(0,0,0,0.92);
+      z-index: 20;
+      background: #23180f;
+      display: flex;
+      flex-direction: column;
+    }
+    .zone-header-title {
+      background: linear-gradient(to bottom, #7c4c23, #4a2c11);
+      color: #ffeed3;
+      padding: 4px 12px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      border-bottom: 2px solid #281404;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.5px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+      user-select: none;
+    }
+    .zone-map-container {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+    .zone-map-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      object-fit: cover;
+    }
+    .zone-grid-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       background-size: 50px 50px;
       background-image: 
-        linear-gradient(to right, rgba(202, 163, 114, 0.22) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(202, 163, 114, 0.22) 1px, transparent 1px);
-      pointer-events: none; z-index: 10;
+        linear-gradient(to right, rgba(202, 163, 114, 0.28) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(202, 163, 114, 0.28) 1px, transparent 1px);
+      pointer-events: none;
     }
-    #grid-overlay.on-top { z-index: 35; }
-    #grid-overlay.hidden { display: none; }
-
-    #map-background-layer {
-      position: absolute; top: 500px; left: 500px;
-      pointer-events: none; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-      border: 2px solid var(--parchment-border); z-index: 20;
-    }
-    #map-image { display: block; pointer-events: none; object-fit: fill; }
 
     #drawing-canvas {
-      position: absolute; top: 0; left: 0; width: 5000px; height: 5000px;
+      position: absolute; top: 0; left: 0; width: 5500px; height: 5000px;
       z-index: 38; pointer-events: none;
     }
 
     #fog-canvas {
-      position: absolute; top: 0; left: 0; width: 5000px; height: 5000px;
+      position: absolute; top: 0; left: 0; width: 5500px; height: 5000px;
       z-index: 40; pointer-events: none;
     }
     #vtt-viewport.fog-brush-active #fog-canvas { pointer-events: auto; cursor: crosshair; }
@@ -161,29 +190,74 @@
 
     .vtt-hud {
       position: absolute; bottom: 16px; right: 16px;
-      background: rgba(30, 18, 9, 0.85); border: 1px solid var(--wood-light);
-      border-radius: 6px; padding: 6px 12px; color: #f7ead9; font-size: 0.8rem;
-      display: flex; align-items: center; gap: 8px; z-index: 500;
+      background: rgba(30, 18, 9, 0.92); border: 1px solid var(--wood-light);
+      border-radius: 8px; padding: 6px 14px; color: #f7ead9; font-size: 0.8rem;
+      display: flex; align-items: center; gap: 6px; z-index: 500;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
     }
     .vtt-hud button {
       background: #5e3512; border: 1px solid #b3814d; color: white;
-      padding: 2px 8px; border-radius: 3px; cursor: pointer; font-weight: bold;
+      padding: 3px 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
+      font-size: 0.78rem; transition: background 0.15s;
     }
+    .vtt-hud button:hover { background: #7c4c23; }
 
-    /* Lag-Free GPU Accelerated Token Styling */
-    .vtt-token {
+    /* Lag-Free GPU Accelerated Token & Object Styling */
+    .vtt-token, .vtt-object {
       position: absolute;
       cursor: grab; user-select: none; z-index: 50;
       will-change: transform, left, top;
       transform: translateZ(0);
+      transition: transform 0.1s ease;
     }
-    .vtt-token.selected-token .token-circle {
+    .vtt-token.selected-token .token-circle, .vtt-object.selected-object .object-box {
       outline: 3px solid #00e5ff;
       box-shadow: 0 0 14px #00e5ff;
     }
-    .vtt-token.locked { cursor: not-allowed !important; filter: brightness(0.85); }
-    .vtt-token:active:not(.locked) { cursor: grabbing; z-index: 900 !important; }
-    .vtt-token.hidden-by-fog { display: none !important; }
+    .vtt-token.locked, .vtt-object.locked { cursor: not-allowed !important; filter: brightness(0.85); }
+    .vtt-token:active:not(.locked), .vtt-object:active:not(.locked) { cursor: grabbing; z-index: 900 !important; }
+    .vtt-token.hidden-by-fog, .vtt-object.hidden-by-fog { display: none !important; }
+
+    /* Interactive Object Specific Styles */
+    .vtt-object {
+      cursor: pointer;
+    }
+    .vtt-object:hover .object-box {
+      transform: scale(1.05);
+      border-color: #ffeb3b;
+      box-shadow: 0 0 12px rgba(255, 235, 59, 0.8);
+    }
+    .object-box {
+      width: 100%; height: 100%; border-radius: 12px;
+      background: radial-gradient(circle, #52341b 0%, #261408 100%);
+      border: 3px solid #e0a96d;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+      display: flex; justify-content: center; align-items: center;
+      position: relative; overflow: hidden; transition: all 0.15s ease;
+    }
+    .object-icon {
+      font-size: 2rem; pointer-events: none;
+    }
+    .object-img {
+      width: 100%; height: 100%; object-fit: cover; pointer-events: none;
+    }
+    .object-touch-indicator {
+      position: absolute; top: -14px; right: -10px;
+      background: #ff9800; color: #fff; font-size: 0.65rem; font-weight: bold;
+      padding: 1px 5px; border-radius: 10px; border: 1px solid #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none;
+    }
+    .object-teleport-badge {
+      position: absolute; bottom: 2px; right: 2px;
+      background: #6a1b9a; color: #fff; font-size: 0.6rem; font-weight: bold;
+      padding: 0 4px; border-radius: 6px; border: 1px solid #fff; pointer-events: none;
+    }
+    .object-label {
+      position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+      background: rgba(18, 10, 4, 0.9); color: #ffdca8; font-size: 0.72rem; font-weight: bold;
+      padding: 1px 7px; border-radius: 4px; border: 1px solid #caa372;
+      white-space: nowrap; pointer-events: none;
+    }
 
     .reach-guide-container {
       display: none; position: absolute; top: 50%; left: 50%;
@@ -263,13 +337,13 @@
       white-space: nowrap; pointer-events: none;
     }
 
-    .token-del-btn {
+    .token-del-btn, .object-del-btn {
       display: none; position: absolute; top: -10px; right: -10px;
       width: 20px; height: 20px; background: #c62828; color: white;
       border-radius: 50%; border: 1px solid white; font-size: 0.7rem; font-weight: bold;
       cursor: pointer; justify-content: center; align-items: center; z-index: 70;
     }
-    .gm-mode .token-del-btn { display: flex; }
+    .gm-mode .token-del-btn, .gm-mode .object-del-btn { display: flex; }
 
     .floating-window {
       position: absolute; background: var(--parchment);
@@ -305,7 +379,8 @@
     #dice-window { top: 60px; right: 20px; width: 340px; height: 460px; }
     #spawner-window { top: 120px; left: 520px; width: 390px; height: 530px; display: none; }
     #compendium-window { top: 100px; left: 250px; width: 540px; height: 500px; display: none; }
-    #map-window { top: 140px; left: 320px; width: 440px; height: 530px; display: none; }
+    #object-window { top: 110px; left: 380px; width: 490px; height: 580px; display: none; }
+    #map-window { top: 140px; left: 320px; width: 460px; height: 560px; display: none; }
     #gm-toolbox-window { top: 120px; left: 360px; width: 420px; height: 560px; display: none; }
     #handouts-box-window { top: 140px; left: 420px; width: 440px; height: 520px; display: none; }
     #draw-tools-window { top: 60px; left: 520px; width: 320px; height: 290px; display: none; }
@@ -470,6 +545,8 @@
     }
     .chat-msg { background: rgba(255,255,255,0.08); padding: 3px 6px; border-radius: 4px; word-break: break-all; }
     .chat-msg.dice { border-left: 3px solid var(--brass); color: #ffdca8; }
+    .chat-msg.object-msg { border-left: 3px solid #ff9800; background: rgba(255, 152, 0, 0.15); color: #fff3e0; }
+    .chat-msg.teleport-msg { border-left: 3px solid #ab47bc; background: rgba(171, 71, 188, 0.18); color: #f3e5f5; }
     .chat-input-bar {
       display: flex; border-top: 1px solid #7c4c23; padding: 4px;
       background: rgba(20, 12, 5, 0.9); flex-shrink: 0;
@@ -520,6 +597,23 @@
       max-height: 80vh; overflow-y: auto;
       box-shadow: 0 10px 40px rgba(0,0,0,0.8);
       position: relative;
+    }
+
+    /* Interactive Object Modal Popup */
+    #object-interact-modal {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.78); z-index: 9600;
+      justify-content: center; align-items: center;
+    }
+    .object-card {
+      background: var(--parchment); border: 4px solid #b3814d;
+      border-radius: 10px; padding: 22px; max-width: 500px; width: 90%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.9); position: relative;
+      animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     .modal-overlay {
@@ -614,6 +708,18 @@
     .map-compendium-thumb {
       width: 100%; height: 90px; object-fit: cover; border-radius: 4px; border: 1px solid #caa372;
     }
+
+    .object-comp-card {
+      background: #f7eedf; border: 1px solid #caa372; border-radius: 6px;
+      padding: 8px; display: flex; gap: 8px; align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative;
+    }
+    .object-comp-icon {
+      width: 48px; height: 48px; border-radius: 8px; background: #3b200b;
+      border: 2px solid var(--brass); display: flex; justify-content: center; align-items: center;
+      font-size: 1.8rem; color: #fff; flex-shrink: 0;
+    }
+    .object-comp-info { flex: 1; font-size: 0.76rem; line-height: 1.3; }
   </style>
 </head>
 <body class="player-mode">
@@ -674,13 +780,14 @@
         <button class="menu-btn active-toggle" id="btn-toggle-sheet" onclick="toggleWindow('sheet-window')">📜 캐릭터 시트</button>
         <button class="menu-btn active-toggle" id="btn-toggle-dice" onclick="toggleWindow('dice-window')">🎲 주사위 롤러</button>
         <button class="menu-btn" id="btn-toggle-spawner" onclick="toggleWindow('spawner-window')">➕ 토큰 생성기</button>
+        <button class="menu-btn" id="btn-toggle-object" onclick="toggleWindow('object-window')">📦 오브젝트 & 포탈</button>
         <button class="menu-btn" id="btn-toggle-compendium" onclick="toggleWindow('compendium-window')" style="display:none;">📖 토큰 도감 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-gm-toolbox" onclick="toggleWindow('gm-toolbox-window')" style="display:none;">🧰 마스터 도구함 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-sfx" onclick="toggleWindow('sfx-window')" style="display:none;">🔊 효과음 패널 <span style="font-size:0.7rem; background:var(--red); color:#fff; padding:1px 4px; border-radius:3px;">GM</span></button>
         <button class="menu-btn" id="btn-toggle-users" onclick="toggleWindow('users-window')">👥 접속자 명단</button>
         <button class="menu-btn" id="btn-toggle-handouts-box" onclick="toggleWindow('handouts-box-window')">📁 단서 보관함</button>
         <button class="menu-btn" id="btn-toggle-draw" onclick="toggleWindow('draw-tools-window')">✏️ 스케치 펜</button>
-        <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 맵 배경 설정</button>
+        <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 3구역 맵 배경 설정</button>
       </div>
     </div>
 
@@ -705,27 +812,33 @@
   <!-- Interactive VTT Viewport -->
   <div id="vtt-viewport">
     <div id="vtt-world">
-      <div id="map-background-layer">
-        <img id="map-image" src="https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=1600&q=80" alt="전술 맵">
-      </div>
-      <div id="grid-overlay" class="on-top"></div>
+      <!-- 3 Distinct Map Zones Background Layer -->
+      <div id="map-zones-layer"></div>
       
       <!-- Drawing Canvas Layer -->
-      <canvas id="drawing-canvas" width="5000" height="5000"></canvas>
+      <canvas id="drawing-canvas" width="5500" height="5000"></canvas>
 
       <!-- Fog of War Canvas Layer -->
-      <canvas id="fog-canvas" width="5000" height="5000"></canvas>
+      <canvas id="fog-canvas" width="5500" height="5000"></canvas>
 
+      <!-- Interactive Objects Layer -->
+      <div id="objects-layer"></div>
+
+      <!-- Tokens Layer -->
       <div id="tokens-layer"></div>
     </div>
 
     <div class="vtt-hud">
-      <span>줌: <strong id="hud-zoom">100%</strong></span>
-      <button onclick="zoomStep(0.15)">➕ 확대</button>
-      <button onclick="zoomStep(-0.15)">➖ 축소</button>
-      <button onclick="resetZoomPan()">🎯 중앙 초기화</button>
-      <button id="btn-player-guide-toggle" onclick="togglePlayerReachGuide()" style="background:#2e7d32; margin-left:4px;">📏 사거리 가이드 켜기</button>
-      <span style="font-size:0.72rem; color:#deb887; margin-left:6px;">※ 휠 클릭+드래그: 맵 이동 | Shift+클릭: 핑 | 토큰 클릭: 선택</span>
+      <span style="font-weight:bold; color:#ffdfa9;">🗺️ 빠른 이동:</span>
+      <button onclick="jumpToZone(1)">📍 1구역</button>
+      <button onclick="jumpToZone(2)">📍 2구역</button>
+      <button onclick="jumpToZone(3)">📍 3구역</button>
+      <button onclick="jumpToMyToken()" style="background:#2e7d32;">👤 내 토큰</button>
+      <span style="margin-left:4px;">줌: <strong id="hud-zoom">100%</strong></span>
+      <button onclick="zoomStep(0.15)">➕</button>
+      <button onclick="zoomStep(-0.15)">➖</button>
+      <button onclick="resetZoomPan()">🎯</button>
+      <button id="btn-player-guide-toggle" onclick="togglePlayerReachGuide()" style="background:#2e7d32; margin-left:4px;">📏 사거리</button>
     </div>
   </div>
 
@@ -840,25 +953,172 @@
         </div>
       </div>
 
-      <!-- Token Size Selection -->
-      <div class="form-group" style="margin-top:6px;">
-        <label>📐 토큰 크기 (전장 격자 기준)</label>
-        <select id="spawn-token-size">
-          <option value="60">일반 / 소형 (1×1칸 - 60px)</option>
-          <option value="110">대형 네임드 (2×2칸 - 110px)</option>
-          <option value="160">거대 보스 (3×3칸 - 160px)</option>
-          <option value="210">초거대 괴수 (4×4칸 - 210px)</option>
-        </select>
+      <div style="display:flex; gap:6px; margin-top:6px;">
+        <div class="form-group" style="flex:1;">
+          <label>소환 배치 구역 선택</label>
+          <select id="spawn-target-zone-select">
+            <option value="1">제 1구역</option>
+            <option value="2">제 2구역</option>
+            <option value="3">제 3구역</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>📐 토큰 크기</label>
+          <select id="spawn-token-size">
+            <option value="60">일반 / 1칸 (60px)</option>
+            <option value="110">대형 / 2×2칸 (110px)</option>
+            <option value="160">거대 / 3×3칸 (160px)</option>
+            <option value="210">초거대 (210px)</option>
+          </select>
+        </div>
       </div>
 
       <div class="form-group">
-        <label>조종 권한 부여 (플레이어 닉네임 선택)</label>
+        <label>조종 권한 부여 (플레이어 닉네임)</label>
         <select id="spawn-owner-select"></select>
       </div>
 
       <div style="display:flex; gap:6px;">
         <button class="btn-create" onclick="spawnNewToken(true)" style="background:var(--green);">전장 배치 + 도감 저장</button>
         <button class="btn-create" onclick="spawnNewToken(false)">전장 배치만</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING WINDOW: Interactive Object Manager & Compendium with Teleport Portal -->
+  <div class="floating-window" id="object-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'object-window')">
+      <div class="window-title">📦 오브젝트 & 구역 이동 포탈 도감</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('object-window')" title="최소화">_</button>
+        <button class="win-btn" onclick="toggleWindow('object-window')" title="닫기">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <div class="spawner-tabs">
+        <button class="spawner-tab-btn active" id="tab-obj-create" onclick="switchObjectWindowTab('create')">➕ 오브젝트 생성 및 배치</button>
+        <button class="spawner-tab-btn" id="tab-obj-compendium" onclick="switchObjectWindowTab('compendium')">📖 오브젝트 도감</button>
+      </div>
+
+      <!-- Tab 1: Create & Spawn Object -->
+      <div id="obj-subview-create">
+        <div class="form-group">
+          <label>오브젝트 이름</label>
+          <input type="text" id="obj-name-input" placeholder="예: 지하 2층 계단, 황금 보물상자, 비밀 레버">
+        </div>
+
+        <div style="display:flex; gap:6px;">
+          <div class="form-group" style="flex:1;">
+            <label>대표 아이콘 (이모지)</label>
+            <input type="text" id="obj-icon-input" value="🪜" style="text-align:center; font-size:1.2rem;">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>소환 배치 구역</label>
+            <select id="obj-spawn-zone-select">
+              <option value="1">제 1구역</option>
+              <option value="2">제 2구역</option>
+              <option value="3">제 3구역</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>📐 크기</label>
+            <select id="obj-size-select">
+              <option value="60">일반 (60px)</option>
+              <option value="110">대형 (110px)</option>
+              <option value="160">거대 (160px)</option>
+              <option value="44">미니 (44px)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:4px; margin-bottom:8px;">
+          <button type="button" class="win-btn" style="flex:1; width:auto;" onclick="document.getElementById('obj-icon-input').value='🪜'">🪜 사다리</button>
+          <button type="button" class="win-btn" style="flex:1; width:auto;" onclick="document.getElementById('obj-icon-input').value='🚪'">🚪 문/계단</button>
+          <button type="button" class="win-btn" style="flex:1; width:auto;" onclick="document.getElementById('obj-icon-input').value='🌀'">🌀 포탈</button>
+          <button type="button" class="win-btn" style="flex:1; width:auto;" onclick="document.getElementById('obj-icon-input').value='📦'">📦 상자</button>
+          <button type="button" class="win-btn" style="flex:1; width:auto;" onclick="document.getElementById('obj-icon-input').value='🕹️'">🕹️ 레버</button>
+          <button type="button" class="win-btn" style="flex:1; width:auto;" onclick="document.getElementById('obj-icon-input').value='🗿'">🗿 석판</button>
+        </div>
+
+        <div class="form-group">
+          <label>이미지 파일 (선택 사항: 아이콘 대신 사용)</label>
+          <input type="file" id="obj-image-file" accept="image/*" style="font-size:0.75rem;" onchange="handleObjectImageSelect(event)">
+        </div>
+
+        <!-- Portal / Zone Teleport Feature -->
+        <div style="background:#f3e5f5; border:1px solid #ce93d8; border-radius:6px; padding:8px 10px; margin-bottom:8px;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:bold; color:var(--purple); font-size:0.82rem;">
+            <input type="checkbox" id="obj-teleport-enabled" onchange="toggleTeleportOptions(this.checked)">
+            <span>🌀 구역 간 이동 포탈/계단 기능 활성화</span>
+          </label>
+          <p style="font-size:0.72rem; color:var(--ink-muted); margin-top:2px;">
+            토큰이 이 오브젝트를 클릭/터치하면 지정한 다른 맵 구역(예: 던전 지하 2층, 여관 등)으로 이동합니다.
+          </p>
+
+          <div id="obj-teleport-suboptions" style="display:none; margin-top:6px;">
+            <div class="form-group" style="margin-bottom:4px;">
+              <label style="color:var(--purple); font-weight:bold;">🚀 이동할 목표 구역 선택:</label>
+              <select id="obj-teleport-target-zone" style="border-color:#ab47bc;">
+                <option value="1">제 1구역으로 전송</option>
+                <option value="2" selected>제 2구역으로 전송</option>
+                <option value="3">제 3구역으로 전송</option>
+              </select>
+            </div>
+            <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem; cursor:pointer;">
+              <input type="checkbox" id="obj-teleport-camera" checked>
+              <span>이동 시 뷰포트 카메라를 목표 구역으로 자동 추적 이동</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>📜 조작(클릭) 시 출력될 메시지</label>
+          <textarea id="obj-message-input" rows="2" placeholder="예: 좁은 석조 계단을 통해 던전 지하 2층으로 내려갔습니다!"></textarea>
+        </div>
+
+        <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin-bottom:8px; border:1px solid #caa372;">
+          <label style="font-weight:bold; font-size:0.8rem; color:var(--wood-dark); display:block; margin-bottom:4px;">
+            🎯 메시지 수신 대상 설정
+          </label>
+          <div style="display:flex; flex-direction:column; gap:4px; font-size:0.78rem;">
+            <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+              <input type="radio" name="obj-target-mode" value="TRIGGER_USER" checked onchange="toggleObjCustomRecipients(false)">
+              <span>👤 <strong>만진 플레이어 본인에게만</strong> (개인 비밀 조사/단서)</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+              <input type="radio" name="obj-target-mode" value="ALL" onchange="toggleObjCustomRecipients(false)">
+              <span>🌐 <strong>전체 참가자에게 공개 출력</strong></span>
+            </label>
+            <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+              <input type="radio" name="obj-target-mode" value="CUSTOM" onchange="toggleObjCustomRecipients(true)">
+              <span>👥 <strong>특정 인원만 선택하여 전송</strong></span>
+            </label>
+          </div>
+
+          <div id="obj-custom-recipients-wrap" style="display:none; margin-top:6px;">
+            <label style="font-size:0.72rem; color:var(--ink-muted);">수신 인원 선택:</label>
+            <div class="checkbox-list-box" id="obj-recipients-checkbox-list"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.78rem;">
+          <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+            <input type="checkbox" id="obj-repeatable" checked>
+            <span>반복 조작 가능 (해제 시 1회 조작 후 비활성화)</span>
+          </label>
+        </div>
+
+        <div style="display:flex; gap:6px;">
+          <button class="btn-create" onclick="spawnInteractiveObject(true)" style="background:var(--green);">전장 배치 + 도감 저장</button>
+          <button class="btn-create" onclick="spawnInteractiveObject(false)">전장 배치만</button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Object Compendium -->
+      <div id="obj-subview-compendium" style="display:none;">
+        <strong style="color:var(--wood-dark); font-size:0.82rem; display:block; margin-bottom:4px;">📜 사전 저장된 오브젝트 도감:</strong>
+        <p style="font-size:0.72rem; color:var(--ink-muted); margin-bottom:8px;">클릭하여 원하는 구역에 즉시 소환하거나 내용을 수정하여 소환하세요.</p>
+        <div id="object-compendium-list" style="display:flex; flex-direction:column; gap:6px;"></div>
       </div>
     </div>
   </div>
@@ -951,7 +1211,7 @@
 
       <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; border:1px solid #caa372;">
         <strong style="color:var(--wood-dark); display:block; margin-bottom:4px;">💾 세션 데이터 백업 및 저장</strong>
-        <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:6px;">현재 시트, 토큰, 도감, 지도를 JSON 파일로 보관합니다.</p>
+        <p style="font-size:0.75rem; color:var(--ink-muted); margin-bottom:6px;">현재 시트, 토큰, 3구역 맵, 오브젝트 데이터를 JSON 파일로 보관합니다.</p>
         <div style="display:flex; gap:6px;">
           <button class="btn-create" onclick="exportSessionData()" style="flex:1; background:var(--blue);">📥 세션 내보내기</button>
           <button class="btn-create" onclick="document.getElementById('import-file-input').click()" style="flex:1; background:var(--brass); color:#2b1d0c;">📤 세션 불러오기</button>
@@ -976,7 +1236,8 @@
         <button class="sfx-btn" onclick="playBuiltinSfx('sword')">⚔️ 검격 (칼 부딪힘)</button>
         <button class="sfx-btn" onclick="playBuiltinSfx('magic')">💥 마법 폭발</button>
         <button class="sfx-btn" onclick="playBuiltinSfx('monster')">👹 괴물 포효</button>
-        <button class="sfx-btn" onclick="playBuiltinSfx('door')">🚪 육중한 문 열림</button>
+        <button class="sfx-btn" onclick="playBuiltinSfx('door')">🚪 문 열림</button>
+        <button class="sfx-btn" onclick="playBuiltinSfx('warp')" style="grid-column: span 2; background:linear-gradient(to bottom, #ba68c8, #7b1fa2); color:#fff;">🌀 포탈 워프 이동</button>
       </div>
 
       <div style="background:#f7eedf; padding:8px; border-radius:6px; margin-bottom:10px; border:1px solid #caa372;">
@@ -1076,10 +1337,10 @@
     </div>
   </div>
 
-  <!-- FLOATING WINDOW 8: Map Settings & Map Compendium -->
+  <!-- FLOATING WINDOW 8: 3-Zone Map Settings & Map Compendium -->
   <div class="floating-window" id="map-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'map-window')">
-      <div class="window-title">🗺️ 전장 배경 맵 & 맵 도감</div>
+      <div class="window-title">🗺️ 3구역 맵 배경 설정 & 맵 도감</div>
       <div class="window-actions">
         <button class="win-btn" onclick="minimizeWindow('map-window')" title="최소화">_</button>
         <button class="win-btn" onclick="toggleWindow('map-window')" title="닫기">×</button>
@@ -1087,103 +1348,79 @@
     </div>
     <div class="window-content">
       <div class="spawner-tabs">
-        <button class="spawner-tab-btn active" id="tab-map-apply" onclick="switchMapWindowTab('apply')">⚙️ 현재 맵 설정</button>
-        <button class="spawner-tab-btn" id="tab-map-compendium" onclick="switchMapWindowTab('compendium')">📖 맵 도감 (원클릭 교체)</button>
+        <button class="spawner-tab-btn active" id="tab-zone-1" onclick="switchZoneEditorTab(1)">📍 1구역 설정</button>
+        <button class="spawner-tab-btn" id="tab-zone-2" onclick="switchZoneEditorTab(2)">📍 2구역 설정</button>
+        <button class="spawner-tab-btn" id="tab-zone-3" onclick="switchZoneEditorTab(3)">📍 3구역 설정</button>
+        <button class="spawner-tab-btn" id="tab-zone-comp" onclick="switchZoneEditorTab('comp')">📖 맵 도감</button>
       </div>
 
-      <div id="map-subview-apply">
-        <div class="drop-zone" id="map-drop-zone" onclick="document.getElementById('map-file-input').click()">
-          🗺️ 새 지도 이미지 업로드 (드래그&드롭)
-          <input type="file" id="map-file-input" accept="image/*" style="display:none;" onchange="handleMapFileSelect(event)">
+      <!-- Zone Form Panel -->
+      <div id="zone-editor-form">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <strong id="zone-editor-title" style="color:var(--wood-dark); font-size:0.9rem;">📍 제 1구역 설정</strong>
+          <label style="display:flex; align-items:center; gap:4px; font-size:0.75rem; cursor:pointer;">
+            <input type="checkbox" id="zone-enabled-chk" onchange="updateCurrentZoneField('enabled', this.checked)">
+            <span>구역 전장 활성화</span>
+          </label>
         </div>
+
+        <div class="form-group">
+          <label>구역 명칭 (전장에 표시될 이름)</label>
+          <input type="text" id="zone-name-input" placeholder="예: 고블린 동굴 지하 1층">
+        </div>
+
+        <div class="drop-zone" id="zone-drop-zone" onclick="document.getElementById('zone-file-input').click()">
+          🗺️ 이 구역의 지도 이미지 업로드 (드래그&드롭 또는 클릭)
+          <input type="file" id="zone-file-input" accept="image/*" style="display:none;" onchange="handleZoneFileSelect(event)">
+        </div>
+
         <div class="form-group">
           <label>또는 이미지 URL 입력</label>
-          <input type="text" id="map-url-input" placeholder="https://example.com/map.jpg">
+          <input type="text" id="zone-url-input" placeholder="https://example.com/map.jpg">
         </div>
 
         <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin:8px 0; border:1px solid #d4b88b;">
           <label style="font-weight:bold; font-size:0.8rem; color:var(--wood-dark); display:block; margin-bottom:4px;">
-            📏 지도 격자 크기 맞춤 (가로 × 세로 칸수)
+            📏 구역 격자 크기 맞춤 (가로 × 세로 칸수)
           </label>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="number" id="map-grid-w" value="30" min="1" max="100" style="width:60px; padding:4px; text-align:center;">
+            <input type="number" id="zone-grid-w" value="24" min="5" max="80" style="width:60px; padding:4px; text-align:center;">
             <span>칸 ×</span>
-            <input type="number" id="map-grid-h" value="20" min="1" max="100" style="width:60px; padding:4px; text-align:center;">
+            <input type="number" id="zone-grid-h" value="18" min="5" max="80" style="width:60px; padding:4px; text-align:center;">
             <span>칸</span>
             <span style="font-size:0.75rem; color:var(--ink-muted); margin-left:auto;">(1칸 = 50px)</span>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>맵 이름 (도감 저장 시 사용)</label>
-          <input type="text" id="map-save-name" placeholder="예: 고블린 동굴 지하 1층">
-        </div>
-
-        <div style="display:flex; gap:6px;">
-          <button class="btn-create" onclick="applyMapSettings(false)">전장 맵만 적용</button>
-          <button class="btn-create" onclick="applyMapSettings(true)" style="background:var(--green);">전장 적용 + 맵 도감 저장</button>
-        </div>
-
-        <div style="margin-top:12px; padding-top:8px; border-top:1px solid var(--parchment-border);">
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold;">
-            <input type="checkbox" id="chk-grid-ontop" checked onchange="toggleGridOnTop(this.checked)">
-            <span>격자 무늬를 지도 위에 띄우기 (Grid Overlay)</span>
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:6px;">
-            <input type="checkbox" id="chk-grid-visible" checked onchange="toggleGridVisible(this.checked)">
-            <span>격자선 표시 (끄면 그리드 숨김)</span>
-          </label>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="btn-create" onclick="applyCurrentZoneSettings()">현재 구역에 즉시 적용</button>
+          <button class="btn-create" onclick="saveCurrentZoneToCompendium()" style="background:var(--green);">구역 적용 + 도감 저장</button>
         </div>
       </div>
 
-      <div id="map-subview-compendium" style="display:none;">
-        <strong style="color:var(--wood-dark); font-size:0.82rem; display:block; margin-bottom:4px;">📜 사전 저장된 맵 목록 (클릭 즉시 전장 반영):</strong>
-        <div class="map-compendium-grid" id="map-compendium-container"></div>
+      <!-- Zone Compendium Panel -->
+      <div id="zone-compendium-panel" style="display:none;">
+        <strong style="color:var(--wood-dark); font-size:0.82rem; display:block; margin-bottom:4px;">📜 사전 저장된 맵 목록 (원하는 구역에 즉시 배치):</strong>
+        <div class="map-compendium-grid" id="zone-compendium-container"></div>
       </div>
     </div>
   </div>
 
-  <!-- Semi-Transparent Resizable Chat Window -->
-  <div id="chat-window">
-    <div class="chat-header" onmousedown="startDragWindow(event, 'chat-window')">
-      <span>💬 세션 대화 및 판정 로그</span>
-      <button class="win-btn" onclick="document.getElementById('chat-window').style.display='none'">×</button>
-    </div>
-    <div class="chat-messages" id="chat-messages-container">
-      <div class="chat-msg">⚔️ 던전월드 모험 세션이 시작되었습니다!</div>
-    </div>
-    <div class="chat-input-bar">
-      <input type="text" id="chat-text-input" placeholder="대화를 입력하세요..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-      <button onclick="sendChatMessage()">전송</button>
-    </div>
-  </div>
-
-  <!-- Draggable BGM Player Window -->
-  <div id="bgm-dock">
-    <div class="bgm-header" onmousedown="startDragWindow(event, 'bgm-dock')">
-      <span>🎵 BGM 플레이어 & 오디오 관리 (드래그 이동 가능)</span>
-      <button class="win-btn" onclick="document.getElementById('bgm-dock').style.display='none'">×</button>
-    </div>
-    <div class="bgm-body">
-      <span>트랙:</span>
-      <select id="bgm-select" class="bgm-select" onchange="changeBgmTrack(this.value)">
-        <option value="synth_tavern">🍺 활기찬 모험가 주점 (자체 류트 연주)</option>
-        <option value="custom_url">🔗 외부 음악 URL 입력</option>
-      </select>
-      <button class="bgm-btn" id="bgm-play-btn" onclick="toggleBgmPlayback()">▶ 재생</button>
-      <button class="bgm-btn" onclick="openBgmUploadPrompt()">📁 음악 업로드</button>
-      <input type="file" id="bgm-file-input" accept="audio/*" style="display:none;" onchange="handleBgmFileSelect(event)">
-    </div>
-  </div>
-
-  <!-- Shared Handout Central Modal Popup -->
-  <div id="handout-modal">
-    <div class="handout-card">
-      <button class="win-btn" style="position:absolute; top:12px; right:12px;" onclick="closeHandoutModal()">×</button>
-      <h2 id="handout-modal-title">단서 발견</h2>
-      <img id="handout-modal-img" class="handout-img" style="display:none;">
-      <div id="handout-modal-body" class="handout-content"></div>
-      <button class="btn-create" onclick="closeHandoutModal()" style="margin-top:16px;">확인 완료</button>
+  <!-- Interactive Object Modal Popup -->
+  <div id="object-interact-modal">
+    <div class="object-card">
+      <button class="win-btn" style="position:absolute; top:12px; right:12px;" onclick="closeObjectModal()">×</button>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; border-bottom:2px solid var(--parchment-border); padding-bottom:8px;">
+        <span id="obj-modal-icon" style="font-size:2rem;">📦</span>
+        <div>
+          <h3 id="obj-modal-title" style="color:var(--wood-dark); margin:0;">오브젝트 상호작용</h3>
+          <span id="obj-modal-triggerer" style="font-size:0.75rem; color:var(--ink-muted);"></span>
+        </div>
+      </div>
+      <div id="obj-modal-body" style="font-size:0.92rem; line-height:1.5; color:#2b1d0c; background:#f7eedf; padding:12px; border-radius:6px; border:1px solid #caa372; white-space:pre-wrap;"></div>
+      <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+        <button class="btn-create" style="width:auto; padding:6px 18px;" onclick="closeObjectModal()">확인</button>
+      </div>
     </div>
   </div>
 
@@ -1223,6 +1460,9 @@
     let currentRole = 'player';
     let selectedCharIndex = 0;
     let uploadedTokenDataUrl = null;
+    let uploadedObjectDataUrl = null;
+    let pendingZoneImageSrc = null;
+    let editingZoneId = 1;
 
     let showPlayerGuide = false;
     let isFogActive = false;
@@ -1248,6 +1488,40 @@
 
     let connectedUsers = [
       { nickname: 'GM', realName: '마스터', role: 'gm', boundCharId: null, charName: '마스터 (전체 제어)' }
+    ];
+
+    // --- 3 Distinct Map Zones Configuration ---
+    let mapZones = [
+      {
+        id: 1,
+        name: '제 1구역: 고블린 동굴 지하 1층',
+        enabled: true,
+        x: 300,
+        y: 400,
+        gridW: 24,
+        gridH: 18,
+        src: 'https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 2,
+        name: '제 2구역: 고블린 은신처 심층 B2',
+        enabled: true,
+        x: 1800,
+        y: 400,
+        gridW: 26,
+        gridH: 20,
+        src: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80'
+      },
+      {
+        id: 3,
+        name: '제 3구역: 지상 여관 & 모험가 길드',
+        enabled: true,
+        x: 3400,
+        y: 400,
+        gridW: 22,
+        gridH: 16,
+        src: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1600&q=80'
+      }
     ];
 
     let characters = [
@@ -1315,35 +1589,152 @@
       ]
     };
 
+    // --- Interactive Objects with Teleport Portal Feature ---
+    let objects = [
+      {
+        id: 'obj_stair_down',
+        name: '지하 2층 연결 돌계단',
+        icon: '🪜',
+        image: '',
+        size: 60,
+        zoneId: 1,
+        x: 1200,
+        y: 650,
+        message: '어둡고 가파른 계단을 밟고 내려가 제 2구역(지하 2층)에 도착했습니다!',
+        targetMode: 'ALL',
+        targetRecipients: [],
+        repeatable: true,
+        interactedCount: 0,
+        teleportEnabled: true,
+        teleportTargetZone: 2,
+        teleportCamera: true
+      },
+      {
+        id: 'obj_stair_up',
+        name: '지하 1층 복귀 사다리',
+        icon: '🪜',
+        image: '',
+        size: 60,
+        zoneId: 2,
+        x: 1950,
+        y: 550,
+        message: '사다리를 타고 올라가 제 1구역(지하 1층)으로 복귀했습니다!',
+        targetMode: 'ALL',
+        targetRecipients: [],
+        repeatable: true,
+        interactedCount: 0,
+        teleportEnabled: true,
+        teleportTargetZone: 1,
+        teleportCamera: true
+      },
+      {
+        id: 'obj_sample_chest',
+        name: '황금 보물상자',
+        icon: '📦',
+        image: '',
+        size: 60,
+        zoneId: 1,
+        x: 650,
+        y: 650,
+        message: '뚜껑을 열자 눈부신 금화 50닢과 [푸른빛 회복 물약]이 들어있습니다!',
+        targetMode: 'TRIGGER_USER',
+        targetRecipients: [],
+        repeatable: true,
+        interactedCount: 0,
+        teleportEnabled: false,
+        teleportTargetZone: 1,
+        teleportCamera: false
+      }
+    ];
+
+    let objectCompendium = [
+      {
+        id: 'c_obj_portal_b2',
+        name: '지하 2층 연결 돌계단 (포탈)',
+        icon: '🪜',
+        image: '',
+        size: 60,
+        message: '계단을 밟고 내려가 제 2구역(지하 2층)으로 이동했습니다!',
+        targetMode: 'ALL',
+        targetRecipients: [],
+        repeatable: true,
+        teleportEnabled: true,
+        teleportTargetZone: 2,
+        teleportCamera: true
+      },
+      {
+        id: 'c_obj_tavern_door',
+        name: '주점 정문 포탈 (여관 이동)',
+        icon: '🚪',
+        image: '',
+        size: 60,
+        message: '무거운 나무문을 열고 제 3구역(지상 여관)으로 들어섰습니다!',
+        targetMode: 'ALL',
+        targetRecipients: [],
+        repeatable: true,
+        teleportEnabled: true,
+        teleportTargetZone: 3,
+        teleportCamera: true
+      },
+      {
+        id: 'c_obj_chest',
+        name: '황금 보물상자',
+        icon: '📦',
+        image: '',
+        size: 60,
+        message: '상자를 열자 눈부신 금화 50닢이 들어있습니다!',
+        targetMode: 'TRIGGER_USER',
+        targetRecipients: [],
+        repeatable: true,
+        teleportEnabled: false,
+        teleportTargetZone: 1,
+        teleportCamera: false
+      },
+      {
+        id: 'c_obj_lever',
+        name: '비밀 벽면 레버',
+        icon: '🕹️',
+        image: '',
+        size: 44,
+        message: '철컥! 레버가 당겨지며 비밀 통로가 작동합니다.',
+        targetMode: 'ALL',
+        targetRecipients: [],
+        repeatable: false,
+        teleportEnabled: false,
+        teleportTargetZone: 1,
+        teleportCamera: false
+      }
+    ];
+
     let mapCompendium = [
       {
         id: 'map_cave',
-        name: '고블린 은신처 지하 동굴',
+        name: '고블린 은신처 지하 동굴 B1',
         src: 'https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=1600&q=80',
-        gridW: 30,
-        gridH: 20
+        gridW: 24,
+        gridH: 18
       },
       {
         id: 'map_forest',
-        name: '안개 낀 고대 수림 (Forest)',
+        name: '안개 낀 고대 수림 심층 B2',
         src: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80',
-        gridW: 32,
-        gridH: 24
+        gridW: 26,
+        gridH: 20
       },
       {
         id: 'map_tavern',
-        name: '황금빛 모험가 주점 (Tavern)',
+        name: '황금빛 모험가 주점 & 길드 1F',
         src: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1600&q=80',
-        gridW: 24,
-        gridH: 18
+        gridW: 22,
+        gridH: 16
       }
     ];
 
     let tokens = [
-      { id: 'char_1', name: '김점순', type: 'player', owner: '모험가', x: 750, y: 750, size: 60, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage, conditions: [] },
-      { id: 'char_2', name: '녹티엘', type: 'player', owner: 'GM', x: 830, y: 750, size: 60, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage, conditions: [] },
-      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', owner: 'GM', x: 1050, y: 720, size: 60, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', conditions: [] },
-      { id: 'npc_1', name: '김팽덕', type: 'npc', owner: 'GM', x: 670, y: 750, size: 60, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok', conditions: [] }
+      { id: 'char_1', name: '김점순', type: 'player', owner: '모험가', zoneId: 1, x: 450, y: 550, size: 60, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage, conditions: [] },
+      { id: 'char_2', name: '녹티엘', type: 'player', owner: 'GM', zoneId: 1, x: 530, y: 550, size: 60, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage, conditions: [] },
+      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', owner: 'GM', zoneId: 1, x: 850, y: 600, size: 60, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin', conditions: [] },
+      { id: 'npc_1', name: '김팽덕', type: 'npc', owner: 'GM', zoneId: 3, x: 3550, y: 550, size: 60, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok', conditions: [] }
     ];
 
     let handoutsLibrary = [
@@ -1412,13 +1803,12 @@
         if (currentRole === 'gm') {
           conn.send({
             type: 'FULL_SYNC',
-            payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive }
+            payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive }
           });
         }
       });
 
       conn.on('data', (data) => {
-        // [GM 중계 Relay] 플레이어로부터 온 메시지를 다른 모든 플레이어에게 전달
         if (currentRole === 'gm') {
           peerConnections.forEach(otherConn => {
             if (otherConn.peer !== conn.peer && otherConn.open) {
@@ -1466,12 +1856,18 @@
 
       if (msg.type === 'FULL_SYNC') {
         tokens = msg.payload.tokens || tokens;
+        objects = msg.payload.objects || objects;
+        objectCompendium = msg.payload.objectCompendium || objectCompendium;
+        mapZones = msg.payload.mapZones || mapZones;
         characters = msg.payload.characters || characters;
         connectedUsers = msg.payload.connectedUsers || connectedUsers;
         handoutsLibrary = msg.payload.handoutsLibrary || handoutsLibrary;
         isFogActive = msg.payload.isFogActive || false;
         renderUsersTable();
+        renderMapZones();
         renderTokens();
+        renderObjects();
+        renderObjectCompendium();
         renderSheetTabs();
         renderSheet();
         redrawFog();
@@ -1482,12 +1878,15 @@
         else connectedUsers.push(u);
         renderUsersTable();
         populateOwnerDropdowns();
+        renderObjectRecipientsCheckboxes();
+        renderHandoutRecipientsCheckboxes();
         appendChatMessage(`👋 [${u.nickname} (${u.realName})]님이 접속했습니다.`);
       } else if (msg.type === 'TOKEN_MOVE') {
         const t = tokens.find(tok => tok.id === msg.payload.id);
         if (t) {
           t.x = msg.payload.x;
           t.y = msg.payload.y;
+          t.zoneId = msg.payload.zoneId || t.zoneId;
           const el = document.getElementById(`vtt-tok-${t.id}`);
           if (el) {
             el.style.left = `${t.x}px`;
@@ -1498,11 +1897,29 @@
             redrawFog();
           }
         }
+      } else if (msg.type === 'OBJECT_MOVE') {
+        const obj = objects.find(o => o.id === msg.payload.id);
+        if (obj) {
+          obj.x = msg.payload.x;
+          obj.y = msg.payload.y;
+          obj.zoneId = msg.payload.zoneId || obj.zoneId;
+          const el = document.getElementById(`vtt-obj-${obj.id}`);
+          if (el) {
+            el.style.left = `${obj.x}px`;
+            el.style.top = `${obj.y}px`;
+          }
+        }
+      } else if (msg.type === 'OBJECT_UPDATE') {
+        objects = msg.payload.objects;
+        renderObjects();
+      } else if (msg.type === 'OBJECT_INTERACT') {
+        handleReceivedObjectInteraction(msg.payload);
+      } else if (msg.type === 'MAP_ZONES_UPDATE') {
+        mapZones = msg.payload.mapZones;
+        renderMapZones();
       } else if (msg.type === 'TOKEN_UPDATE') {
         tokens = msg.payload.tokens;
         renderTokens();
-      } else if (msg.type === 'MAP_CHANGE') {
-        applyMapPreset(msg.payload, false);
       } else if (msg.type === 'CHAT_MSG') {
         appendChatMessage(msg.payload.html, msg.payload.type);
       } else if (msg.type === 'PING') {
@@ -1620,8 +2037,9 @@
           name: newChar.name,
           type: 'player',
           owner: myNickname,
-          x: 750 + Math.random() * 50,
-          y: 750 + Math.random() * 50,
+          zoneId: 1,
+          x: 450 + Math.random() * 50,
+          y: 550 + Math.random() * 50,
           size: 60,
           hp: newChar.hp,
           maxHp: newChar.maxHp,
@@ -1670,11 +2088,16 @@
       renderSheetTabs();
       renderSheet();
       renderCompendium();
+      renderMapZones();
       renderTokens();
+      renderObjects();
+      renderObjectCompendium();
       renderHandoutsLibrary();
       renderHandoutRecipientsCheckboxes();
+      renderObjectRecipientsCheckboxes();
       renderUsersTable();
-      renderMapCompendium();
+      renderZoneCompendium();
+      loadZoneFormValues(1);
       populateGmTargetTokenDropdown();
       updatePlayerExploredHistory();
       redrawFog();
@@ -1723,12 +2146,53 @@
       });
     }
 
-    // --- Web Audio Synthesis (Dice, SFX, PING) ---
+    // --- Web Audio Synthesis (Dice, SFX, PING, Interaction, Warp Portal) ---
     let audioCtx = null;
     function getAudioContext() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
       return audioCtx;
+    }
+
+    function playInteractSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const freqs = [587.33, 880.0, 1174.66];
+        freqs.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const noteTime = now + (idx * 0.08);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, noteTime);
+          gain.gain.setValueAtTime(0.2, noteTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.45);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(noteTime);
+          osc.stop(noteTime + 0.48);
+        });
+      } catch (err) {}
+    }
+
+    function playWarpSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
+        osc.frequency.exponentialRampToValueAtTime(1760, now + 0.6);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.4, now + 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.75);
+      } catch (err) {}
     }
 
     function playPingSound() {
@@ -1767,6 +2231,696 @@
       world.appendChild(ping);
       setTimeout(() => { ping.remove(); }, 1300);
       appendChatMessage(`📍 [${sender}]님이 위치를 핑했습니다.`);
+    }
+
+    // =========================================================================
+    // --- 3-ZONE MAP BACKGROUND ENGINE & BOUNDARY CONSTRAINTS ---
+    // =========================================================================
+
+    function renderMapZones() {
+      const container = document.getElementById('map-zones-layer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      mapZones.forEach(zone => {
+        if (!zone.enabled) return;
+
+        const w = zone.gridW * 50;
+        const h = zone.gridH * 50;
+
+        const zoneEl = document.createElement('div');
+        zoneEl.className = 'map-zone-wrapper';
+        zoneEl.id = `zone-box-${zone.id}`;
+        zoneEl.style.left = `${zone.x}px`;
+        zoneEl.style.top = `${zone.y}px`;
+        zoneEl.style.width = `${w}px`;
+        zoneEl.style.height = `${h + 30}px`; // 30px for zone header
+
+        zoneEl.innerHTML = `
+          <div class="zone-header-title">
+            <span>🗺️ ${zone.name}</span>
+            <span style="font-size:0.72rem; color:#ffdca8;">${zone.gridW}×${zone.gridH}칸 (${w}×${h}px)</span>
+          </div>
+          <div class="zone-map-container">
+            <img src="${zone.src}" class="zone-map-image" alt="${zone.name}">
+            <div class="zone-grid-overlay"></div>
+          </div>
+        `;
+        container.appendChild(zoneEl);
+      });
+    }
+
+    function getZoneById(id) {
+      return mapZones.find(z => z.id === parseInt(id, 10)) || mapZones[0];
+    }
+
+    function getZoneBounds(zoneId) {
+      const zone = getZoneById(zoneId);
+      const w = zone.gridW * 50;
+      const h = zone.gridH * 50;
+      return {
+        zoneId: zone.id,
+        minX: zone.x,
+        maxX: zone.x + w,
+        minY: zone.y + 30, // below header
+        maxY: zone.y + 30 + h
+      };
+    }
+
+    function getZoneForCoords(x, y) {
+      for (const zone of mapZones) {
+        if (!zone.enabled) continue;
+        const b = getZoneBounds(zone.id);
+        if (x >= b.minX && x <= b.maxX && y >= b.minY && y <= b.maxY) {
+          return zone;
+        }
+      }
+      return null;
+    }
+
+    function jumpToZone(zoneId) {
+      const zone = getZoneById(zoneId);
+      if (!zone) return;
+      const viewRect = viewport.getBoundingClientRect();
+      const zoneCenterX = zone.x + (zone.gridW * 50) / 2;
+      const zoneCenterY = zone.y + 30 + (zone.gridH * 50) / 2;
+
+      panX = Math.round(viewRect.width / 2 - zoneCenterX * zoomLevel);
+      panY = Math.round(viewRect.height / 2 - zoneCenterY * zoomLevel);
+      updateWorldTransform();
+      appendChatMessage(`👀 [시야 이동] ${zone.name} 구역을 바라봅니다.`);
+    }
+
+    function jumpToMyToken() {
+      const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
+      if (!myTok) {
+        alert('배치된 내 캐릭터 토큰을 찾을 수 없습니다.');
+        return;
+      }
+      focusOnCoords(myTok.x + (myTok.size || 60)/2, myTok.y + (myTok.size || 60)/2);
+      appendChatMessage(`👀 [시야 이동] 내 캐릭터 [${myTok.name}] 위치로 이동했습니다.`);
+    }
+
+    function focusOnCoords(targetX, targetY) {
+      const viewRect = viewport.getBoundingClientRect();
+      panX = Math.round(viewRect.width / 2 - targetX * zoomLevel);
+      panY = Math.round(viewRect.height / 2 - targetY * zoomLevel);
+      updateWorldTransform();
+    }
+
+    // --- Zone Map Settings Window Tabs & Handlers ---
+    function switchZoneEditorTab(tab) {
+      const tabs = [1, 2, 3, 'comp'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-zone-${t}`);
+        if (btn) btn.classList.toggle('active', t === tab);
+      });
+
+      const formPanel = document.getElementById('zone-editor-form');
+      const compPanel = document.getElementById('zone-compendium-panel');
+
+      if (tab === 'comp') {
+        formPanel.style.display = 'none';
+        compPanel.style.display = 'block';
+        renderZoneCompendium();
+      } else {
+        formPanel.style.display = 'block';
+        compPanel.style.display = 'none';
+        editingZoneId = tab;
+        loadZoneFormValues(tab);
+      }
+    }
+
+    function loadZoneFormValues(zoneId) {
+      const zone = getZoneById(zoneId);
+      if (!zone) return;
+      document.getElementById('zone-editor-title').innerText = `📍 제 ${zone.id}구역 설정`;
+      document.getElementById('zone-name-input').value = zone.name;
+      document.getElementById('zone-url-input').value = zone.src;
+      document.getElementById('zone-grid-w').value = zone.gridW;
+      document.getElementById('zone-grid-h').value = zone.gridH;
+      document.getElementById('zone-enabled-chk').checked = zone.enabled !== false;
+      pendingZoneImageSrc = null;
+    }
+
+    function updateCurrentZoneField(field, val) {
+      const zone = getZoneById(editingZoneId);
+      if (zone) zone[field] = val;
+    }
+
+    function handleZoneFileSelect(e) {
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = ev => {
+          pendingZoneImageSrc = ev.target.result;
+          alert(`제 ${editingZoneId}구역 이미지 파일이 선택되었습니다.`);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function applyCurrentZoneSettings() {
+      const zone = getZoneById(editingZoneId);
+      if (!zone) return;
+
+      zone.name = document.getElementById('zone-name-input').value.trim() || `제 ${zone.id}구역`;
+      const urlInput = document.getElementById('zone-url-input').value.trim();
+      if (pendingZoneImageSrc) zone.src = pendingZoneImageSrc;
+      else if (urlInput) zone.src = urlInput;
+
+      zone.gridW = parseInt(document.getElementById('zone-grid-w').value, 10) || 24;
+      zone.gridH = parseInt(document.getElementById('zone-grid-h').value, 10) || 18;
+      zone.enabled = document.getElementById('zone-enabled-chk').checked;
+
+      renderMapZones();
+      broadcastNetworkMessage({ type: 'MAP_ZONES_UPDATE', payload: { mapZones } });
+      appendChatMessage(`🗺️ [제 ${zone.id}구역: ${zone.name}] 설정이 전장에 적용되었습니다.`);
+      pendingZoneImageSrc = null;
+    }
+
+    function saveCurrentZoneToCompendium() {
+      applyCurrentZoneSettings();
+      const zone = getZoneById(editingZoneId);
+      mapCompendium.push({
+        id: 'map_' + Date.now(),
+        name: zone.name,
+        src: zone.src,
+        gridW: zone.gridW,
+        gridH: zone.gridH
+      });
+      renderZoneCompendium();
+      appendChatMessage(`💾 [${zone.name}] 설정이 맵 도감에 등록되었습니다.`);
+    }
+
+    function renderZoneCompendium() {
+      const container = document.getElementById('zone-compendium-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      mapCompendium.forEach((m, idx) => {
+        const card = document.createElement('div');
+        card.className = 'map-compendium-card';
+        card.innerHTML = `
+          <button class="compendium-del-btn" onclick="deleteZoneCompendiumItem(${idx})" title="삭제">×</button>
+          <img src="${m.src}" class="map-compendium-thumb" onerror="this.src='https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=300&q=80'">
+          <strong style="font-size:0.75rem; color:var(--wood-dark); margin-top:2px;">${m.name}</strong>
+          <span style="font-size:0.68rem; color:var(--ink-muted);">${m.gridW} × ${m.gridH} 칸</span>
+          <div style="display:flex; gap:2px; margin-top:4px;">
+            <button class="compendium-spawn-btn" style="flex:1; padding:3px 2px; font-size:0.68rem;" onclick="applyCompendiumToZone(${idx}, 1)">1구역 적용</button>
+            <button class="compendium-spawn-btn" style="flex:1; padding:3px 2px; font-size:0.68rem;" onclick="applyCompendiumToZone(${idx}, 2)">2구역 적용</button>
+            <button class="compendium-spawn-btn" style="flex:1; padding:3px 2px; font-size:0.68rem;" onclick="applyCompendiumToZone(${idx}, 3)">3구역 적용</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function applyCompendiumToZone(compIdx, targetZoneId) {
+      const item = mapCompendium[compIdx];
+      const zone = getZoneById(targetZoneId);
+      if (!item || !zone) return;
+
+      zone.name = item.name;
+      zone.src = item.src;
+      zone.gridW = item.gridW;
+      zone.gridH = item.gridH;
+      zone.enabled = true;
+
+      renderMapZones();
+      broadcastNetworkMessage({ type: 'MAP_ZONES_UPDATE', payload: { mapZones } });
+      appendChatMessage(`🗺️ 도감의 [${item.name}]이(가) [제 ${targetZoneId}구역]으로 배치되었습니다.`);
+      jumpToZone(targetZoneId);
+    }
+
+    function deleteZoneCompendiumItem(idx) {
+      if (confirm(`[${mapCompendium[idx].name}] 맵을 도감에서 삭제하시겠습니까?`)) {
+        mapCompendium.splice(idx, 1);
+        renderZoneCompendium();
+      }
+    }
+
+    // =========================================================================
+    // --- INTERACTIVE OBJECT SYSTEM & PORTAL TELEPORTATION ---
+    // =========================================================================
+
+    function switchObjectWindowTab(tab) {
+      document.getElementById('tab-obj-create').classList.toggle('active', tab === 'create');
+      document.getElementById('tab-obj-compendium').classList.toggle('active', tab === 'compendium');
+      document.getElementById('obj-subview-create').style.display = tab === 'create' ? 'block' : 'none';
+      document.getElementById('obj-subview-compendium').style.display = tab === 'compendium' ? 'block' : 'none';
+      if (tab === 'compendium') renderObjectCompendium();
+    }
+
+    function toggleTeleportOptions(enabled) {
+      document.getElementById('obj-teleport-suboptions').style.display = enabled ? 'block' : 'none';
+    }
+
+    function toggleObjCustomRecipients(show) {
+      document.getElementById('obj-custom-recipients-wrap').style.display = show ? 'block' : 'none';
+    }
+
+    function renderObjectRecipientsCheckboxes() {
+      const container = document.getElementById('obj-recipients-checkbox-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      connectedUsers.forEach(u => {
+        if (u.nickname === 'GM') return;
+        const l = document.createElement('label');
+        l.style.display = 'flex';
+        l.style.alignItems = 'center';
+        l.style.gap = '4px';
+        l.style.fontSize = '0.75rem';
+        l.innerHTML = `<input type="checkbox" class="obj-recipient-chk" value="${u.nickname}"> 👤 ${u.nickname} (${u.realName})`;
+        container.appendChild(l);
+      });
+    }
+
+    function handleObjectImageSelect(e) {
+      if (e.target.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          uploadedObjectDataUrl = ev.target.result;
+          alert('오브젝트 이미지가 선택되었습니다.');
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    }
+
+    function spawnInteractiveObject(saveToCompendium = false) {
+      const name = document.getElementById('obj-name-input').value.trim() || '신비한 오브젝트';
+      const icon = document.getElementById('obj-icon-input').value.trim() || '📦';
+      const size = parseInt(document.getElementById('obj-size-select').value, 10) || 60;
+      const message = document.getElementById('obj-message-input').value.trim() || '조사했으나 특별한 것은 발견되지 않았습니다.';
+      const repeatable = document.getElementById('obj-repeatable').checked;
+      const spawnZoneId = parseInt(document.getElementById('obj-spawn-zone-select').value, 10) || 1;
+
+      const teleportEnabled = document.getElementById('obj-teleport-enabled').checked;
+      const teleportTargetZone = parseInt(document.getElementById('obj-teleport-target-zone').value, 10) || 2;
+      const teleportCamera = document.getElementById('obj-teleport-camera').checked;
+
+      const targetModeRadio = document.querySelector('input[name="obj-target-mode"]:checked');
+      const targetMode = targetModeRadio ? targetModeRadio.value : 'TRIGGER_USER';
+
+      const customRecipients = [];
+      if (targetMode === 'CUSTOM') {
+        document.querySelectorAll('.obj-recipient-chk:checked').forEach(c => customRecipients.push(c.value));
+      }
+
+      const zone = getZoneById(spawnZoneId);
+      const spawnX = zone.x + 100 + (Math.random() * 80);
+      const spawnY = zone.y + 100 + (Math.random() * 80);
+
+      const newObj = {
+        id: 'obj_' + Date.now(),
+        name,
+        icon,
+        image: uploadedObjectDataUrl || '',
+        size,
+        zoneId: spawnZoneId,
+        x: Math.round(spawnX),
+        y: Math.round(spawnY),
+        message,
+        targetMode,
+        targetRecipients: customRecipients,
+        repeatable,
+        interactedCount: 0,
+        teleportEnabled,
+        teleportTargetZone,
+        teleportCamera
+      };
+
+      objects.push(newObj);
+
+      if (saveToCompendium) {
+        objectCompendium.push({
+          id: 'c_obj_' + Date.now(),
+          name,
+          icon,
+          image: uploadedObjectDataUrl || '',
+          size,
+          message,
+          targetMode,
+          targetRecipients: customRecipients,
+          repeatable,
+          teleportEnabled,
+          teleportTargetZone,
+          teleportCamera
+        });
+        renderObjectCompendium();
+      }
+
+      renderObjects();
+      broadcastNetworkMessage({ type: 'OBJECT_UPDATE', payload: { objects } });
+      appendChatMessage(`📦 [${name}] 오브젝트가 제 ${spawnZoneId}구역에 배치되었습니다.`);
+
+      uploadedObjectDataUrl = null;
+      document.getElementById('obj-image-file').value = '';
+    }
+
+    function renderObjects() {
+      const layer = document.getElementById('objects-layer');
+      if (!layer) return;
+      layer.innerHTML = '';
+
+      objects.forEach(obj => {
+        const el = document.createElement('div');
+        el.className = 'vtt-object';
+        el.id = `vtt-obj-${obj.id}`;
+        el.style.left = `${obj.x}px`;
+        el.style.top = `${obj.y}px`;
+        el.style.width = `${obj.size}px`;
+        el.style.height = `${obj.size}px`;
+
+        let contentHtml = '';
+        if (obj.image) {
+          contentHtml = `<img src="${obj.image}" class="object-img" alt="${obj.name}">`;
+        } else {
+          contentHtml = `<span class="object-icon">${obj.icon || '📦'}</span>`;
+        }
+
+        const isUsed = !obj.repeatable && obj.interactedCount > 0;
+        if (isUsed) {
+          el.style.opacity = '0.55';
+          el.style.filter = 'grayscale(0.8)';
+        }
+
+        const portalBadge = obj.teleportEnabled ? `<span class="object-teleport-badge">구역${obj.teleportTargetZone} 이동</span>` : '';
+
+        el.innerHTML = `
+          <div class="object-box" style="${isUsed ? 'border-color:#757575;' : ''}">
+            ${contentHtml}
+            <span class="object-touch-indicator">${obj.repeatable ? '조작' : (isUsed ? '완료' : '1회')}</span>
+            ${portalBadge}
+          </div>
+          <div class="object-label">${obj.name}</div>
+          <button class="object-del-btn" onclick="removeObject('${obj.id}')" title="오브젝트 제거">×</button>
+        `;
+
+        el.addEventListener('click', (e) => {
+          if (e.target.closest('.object-del-btn')) return;
+          interactWithObject(obj);
+        });
+
+        if (currentRole === 'gm') {
+          attachSmoothObjectDraggable(el, obj);
+        }
+
+        layer.appendChild(el);
+      });
+    }
+
+    function attachSmoothObjectDraggable(element, obj) {
+      let isDragging = false;
+      let startMouseX, startMouseY;
+      let initialObjX, initialObjY;
+      let hasMoved = false;
+
+      element.addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || e.target.closest('.object-del-btn')) return;
+        isDragging = true;
+        hasMoved = false;
+        startMouseX = e.clientX;
+        startMouseY = e.clientY;
+        initialObjX = obj.x;
+        initialObjY = obj.y;
+        e.stopPropagation();
+
+        element.style.zIndex = 1000;
+
+        function onMouseMove(moveEvent) {
+          if (!isDragging) return;
+          const dx = (moveEvent.clientX - startMouseX) / zoomLevel;
+          const dy = (moveEvent.clientY - startMouseY) / zoomLevel;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+
+          let targetX = Math.round(initialObjX + dx);
+          let targetY = Math.round(initialObjY + dy);
+
+          if (currentRole !== 'gm') {
+            const bounds = getZoneBounds(obj.zoneId || 1);
+            targetX = Math.max(bounds.minX, Math.min(bounds.maxX - obj.size, targetX));
+            targetY = Math.max(bounds.minY, Math.min(bounds.maxY - obj.size, targetY));
+          }
+
+          obj.x = targetX;
+          obj.y = targetY;
+          element.style.left = `${obj.x}px`;
+          element.style.top = `${obj.y}px`;
+        }
+
+        function onMouseUp() {
+          if (!isDragging) return;
+          isDragging = false;
+          element.style.zIndex = 50;
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+
+          const newZone = getZoneForCoords(obj.x + obj.size/2, obj.y + obj.size/2);
+          if (newZone) obj.zoneId = newZone.id;
+
+          if (hasMoved) {
+            broadcastNetworkMessage({
+              type: 'OBJECT_MOVE',
+              payload: { id: obj.id, x: obj.x, y: obj.y, zoneId: obj.zoneId }
+            });
+          }
+        }
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+    }
+
+    function removeObject(objId) {
+      if (currentRole !== 'gm') {
+        alert('오브젝트 삭제는 GM만 가능합니다.');
+        return;
+      }
+      const target = objects.find(o => o.id === objId);
+      objects = objects.filter(o => o.id !== objId);
+      renderObjects();
+      broadcastNetworkMessage({ type: 'OBJECT_UPDATE', payload: { objects } });
+      if (target) appendChatMessage(`🗑️ [${target.name}] 오브젝트가 전장에서 제거되었습니다.`);
+    }
+
+    function interactWithObject(obj) {
+      if (!obj.repeatable && obj.interactedCount > 0) {
+        alert('이미 상호작용이 완료되어 더 이상 작동하지 않는 장치입니다.');
+        return;
+      }
+
+      obj.interactedCount++;
+      playInteractSound();
+
+      let teleportExecuted = false;
+      if (obj.teleportEnabled && obj.teleportTargetZone) {
+        teleportExecuted = executeTokenTeleport(obj);
+      }
+
+      const interactionPayload = {
+        objectId: obj.id,
+        objectName: obj.name,
+        objectIcon: obj.icon,
+        message: obj.message,
+        triggerNickname: myNickname,
+        triggerRealName: myRealName,
+        targetMode: obj.targetMode,
+        targetRecipients: obj.targetRecipients,
+        repeatable: obj.repeatable,
+        interactedCount: obj.interactedCount,
+        teleportEnabled: obj.teleportEnabled,
+        teleportTargetZone: obj.teleportTargetZone
+      };
+
+      broadcastNetworkMessage({ type: 'OBJECT_INTERACT', payload: interactionPayload });
+      handleReceivedObjectInteraction(interactionPayload);
+
+      if (!obj.repeatable) {
+        renderObjects();
+        broadcastNetworkMessage({ type: 'OBJECT_UPDATE', payload: { objects } });
+      }
+    }
+
+    function executeTokenTeleport(obj) {
+      const myTok = tokens.find(t => t.id === myBoundCharId || t.owner === myNickname);
+      if (!myTok) return false;
+
+      const targetZone = getZoneById(obj.teleportTargetZone);
+      if (!targetZone || !targetZone.enabled) {
+        alert(`목표 구역(제 ${obj.teleportTargetZone}구역)이 활성화되어 있지 않습니다.`);
+        return false;
+      }
+
+      const landX = targetZone.x + 80 + Math.floor(Math.random() * 60);
+      const landY = targetZone.y + 80 + Math.floor(Math.random() * 60);
+
+      myTok.zoneId = targetZone.id;
+      myTok.x = landX;
+      myTok.y = landY;
+
+      const el = document.getElementById(`vtt-tok-${myTok.id}`);
+      if (el) {
+        el.style.left = `${myTok.x}px`;
+        el.style.top = `${myTok.y}px`;
+      }
+
+      playWarpSound();
+
+      if (obj.teleportCamera !== false) {
+        focusOnCoords(myTok.x + (myTok.size||60)/2, myTok.y + (myTok.size||60)/2);
+      }
+
+      broadcastNetworkMessage({
+        type: 'TOKEN_MOVE',
+        payload: { id: myTok.id, x: myTok.x, y: myTok.y, zoneId: myTok.zoneId }
+      });
+
+      appendChatMessage(`🌀 <strong>[포탈 이동] ${myNickname}</strong>님이 [${obj.name}]을(를) 통해 [${targetZone.name}]으로 순간이동했습니다!`, 'teleport-msg');
+      return true;
+    }
+
+    function handleReceivedObjectInteraction(payload) {
+      if (payload.teleportEnabled) {
+        playWarpSound();
+      } else {
+        playInteractSound();
+      }
+
+      const isTriggerUser = (payload.triggerNickname === myNickname);
+      const isGM = (currentRole === 'gm');
+      let shouldShowModal = false;
+
+      if (payload.targetMode === 'ALL') {
+        shouldShowModal = true;
+      } else if (payload.targetMode === 'TRIGGER_USER') {
+        shouldShowModal = isTriggerUser || isGM;
+      } else if (payload.targetMode === 'CUSTOM') {
+        shouldShowModal = isTriggerUser || isGM || (payload.targetRecipients && payload.targetRecipients.includes(myNickname));
+      }
+
+      if (shouldShowModal) {
+        showObjectModal(payload.objectName, payload.objectIcon, payload.message, payload.triggerNickname);
+        const secretTag = (payload.targetMode === 'TRIGGER_USER') ? ' [개인 단서]' : (payload.targetMode === 'CUSTOM' ? ' [선택 수신]' : ' [전체 공개]');
+        appendChatMessage(`🔍 <strong>[오브젝트 발견] ${payload.triggerNickname}</strong>님이 <strong>[${payload.objectName}]</strong>을(를) 조사함:${secretTag}<br><span style="color:#ffe082;">"${payload.message}"</span>`, 'object-msg');
+      } else {
+        appendChatMessage(`👀 [${payload.triggerNickname}]님이 [${payload.objectName}]을(를) 조사했습니다. (비공개 내용)`);
+      }
+    }
+
+    function showObjectModal(name, icon, msg, triggerer) {
+      const modal = document.getElementById('object-interact-modal');
+      document.getElementById('obj-modal-icon').innerText = icon || '📦';
+      document.getElementById('obj-modal-title').innerText = name;
+      document.getElementById('obj-modal-triggerer').innerText = `조사한 모험가: ${triggerer}`;
+      document.getElementById('obj-modal-body').innerText = msg;
+      modal.style.display = 'flex';
+    }
+
+    function closeObjectModal() {
+      document.getElementById('object-interact-modal').style.display = 'none';
+    }
+
+    function renderObjectCompendium() {
+      const list = document.getElementById('object-compendium-list');
+      if (!list) return;
+      list.innerHTML = '';
+
+      if (objectCompendium.length === 0) {
+        list.innerHTML = '<div style="color:var(--ink-muted); font-size:0.75rem;">저장된 오브젝트가 없습니다.</div>';
+        return;
+      }
+
+      objectCompendium.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'object-comp-card';
+        let targetDesc = '만진 플레이어 본인';
+        if (item.targetMode === 'ALL') targetDesc = '전체 공개';
+        else if (item.targetMode === 'CUSTOM') targetDesc = `특정 인원(${item.targetRecipients ? item.targetRecipients.length : 0}명)`;
+
+        const portalInfo = item.teleportEnabled ? `<span style="color:#ab47bc; font-weight:bold;"> [제 ${item.teleportTargetZone}구역 포탈]</span>` : '';
+
+        card.innerHTML = `
+          <button class="compendium-del-btn" onclick="deleteObjectCompendiumItem(${idx})" title="도감에서 삭제">×</button>
+          <div class="object-comp-icon">${item.icon || '📦'}</div>
+          <div class="object-comp-info">
+            <strong>${item.name}</strong> <span style="font-size:0.68rem; color:#8b5a2b;">(${item.size}px)</span>${portalInfo}<br>
+            <span style="color:var(--ink-muted); font-size:0.72rem;">수신: ${targetDesc} | ${item.repeatable ? '반복 가능' : '1회용'}</span><br>
+            <span style="color:var(--wood-dark); font-size:0.72rem;">"${item.message.substring(0, 30)}${item.message.length > 30 ? '...' : ''}"</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:3px;">
+            <button class="compendium-spawn-btn" onclick="spawnFromObjectCompendium(${idx})">즉시 소환</button>
+            <button class="compendium-spawn-btn" style="background:#5e3512;" onclick="loadObjectCompendiumToForm(${idx})">수정 후 소환</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function spawnFromObjectCompendium(idx) {
+      const item = objectCompendium[idx];
+      if (!item) return;
+
+      const zone = getZoneById(1);
+      const spawnX = zone.x + 100 + (Math.random() * 80);
+      const spawnY = zone.y + 100 + (Math.random() * 80);
+
+      objects.push({
+        id: 'obj_' + Date.now(),
+        name: item.name,
+        icon: item.icon,
+        image: item.image || '',
+        size: item.size,
+        zoneId: 1,
+        x: Math.round(spawnX),
+        y: Math.round(spawnY),
+        message: item.message,
+        targetMode: item.targetMode,
+        targetRecipients: item.targetRecipients || [],
+        repeatable: item.repeatable,
+        interactedCount: 0,
+        teleportEnabled: item.teleportEnabled || false,
+        teleportTargetZone: item.teleportTargetZone || 2,
+        teleportCamera: item.teleportCamera !== false
+      });
+
+      renderObjects();
+      broadcastNetworkMessage({ type: 'OBJECT_UPDATE', payload: { objects } });
+      appendChatMessage(`📦 도감에서 [${item.name}] 오브젝트가 제 1구역에 소환되었습니다.`);
+    }
+
+    function loadObjectCompendiumToForm(idx) {
+      const item = objectCompendium[idx];
+      if (!item) return;
+
+      document.getElementById('obj-name-input').value = item.name;
+      document.getElementById('obj-icon-input').value = item.icon || '📦';
+      document.getElementById('obj-size-select').value = item.size || 60;
+      document.getElementById('obj-message-input').value = item.message || '';
+      document.getElementById('obj-repeatable').checked = item.repeatable !== false;
+
+      const teleportChk = document.getElementById('obj-teleport-enabled');
+      teleportChk.checked = item.teleportEnabled === true;
+      toggleTeleportOptions(teleportChk.checked);
+      if (item.teleportTargetZone) document.getElementById('obj-teleport-target-zone').value = item.teleportTargetZone;
+
+      const radio = document.querySelector(`input[name="obj-target-mode"][value="${item.targetMode || 'TRIGGER_USER'}"]`);
+      if (radio) {
+        radio.checked = true;
+        toggleObjCustomRecipients(item.targetMode === 'CUSTOM');
+      }
+
+      switchObjectWindowTab('create');
+      appendChatMessage(`✏️ [${item.name}] 오브젝트 내용이 생성 폼에 로드되었습니다. 수정 후 배치하세요.`);
+    }
+
+    function deleteObjectCompendiumItem(idx) {
+      const item = objectCompendium[idx];
+      if (confirm(`정말로 도감에서 [${item.name}] 오브젝트를 삭제하시겠습니까?`)) {
+        objectCompendium.splice(idx, 1);
+        renderObjectCompendium();
+      }
     }
 
     // --- GM Condition Applier Functions ---
@@ -1900,7 +3054,7 @@
     window.addEventListener('mouseup', () => { isDrawing = false; });
 
     function clearDrawCanvas() {
-      drawCtx.clearRect(0, 0, 5000, 5000);
+      drawCtx.clearRect(0, 0, 5500, 5000);
       appendChatMessage('🗑️ 스케치 펜 드로잉이 전체 지워졌습니다.');
     }
 
@@ -1909,19 +3063,19 @@
     const fogCtx = fogCanvas.getContext('2d');
 
     const fogMaskCanvas = document.createElement('canvas');
-    fogMaskCanvas.width = 5000;
+    fogMaskCanvas.width = 5500;
     fogMaskCanvas.height = 5000;
     const fogMaskCtx = fogMaskCanvas.getContext('2d');
 
     const fogExploredCanvas = document.createElement('canvas');
-    fogExploredCanvas.width = 5000;
+    fogExploredCanvas.width = 5500;
     fogExploredCanvas.height = 5000;
     const fogExploredCtx = fogExploredCanvas.getContext('2d');
 
     function resetFullFog() {
       fogMaskCtx.fillStyle = 'rgba(0, 0, 0, 1)';
-      fogMaskCtx.fillRect(0, 0, 5000, 5000);
-      fogExploredCtx.clearRect(0, 0, 5000, 5000);
+      fogMaskCtx.fillRect(0, 0, 5500, 5000);
+      fogExploredCtx.clearRect(0, 0, 5500, 5000);
 
       updatePlayerExploredHistory();
       redrawFog();
@@ -1936,7 +3090,7 @@
       updatePlayerExploredHistory();
       redrawFog();
       renderTokens();
-      broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
+      broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
     }
 
     function setFogBrushMode(mode) {
@@ -2013,7 +3167,7 @@
     }
 
     function redrawFog() {
-      fogCtx.clearRect(0, 0, 5000, 5000);
+      fogCtx.clearRect(0, 0, 5500, 5000);
       if (!isFogActive) return;
 
       if (currentRole === 'gm') {
@@ -2033,7 +3187,7 @@
         fogCtx.globalAlpha = 0.62;
         fogCtx.fillStyle = '#080503';
         fogCtx.beginPath();
-        fogCtx.rect(0, 0, 5000, 5000);
+        fogCtx.rect(0, 0, 5500, 5000);
         fogCtx.fill();
         fogCtx.restore();
 
@@ -2062,7 +3216,7 @@
     function togglePlayerReachGuide() {
       showPlayerGuide = !showPlayerGuide;
       const btn = document.getElementById('btn-player-guide-toggle');
-      btn.innerText = showPlayerGuide ? '📏 사거리 가이드 끄기' : '📏 사거리 가이드 켜기';
+      btn.innerText = showPlayerGuide ? '📏 사거리 끄기' : '📏 사거리';
       btn.style.background = showPlayerGuide ? '#c62828' : '#2e7d32';
       renderTokens();
     }
@@ -2124,7 +3278,10 @@
           gain.connect(ctx.destination);
           osc.start(now);
           osc.stop(now + 1.0);
-          appendChatMessage('🚪 [GM 효과음] 끼이익... 둔탁한 던전 문이 열립니다.');
+          appendChatMessage('🚪 [GM 효과음] 끼이익... 둔탁한 문이 열립니다.');
+        } else if (type === 'warp') {
+          playWarpSound();
+          appendChatMessage('🌀 [GM 효과음] 위이이잉! 차원 포탈이 가동되었습니다.');
         }
       } catch (e) {}
     }
@@ -2284,13 +3441,10 @@
       }
     }
 
-    function toggleGridOnTop(isOnTop) { document.getElementById('grid-overlay').classList.toggle('on-top', isOnTop); }
-    function toggleGridVisible(isVisible) { document.getElementById('grid-overlay').classList.toggle('hidden', !isVisible); }
-
     // --- Viewport Zoom & Pan ---
     let zoomLevel = 1.0;
-    let panX = -450;
-    let panY = -450;
+    let panX = -250;
+    let panY = -350;
     let isPanning = false;
     let panStartX, panStartY;
 
@@ -2310,7 +3464,7 @@
     }
 
     function resetZoomPan() {
-      zoomLevel = 1.0; panX = -450; panY = -450;
+      zoomLevel = 1.0; panX = -250; panY = -350;
       updateWorldTransform();
     }
 
@@ -2377,6 +3531,7 @@
         'sheet-window': 'btn-toggle-sheet',
         'dice-window': 'btn-toggle-dice',
         'spawner-window': 'btn-toggle-spawner',
+        'object-window': 'btn-toggle-object',
         'compendium-window': 'btn-toggle-compendium',
         'gm-toolbox-window': 'btn-toggle-gm-toolbox',
         'sfx-window': 'btn-toggle-sfx',
@@ -2427,7 +3582,9 @@
       renderSheetTabs();
       renderSheet();
       renderCompendium();
+      renderMapZones();
       renderTokens();
+      renderObjects();
       renderHandoutsLibrary();
       renderUsersTable();
       populateGmTargetTokenDropdown();
@@ -2459,7 +3616,7 @@
         selectedCharIndex = characters.length - 1;
         renderSheetTabs();
         renderSheet();
-        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
         appendChatMessage(`🛡️ 새 캐릭터 [${name} (${job})] 시트가 등록되었습니다.`);
       };
       bar.appendChild(addBtn);
@@ -2517,7 +3674,7 @@
         renderTokens();
         populateGmTargetTokenDropdown();
         redrawFog();
-        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
         appendChatMessage(`🗑️ [${c.name}] 캐릭터 시트가 삭제되었습니다.`);
       }
     }
@@ -2743,19 +3900,20 @@
       const item = tokenCompendium[category].find(x => x.name === name);
       if (!item) return;
 
-      const viewRect = viewport.getBoundingClientRect();
+      const zone = getZoneById(1);
       const tokenSize = item.size || 60;
-      const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - (tokenSize / 2);
-      const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - (tokenSize / 2);
+      const spawnX = zone.x + 100 + (Math.random() * 80);
+      const spawnY = zone.y + 100 + (Math.random() * 80);
 
       tokens.push({
         id: `${category}_${Date.now()}`,
         name: item.name,
         type: category,
         owner: 'GM',
+        zoneId: 1,
         size: tokenSize,
-        x: spawnX + (Math.random() * 40 - 20),
-        y: spawnY + (Math.random() * 40 - 20),
+        x: Math.round(spawnX),
+        y: Math.round(spawnY),
         hp: item.hp,
         maxHp: item.hp,
         armor: item.armor,
@@ -2766,15 +3924,13 @@
       renderTokens();
       populateGmTargetTokenDropdown();
       broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
-      appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 전장에 소환되었습니다.`);
+      appendChatMessage(`⚔️ 도감에서 [${item.name}]이(가) 제 1구역에 소환되었습니다.`);
     }
 
-    // [최적화 핵심] 드래그 중 DOM을 파괴하지 않고 클래스/포커스만 즉시 갱신
     function selectTokenById(tokId) {
       selectedTokenId = tokId;
       if (!tokId) return;
 
-      // 1. 전체 토큰 재렌더링 방지: 선택 테두리 클래스만 O(1) 단위로 토글
       document.querySelectorAll('.vtt-token').forEach(el => {
         el.classList.toggle('selected-token', el.id === `vtt-tok-${tokId}`);
       });
@@ -2796,7 +3952,7 @@
       }
     }
 
-    // --- Lag-Free High Performance Token Rendering & Dragging ---
+    // --- Lag-Free Token Dragging with Zone Boundaries Constraint ---
     function renderTokens() {
       const layer = document.getElementById('tokens-layer');
       layer.innerHTML = '';
@@ -2822,18 +3978,11 @@
             isVisibleInFog = true;
           } else {
             let inPlayerVision = false;
-            if (myTok) {
+            if (myTok && myTok.zoneId === tok.zoneId) {
               const dist = Math.hypot((tok.x + tokCenterOffset) - (myTok.x + myTokenCenterOffset), (tok.y + tokCenterOffset) - (myTok.y + myTokenCenterOffset));
               inPlayerVision = dist <= visionRadius;
             }
-
-            let inGmUncoveredZone = false;
-            try {
-              const pixelData = fogMaskCtx.getImageData(Math.floor(tok.x + tokCenterOffset), Math.floor(tok.y + tokCenterOffset), 1, 1).data;
-              inGmUncoveredZone = (pixelData[3] === 0);
-            } catch (err) {}
-
-            isVisibleInFog = inPlayerVision || inGmUncoveredZone;
+            isVisibleInFog = inPlayerVision;
           }
         }
 
@@ -2862,10 +4011,10 @@
 
         el.innerHTML = `
           <div class="reach-guide-container ${showRings ? 'active' : ''}">
-            <div class="reach-ring far"><span class="reach-badge" style="background:#e91e63;">중거리 (Far)</span></div>
-            <div class="reach-ring near"><span class="reach-badge" style="background:#ff9800;">몇걸음 (Near)</span></div>
-            <div class="reach-ring reach"><span class="reach-badge" style="background:#2196f3;">한걸음 (Reach)</span></div>
-            <div class="reach-ring close"><span class="reach-badge" style="background:#4caf50;">반걸음 (Close)</span></div>
+            <div class="reach-ring far"><span class="reach-badge" style="background:#e91e63;">중거리</span></div>
+            <div class="reach-ring near"><span class="reach-badge" style="background:#ff9800;">몇걸음</span></div>
+            <div class="reach-ring reach"><span class="reach-badge" style="background:#2196f3;">한걸음</span></div>
+            <div class="reach-ring close"><span class="reach-badge" style="background:#4caf50;">반걸음</span></div>
           </div>
 
           ${conditionsHtml}
@@ -2891,7 +4040,7 @@
           </div>
 
           <div class="token-label">${tok.name}</div>
-          <div class="token-owner-badge">권한: ${tok.owner || '공용'}</div>
+          <div class="token-owner-badge">구역${tok.zoneId || 1} | ${tok.owner || '공용'}</div>
           <button class="token-del-btn" onclick="removeToken('${tok.id}')" title="토큰 제거">×</button>
         `;
 
@@ -2905,7 +4054,7 @@
         } else {
           el.addEventListener('mousedown', (e) => {
             if (e.button === 0 && !e.target.closest('.token-bubble')) {
-              appendChatMessage(`ℹ️ [${tok.name}] 토큰 선택됨 (조종 권한: ${tok.owner || 'GM'})`);
+              appendChatMessage(`ℹ️ [${tok.name}] 토큰 선택됨 (구역: ${tok.zoneId || 1}, 조종: ${tok.owner || 'GM'})`);
             }
           });
         }
@@ -2913,7 +4062,6 @@
       });
     }
 
-    // [핵심] 부드러운 마우스 추적 및 Fog 연산 스로틀링(Throttling) 드래그 엔진
     function attachSmoothTokenDraggable(element, tokenObj) {
       let isDragging = false;
       let startMouseX, startMouseY;
@@ -2932,21 +4080,28 @@
         e.stopPropagation();
 
         element.style.zIndex = 1000;
-        selectTokenById(tokenObj.id); // DOM 파괴 없이 선택 상태만 신속 반영
+        selectTokenById(tokenObj.id);
 
         function onMouseMove(moveEvent) {
           if (!isDragging) return;
           const dx = (moveEvent.clientX - startMouseX) / zoomLevel;
           const dy = (moveEvent.clientY - startMouseY) / zoomLevel;
           
-          tokenObj.x = Math.round(initialTokenX + dx);
-          tokenObj.y = Math.round(initialTokenY + dy);
+          let targetX = Math.round(initialTokenX + dx);
+          let targetY = Math.round(initialTokenY + dy);
 
-          // 빠른 인라인 스타일 갱신 (will-change & translateZ GPU 가속)
+          if (currentRole !== 'gm') {
+            const bounds = getZoneBounds(tokenObj.zoneId || 1);
+            targetX = Math.max(bounds.minX, Math.min(bounds.maxX - (tokenObj.size || 60), targetX));
+            targetY = Math.max(bounds.minY, Math.min(bounds.maxY - (tokenObj.size || 60), targetY));
+          }
+
+          tokenObj.x = targetX;
+          tokenObj.y = targetY;
+
           element.style.left = `${tokenObj.x}px`;
           element.style.top = `${tokenObj.y}px`;
 
-          // [성능 병목 해결] 5000px 캔버스는 매 프레임 그리지 않고 120ms 주기로 스로틀링
           const now = performance.now();
           if (isFogActive && (now - lastFogUpdateTime > 120)) {
             if (tokenObj.id === myBoundCharId || tokenObj.owner === myNickname) {
@@ -2964,17 +4119,18 @@
           window.removeEventListener('mousemove', onMouseMove);
           window.removeEventListener('mouseup', onMouseUp);
 
-          // 드래그 종료 시 최종 안개 및 시야 확정 갱신
+          const newZone = getZoneForCoords(tokenObj.x + (tokenObj.size||60)/2, tokenObj.y + (tokenObj.size||60)/2);
+          if (newZone) tokenObj.zoneId = newZone.id;
+
           if (isFogActive) {
             updatePlayerExploredHistory();
             redrawFog();
             renderTokens();
           }
 
-          // 최종 좌표 다른 참가자에게 브로드캐스트
           broadcastNetworkMessage({ 
             type: 'TOKEN_MOVE', 
-            payload: { id: tokenObj.id, x: tokenObj.x, y: tokenObj.y } 
+            payload: { id: tokenObj.id, x: tokenObj.x, y: tokenObj.y, zoneId: tokenObj.zoneId } 
           });
         }
 
@@ -3157,17 +4313,19 @@
       const img = uploadedTokenDataUrl || defaultImg;
       const owner = document.getElementById('spawn-owner-select').value || 'GM';
       const sizeVal = parseInt(document.getElementById('spawn-token-size').value, 10) || 60;
+      const targetZoneId = parseInt(document.getElementById('spawn-target-zone-select').value, 10) || 1;
 
-      const viewRect = viewport.getBoundingClientRect();
-      const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - (sizeVal / 2);
-      const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - (sizeVal / 2);
+      const zone = getZoneById(targetZoneId);
+      const spawnX = zone.x + 80 + (Math.random() * 60);
+      const spawnY = zone.y + 80 + (Math.random() * 60);
 
       tokens.push({
         id: `${type}_${Date.now()}`,
         name: name, type: type, owner: owner,
+        zoneId: targetZoneId,
         size: sizeVal,
-        x: spawnX + (Math.random() * 40 - 20),
-        y: spawnY + (Math.random() * 40 - 20),
+        x: Math.round(spawnX),
+        y: Math.round(spawnY),
         hp: hp, maxHp: hp, armor: armor, damage: dmg,
         image: img, conditions: []
       });
@@ -3183,115 +4341,7 @@
       broadcastNetworkMessage({ type: 'TOKEN_UPDATE', payload: { tokens } });
       uploadedTokenDataUrl = null;
       document.getElementById('token-image-preview-wrap').style.display = 'none';
-      appendChatMessage(`⚔️ [${name}] 토큰이 전장에 배치되었습니다. (크기: ${sizeVal}px / 조종 권한: ${owner})`);
-    }
-
-    // --- Map Compendium & Background System ---
-    let pendingMapImageSrc = null;
-    const mapDropZone = document.getElementById('map-drop-zone');
-    mapDropZone.addEventListener('dragover', e => { e.preventDefault(); mapDropZone.classList.add('dragover'); });
-    mapDropZone.addEventListener('dragleave', () => mapDropZone.classList.remove('dragover'));
-    mapDropZone.addEventListener('drop', e => {
-      e.preventDefault(); mapDropZone.classList.remove('dragover');
-      if (e.dataTransfer.files.length > 0) {
-        const file = e.dataTransfer.files[0];
-        const reader = new FileReader();
-        reader.onload = ev => {
-          pendingMapImageSrc = ev.target.result;
-          alert('이미지가 선택되었습니다. 가로/세로 칸수 입력 후 적용하세요.');
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    function handleMapFileSelect(e) {
-      if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = ev => {
-          pendingMapImageSrc = ev.target.result;
-          alert('이미지가 선택되었습니다. 가로/세로 칸수 입력 후 적용하세요.');
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function switchMapWindowTab(tab) {
-      document.getElementById('tab-map-apply').classList.toggle('active', tab === 'apply');
-      document.getElementById('tab-map-compendium').classList.toggle('active', tab === 'compendium');
-      document.getElementById('map-subview-apply').style.display = tab === 'apply' ? 'block' : 'none';
-      document.getElementById('map-subview-compendium').style.display = tab === 'compendium' ? 'block' : 'none';
-      if (tab === 'compendium') renderMapCompendium();
-    }
-
-    function applyMapSettings(saveToCompendium = false) {
-      const urlInput = document.getElementById('map-url-input').value.trim();
-      const imgSrc = pendingMapImageSrc || urlInput || document.getElementById('map-image').src;
-      const gridW = parseInt(document.getElementById('map-grid-w').value, 10) || 30;
-      const gridH = parseInt(document.getElementById('map-grid-h').value, 10) || 20;
-      const saveName = document.getElementById('map-save-name').value.trim() || `맵 ${mapCompendium.length + 1}`;
-
-      const mapData = { name: saveName, src: imgSrc, gridW, gridH };
-      applyMapPreset(mapData, true);
-
-      if (saveToCompendium) {
-        mapCompendium.push({ id: 'map_' + Date.now(), ...mapData });
-        renderMapCompendium();
-        appendChatMessage(`🗺️ [${saveName}] 지도가 맵 도감에 등록되었습니다.`);
-      }
-    }
-
-    function applyMapPreset(mapData, shouldBroadcast = true) {
-      const targetWidth = mapData.gridW * 50;
-      const targetHeight = mapData.gridH * 50;
-      const imgEl = document.getElementById('map-image');
-      const layerEl = document.getElementById('map-background-layer');
-
-      if (mapData.src) imgEl.src = mapData.src;
-      imgEl.style.width = `${targetWidth}px`;
-      imgEl.style.height = `${targetHeight}px`;
-      layerEl.style.width = `${targetWidth}px`;
-      layerEl.style.height = `${targetHeight}px`;
-
-      document.getElementById('map-grid-w').value = mapData.gridW;
-      document.getElementById('map-grid-h').value = mapData.gridH;
-
-      appendChatMessage(`🗺️ 배경 지도가 [${mapData.name || '새 지도'}] (${mapData.gridW}×${mapData.gridH} 칸)으로 교체되었습니다.`);
-
-      if (shouldBroadcast) {
-        broadcastNetworkMessage({ type: 'MAP_CHANGE', payload: mapData });
-      }
-    }
-
-    function renderMapCompendium() {
-      const container = document.getElementById('map-compendium-container');
-      if (!container) return;
-      container.innerHTML = '';
-
-      mapCompendium.forEach((m, idx) => {
-        const card = document.createElement('div');
-        card.className = 'map-compendium-card';
-        card.innerHTML = `
-          <button class="compendium-del-btn" onclick="deleteMapCompendiumItem(${idx})" title="삭제">×</button>
-          <img src="${m.src}" class="map-compendium-thumb" onerror="this.src='https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=300&q=80'">
-          <strong style="font-size:0.75rem; color:var(--wood-dark); margin-top:2px;">${m.name}</strong>
-          <span style="font-size:0.68rem; color:var(--ink-muted);">${m.gridW} × ${m.gridH} 칸 (${m.gridW*50}×${m.gridH*50}px)</span>
-          <button class="compendium-spawn-btn" style="margin-top:4px;" onclick="applyMapCompendiumItem(${idx})">맵으로 즉시 적용</button>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function applyMapCompendiumItem(idx) {
-      const item = mapCompendium[idx];
-      if (item) applyMapPreset(item, true);
-    }
-
-    function deleteMapCompendiumItem(idx) {
-      if (confirm(`[${mapCompendium[idx].name}] 맵을 도감에서 삭제하시겠습니까?`)) {
-        mapCompendium.splice(idx, 1);
-        renderMapCompendium();
-      }
+      appendChatMessage(`⚔️ [${name}] 토큰이 제 ${targetZoneId}구역에 배치되었습니다.`);
     }
 
     // --- Handouts and Multiple Recipients Sharing ---
@@ -3375,7 +4425,7 @@
         handoutsLibrary.push(newH);
         renderHandoutsLibrary();
         showHandoutModal(newH.title, newH.text, newH.image);
-        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
         appendChatMessage(`📜 새로운 단서 [${newH.title}]이(가) 등록되었습니다.`);
       }
 
@@ -3397,7 +4447,7 @@
       if (confirm(`정말로 이 단서를 삭제하시겠습니까?`)) {
         handoutsLibrary = handoutsLibrary.filter(x => x.id !== id);
         renderHandoutsLibrary();
-        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, characters, connectedUsers, handoutsLibrary, isFogActive } });
+        broadcastNetworkMessage({ type: 'FULL_SYNC', payload: { tokens, objects, objectCompendium, mapZones, characters, connectedUsers, handoutsLibrary, isFogActive } });
       }
     }
 
@@ -3419,14 +4469,9 @@
 
     function exportSessionData() {
       const sessionData = {
-        version: '1.5',
+        version: '2.0',
         timestamp: new Date().toISOString(),
-        characters, tokens, tokenCompendium, mapCompendium, handoutsLibrary, connectedUsers,
-        mapSettings: {
-          src: document.getElementById('map-image').src,
-          gridW: document.getElementById('map-grid-w').value,
-          gridH: document.getElementById('map-grid-h').value
-        }
+        characters, tokens, objects, objectCompendium, tokenCompendium, mapZones, mapCompendium, handoutsLibrary, connectedUsers
       };
 
       const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
@@ -3434,7 +4479,7 @@
       a.href = URL.createObjectURL(blob);
       a.download = `dungeon_world_session_${new Date().toISOString().slice(0,10)}.json`;
       a.click();
-      appendChatMessage('💾 세션 데이터 백업 파일이 다운로드되었습니다.');
+      appendChatMessage('💾 3구역 전장 및 오브젝트 세션 백업 파일이 다운로드되었습니다.');
     }
 
     function importSessionData(e) {
@@ -3446,19 +4491,23 @@
             const data = JSON.parse(ev.target.result);
             if (data.characters) characters = data.characters;
             if (data.tokens) tokens = data.tokens;
+            if (data.objects) objects = data.objects;
+            if (data.objectCompendium) objectCompendium = data.objectCompendium;
             if (data.tokenCompendium) tokenCompendium = data.tokenCompendium;
+            if (data.mapZones) mapZones = data.mapZones;
             if (data.mapCompendium) mapCompendium = data.mapCompendium;
             if (data.handoutsLibrary) handoutsLibrary = data.handoutsLibrary;
             if (data.connectedUsers) connectedUsers = data.connectedUsers;
-            if (data.mapSettings) {
-              applyMapPreset({ src: data.mapSettings.src, gridW: parseInt(data.mapSettings.gridW,10), gridH: parseInt(data.mapSettings.gridH,10) }, true);
-            }
+            
             renderSheetTabs();
             renderSheet();
             renderCompendium();
+            renderMapZones();
             renderTokens();
+            renderObjects();
+            renderObjectCompendium();
             renderHandoutsLibrary();
-            renderMapCompendium();
+            renderZoneCompendium();
             renderUsersTable();
             redrawFog();
             appendChatMessage(`📂 세션 백업 파일 [${file.name}]을 복원했습니다!`);
@@ -3586,11 +4635,16 @@
       renderSheetTabs();
       renderSheet();
       renderCompendium();
+      renderMapZones();
       renderTokens();
+      renderObjects();
+      renderObjectCompendium();
       renderHandoutsLibrary();
       renderHandoutRecipientsCheckboxes();
+      renderObjectRecipientsCheckboxes();
       renderUsersTable();
-      renderMapCompendium();
+      renderZoneCompendium();
+      loadZoneFormValues(1);
       populateGmTargetTokenDropdown();
       renderCustomSfxList();
       resetFullFog();
