@@ -3,871 +3,943 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>던전월드 TRPG 모험의 전당</title>
+  <title>던전월드 TRPG Roll20형 VTT 전장</title>
   <style>
-    /* Antique Light Wood & Parchment Theme */
     :root {
-      --wood-dark: #5c3a21;
-      --wood-medium: #8b5a2b;
-      --wood-light: #c89d68;
-      --parchment-bg: #fbf6ec;
-      --parchment-border: #d4b886;
-      --parchment-shadow: rgba(92, 58, 33, 0.15);
+      --wood-dark: #4a2c11;
+      --wood-medium: #7c4c23;
+      --wood-light: #b3814d;
+      --wood-border: #381f08;
+      --parchment: #fdf8ee;
+      --parchment-dark: #edd8bf;
+      --parchment-border: #caa372;
       --ink: #2b1d0c;
-      --ink-muted: #5e4a36;
-      --brass: #b8860b;
-      --red-accent: #9e2a2b;
-      --green-accent: #2e6f40;
+      --ink-muted: #6e4f32;
+      --brass: #c59b27;
+      --red: #a82824;
+      --green: #2e7d32;
+      --blue: #1976d2;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Georgia', 'Batang', 'Apple SD Gothic Neo', serif;
-      background: #e6d2b5;
-      background-image: 
-        radial-gradient(ellipse at center, rgba(255,255,255,0.4) 0%, rgba(0,0,0,0.1) 100%),
-        linear-gradient(to bottom, #d2b48c, #c49a6c, #deb887);
+      background: #18130e;
       color: var(--ink);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      user-select: none;
     }
 
-    /* Top Navigation Bar */
+    /* Top Roll20 Style Menu Header */
     header {
-      background: linear-gradient(to bottom, #8b5a2b, #69401b);
-      border-bottom: 3px solid #4a2c11;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      padding: 10px 20px;
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 48px;
+      background: linear-gradient(to bottom, #6d421d, #44240a);
+      border-bottom: 2px solid #281404;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.6);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      color: #fff8ee;
+      padding: 0 16px;
+      z-index: 1000;
+      color: #fdf5ea;
     }
 
-    .title-area { display: flex; align-items: center; gap: 10px; }
-    .title-area h1 { font-size: 1.4rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.6); }
-
-    .nav-tabs { display: flex; gap: 8px; }
-    .tab-btn {
-      background: #a2703f;
-      border: 1px solid #5a3517;
-      color: #fff;
-      padding: 8px 16px;
-      font-size: 0.95rem;
-      cursor: pointer;
-      border-radius: 4px;
-      font-weight: bold;
-      transition: all 0.2s;
-    }
-    .tab-btn:hover { background: #b6824f; }
-    .tab-btn.active {
-      background: var(--parchment-bg);
-      color: var(--wood-dark);
-      border-color: #3b200b;
-    }
-
-    /* Role Switcher */
-    .role-container {
+    .header-left {
       display: flex;
-      background: #4a2c11;
-      padding: 4px;
-      border-radius: 20px;
-      border: 1px solid #8b5a2b;
+      align-items: center;
+      gap: 12px;
     }
-    .role-btn {
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: #ffdfa9;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .menu-bar { display: flex; gap: 6px; }
+
+    .menu-btn {
+      background: linear-gradient(to bottom, #8a582c, #5e3512);
+      border: 1px solid #ffdfa9;
+      color: #fff8ee;
+      padding: 5px 12px;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .menu-btn:hover {
+      background: linear-gradient(to bottom, #a36d3c, #73431a);
+      box-shadow: 0 0 6px rgba(255, 223, 169, 0.4);
+    }
+
+    .menu-btn.active-toggle {
+      background: #edd8bf;
+      color: #3b200b;
+      border-color: #ffe6ba;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .role-toggle {
+      display: flex;
+      background: #231205;
+      padding: 3px;
+      border-radius: 16px;
+      border: 1px solid #8a582c;
+    }
+
+    .role-toggle button {
       background: transparent;
       border: none;
-      color: #e2cbb2;
-      padding: 6px 14px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      border-radius: 16px;
-      font-weight: bold;
-    }
-    .role-btn.active {
-      background: #c89d68;
-      color: #2b1d0c;
-    }
-
-    /* Main Container */
-    main {
-      flex: 1;
-      padding: 16px 20px 80px;
-      max-width: 1400px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    .page-section { display: none; }
-    .page-section.active { display: block; }
-
-    /* Parchment Card */
-    .parchment {
-      background: var(--parchment-bg);
-      border: 2px solid var(--parchment-border);
-      border-radius: 8px;
-      box-shadow: 0 4px 12px var(--parchment-shadow);
-      padding: 18px 22px;
-      margin-bottom: 20px;
-    }
-    .parchment h2, .parchment h3 {
-      color: var(--wood-dark);
-      border-bottom: 1px solid var(--parchment-border);
-      padding-bottom: 6px;
-      margin-bottom: 12px;
-    }
-
-    /* Dice Bar */
-    .dice-dock {
-      background: #4a2c11;
-      border: 2px solid #8b5a2b;
-      border-radius: 8px;
-      padding: 12px 18px;
-      margin-bottom: 18px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      color: #fbf6ec;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .dice-group { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .dice-group-title { font-size: 0.9rem; color: #deb887; font-weight: bold; }
-    .dice-btn {
-      background: linear-gradient(to bottom, #d4a373, #a2703f);
-      border: 1px solid #fbf6ec;
-      color: #2b1d0c;
-      padding: 8px 12px;
-      font-size: 0.9rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .dice-btn:hover { background: linear-gradient(to bottom, #e2b484, #b8860b); }
-    .dice-btn.highlight {
-      background: linear-gradient(to bottom, #ffdb8a, #d69e2e);
-      border: 2px solid #fff;
-    }
-    .custom-dice-wrap { display: flex; align-items: center; gap: 6px; }
-    .custom-dice-wrap input {
-      width: 50px;
-      padding: 6px;
-      border-radius: 4px;
-      border: 1px solid #8b5a2b;
-      background: #fbf6ec;
-      text-align: center;
-    }
-
-    /* Dice Animation Modal */
-    .dice-modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 9999;
-      justify-content: center;
-      align-items: center;
-    }
-    .dice-modal.active { display: flex; }
-    .dice-box {
-      background: #fbf6ec;
-      border: 4px solid var(--wood-medium);
-      border-radius: 12px;
-      padding: 30px;
-      width: 360px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    .dice-tray {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin: 25px 0;
-      min-height: 80px;
-      align-items: center;
-    }
-    .animated-die {
-      width: 75px;
-      height: 75px;
-      background: #fff;
-      border: 3px solid #8b5a2b;
-      border-radius: 10px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 2.2rem;
-      font-weight: bold;
-      color: #4a2c11;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-    }
-    .animated-die.rolling {
-      animation: diceRollShake 0.12s infinite alternate;
-    }
-    .animated-die.dramatic {
-      animation: dramaticSuspense 0.35s ease forwards;
-    }
-    @keyframes diceRollShake {
-      0% { transform: rotate(-16deg) scale(1.06); background: #ffe9cf; }
-      100% { transform: rotate(16deg) scale(0.94); background: #ffffff; }
-    }
-    @keyframes dramaticSuspense {
-      0% { transform: scale(1.35) rotate(35deg); filter: blur(1px); }
-      100% { transform: scale(1) rotate(0deg); }
-    }
-    .dice-result-msg {
-      font-size: 1.25rem;
-      font-weight: bold;
-      color: var(--wood-dark);
-      margin-top: 10px;
-      min-height: 48px;
-    }
-    .close-dice-btn {
-      background: var(--wood-medium);
-      color: white;
-      border: none;
-      padding: 8px 24px;
-      font-size: 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-
-    /* Character Cards */
-    .character-cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-      gap: 20px;
-    }
-    .char-card {
-      background: #fffcf7;
-      border: 2px solid var(--parchment-border);
-      border-radius: 8px;
-      padding: 18px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    }
-    .char-header {
-      display: flex;
-      gap: 15px;
-      border-bottom: 2px solid var(--wood-light);
-      padding-bottom: 12px;
-      margin-bottom: 12px;
-    }
-    .char-avatar-wrap {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      border: 3px solid var(--wood-medium);
-      overflow: hidden;
-      background: #edd8bf;
-      flex-shrink: 0;
-    }
-    .char-avatar { width: 100%; height: 100%; object-fit: cover; }
-    .char-info-top { flex: 1; }
-    .badge {
-      padding: 2px 8px;
-      border-radius: 4px;
+      color: #c9ad90;
+      padding: 4px 12px;
       font-size: 0.8rem;
+      cursor: pointer;
+      border-radius: 12px;
       font-weight: bold;
-      background: #e2cca8;
-      border: 1px solid #c49a6c;
     }
-    .stats-table {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 6px;
-      margin: 14px 0;
-      text-align: center;
-    }
-    .stat-cell {
-      background: #f4e8d3;
-      border: 1px solid #d4b886;
-      border-radius: 6px;
-      padding: 6px 2px;
-    }
-    .stat-label { font-size: 0.75rem; color: var(--ink-muted); font-weight: bold; }
-    .stat-val { font-size: 1.15rem; font-weight: bold; color: var(--wood-dark); }
-    .stat-mod { font-size: 0.8rem; background: #e2cca8; border-radius: 3px; display: inline-block; padding: 1px 4px; font-weight: bold; }
-    .vitals-row {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 12px;
-      background: #f8eedb;
-      padding: 8px 12px;
-      border-radius: 6px;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .hp-btn {
-      width: 26px; height: 26px;
-      background: var(--wood-medium);
-      color: white; border: none;
-      border-radius: 4px; cursor: pointer;
-    }
-    details {
-      margin-bottom: 8px;
-      background: #fbf5ea;
-      border: 1px solid #e2cea8;
-      border-radius: 4px;
-      padding: 6px 10px;
-    }
-    details summary { cursor: pointer; font-weight: bold; color: var(--wood-dark); }
-    .detail-body { padding-top: 8px; font-size: 0.85rem; line-height: 1.5; }
-    .gm-edit-field { border: 1px dashed var(--brass); background: #fff; padding: 2px 4px; border-radius: 3px; }
 
-    /* Battle VTT */
-    .battle-layout {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 16px;
+    .role-toggle button.active {
+      background: var(--brass);
+      color: #2b1704;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
-    @media (max-width: 1024px) { .battle-layout { grid-template-columns: 1fr; } }
-    .vtt-board-container {
-      background: #231b14;
-      border: 4px solid var(--wood-dark);
-      border-radius: 8px;
-      position: relative;
+
+    /* VTT Workspace */
+    #vtt-viewport {
+      position: absolute;
+      top: 48px; left: 0; right: 0; bottom: 0;
+      background: #140f0a;
       overflow: hidden;
-      min-height: 600px;
-      height: 680px;
+      cursor: default;
     }
-    .vtt-grid-canvas {
-      width: 100%; height: 100%;
-      background-size: 40px 40px;
+
+    #vtt-viewport.panning { cursor: grab; }
+    #vtt-viewport.panning:active { cursor: grabbing; }
+
+    #vtt-world {
+      position: absolute;
+      top: 0; left: 0;
+      width: 5000px; height: 5000px;
+      transform-origin: 0 0;
+      background-size: 50px 50px;
       background-image: 
-        linear-gradient(to right, rgba(200, 157, 104, 0.12) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(200, 157, 104, 0.12) 1px, transparent 1px);
-      position: absolute; top: 0; left: 0;
+        linear-gradient(to right, rgba(202, 163, 114, 0.16) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(202, 163, 114, 0.16) 1px, transparent 1px);
     }
-    .vtt-top-bar {
-      position: absolute; top: 10px; left: 10px; z-index: 10;
-      background: rgba(43, 29, 12, 0.85);
-      padding: 6px 12px; border-radius: 6px;
-      border: 1px solid var(--wood-light); color: #fbf6ec; font-size: 0.85rem;
+
+    #map-background-layer {
+      position: absolute;
+      top: 500px; left: 500px;
+      pointer-events: none;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+      border: 2px solid var(--parchment-border);
     }
+
+    #map-image {
+      display: block;
+      max-width: 4000px;
+      max-height: 4000px;
+      pointer-events: none;
+    }
+
+    .vtt-hud {
+      position: absolute;
+      bottom: 16px; left: 16px;
+      background: rgba(30, 18, 9, 0.85);
+      border: 1px solid var(--wood-light);
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: #f7ead9;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 500;
+    }
+
+    .vtt-hud button {
+      background: #5e3512;
+      border: 1px solid #b3814d;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Tokens */
     .vtt-token {
-      position: absolute; width: 70px; height: 70px;
-      cursor: grab; user-select: none; z-index: 20;
+      position: absolute;
+      width: 60px; height: 60px;
+      cursor: grab;
+      user-select: none;
+      z-index: 50;
     }
-    .vtt-token:active { cursor: grabbing; z-index: 100; }
+
+    .vtt-token:active { cursor: grabbing; z-index: 900 !important; }
+
     .token-bubbles {
-      position: absolute; top: -24px; left: 50%;
-      transform: translateX(-50%); display: flex; gap: 5px; z-index: 30;
+      position: absolute;
+      top: -24px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 4px;
+      z-index: 60;
     }
+
     .token-bubble {
-      width: 22px; height: 22px; border-radius: 50%;
+      width: 22px; height: 22px;
+      border-radius: 50%;
       display: flex; justify-content: center; align-items: center;
-      font-size: 0.68rem; font-weight: bold; color: white;
-      border: 2px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      font-size: 0.65rem; font-weight: bold; color: white;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.6);
       cursor: pointer; position: relative;
     }
+
     .bubble-green { background: #2e7d32; }
-    .bubble-blue { background: #1565c0; }
+    .bubble-blue { background: #1976d2; }
     .bubble-red { background: #c62828; }
-    .token-bubble-tooltip {
-      position: absolute; bottom: 26px; left: 50%;
-      transform: translateX(-50%); background: rgba(0,0,0,0.85);
-      color: white; padding: 2px 6px; font-size: 0.7rem;
-      white-space: nowrap; border-radius: 3px; display: none;
+
+    .token-bubble:hover::after {
+      content: attr(data-tooltip);
+      position: absolute; bottom: 25px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: white;
+      padding: 2px 6px; font-size: 0.65rem;
+      white-space: nowrap; border-radius: 3px;
+      pointer-events: none;
     }
-    .token-bubble:hover .token-bubble-tooltip { display: block; }
-    .token-body {
-      width: 100%; height: 100%; border-radius: 50%;
-      border: 3px solid #ffd700; overflow: hidden; background: #4a2c11;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
-    }
-    .token-body.monster { border-color: #e53935; }
-    .token-img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-    .token-name-tag {
-      position: absolute; bottom: -18px; left: 50%;
-      transform: translateX(-50%); background: rgba(20, 10, 5, 0.85);
-      color: #fbf6ec; font-size: 0.75rem; font-weight: bold;
-      padding: 1px 8px; border-radius: 4px; border: 1px solid #8b5a2b;
-      white-space: nowrap; pointer-events: none;
-    }
+
     .token-hp-bar {
-      position: absolute; top: -4px; left: 5px; right: 5px; height: 5px;
-      background: rgba(0,0,0,0.6); border-radius: 3px; overflow: hidden;
+      position: absolute; top: -3px; left: 4px; right: 4px; height: 4px;
+      background: rgba(0,0,0,0.7); border-radius: 2px;
+      overflow: hidden; border: 1px solid #111;
     }
+
     .token-hp-fill { height: 100%; background: #4caf50; }
-    .monster-form input, .monster-form textarea {
-      width: 100%; padding: 6px 8px; margin: 4px 0 8px;
-      border: 1px solid var(--parchment-border); border-radius: 4px;
+
+    .token-circle {
+      width: 100%; height: 100%;
+      border-radius: 50%; border: 3px solid #ffd700;
+      overflow: hidden; background: #2a1a0c;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.7);
+      display: flex; justify-content: center; align-items: center;
     }
-    .action-btn-primary {
-      background: linear-gradient(to bottom, #8b5a2b, #5c3a21);
-      color: #fff; border: 1px solid #3b200b; padding: 8px 14px;
-      border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%;
+
+    .token-circle.monster { border-color: #e53935; }
+    .token-circle.npc { border-color: #8e24aa; }
+
+    .token-circle img {
+      width: 100%; height: 100%;
+      object-fit: cover; pointer-events: none;
     }
-    .monster-roster-item {
-      background: #f4e8d3; border: 1px solid #d4b886; border-radius: 6px;
-      padding: 8px 12px; margin-bottom: 8px; display: flex;
-      justify-content: space-between; align-items: center; font-size: 0.85rem;
+
+    .token-label {
+      position: absolute; bottom: -18px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 10, 4, 0.85); color: #fff4e3;
+      font-size: 0.72rem; font-weight: bold;
+      padding: 1px 7px; border-radius: 4px;
+      border: 1px solid #805325; white-space: nowrap;
+      pointer-events: none;
     }
-    .monster-roster-item button {
-      background: var(--brass); color: white; border: none;
-      padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold;
+
+    .token-del-btn {
+      display: none; position: absolute;
+      top: -10px; right: -10px;
+      width: 20px; height: 20px;
+      background: #c62828; color: white;
+      border-radius: 50%; border: 1px solid white;
+      font-size: 0.7rem; font-weight: bold;
+      cursor: pointer; justify-content: center; align-items: center;
+      z-index: 70;
     }
-    .bubble-edit-modal {
-      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5); z-index: 10000;
+
+    .gm-mode .token-del-btn { display: flex; }
+
+    /* Floating Draggable Windows */
+    .floating-window {
+      position: absolute;
+      background: var(--parchment);
+      border: 2px solid var(--wood-medium);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column;
+      z-index: 1200;
+      min-width: 320px; max-width: 90vw;
+      resize: both; overflow: hidden;
+    }
+
+    .floating-window.minimized .window-content { display: none; }
+    .floating-window.minimized { height: auto !important; resize: none; }
+
+    .window-header {
+      background: linear-gradient(to bottom, #7c4c23, #532e0e);
+      color: #fdf5ea; padding: 8px 12px;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: move; border-bottom: 2px solid #381f08;
+      font-size: 0.9rem; font-weight: bold;
+    }
+
+    .window-title { display: flex; align-items: center; gap: 6px; }
+    .window-actions { display: flex; gap: 6px; }
+
+    .win-btn {
+      background: #41230a; border: 1px solid #996738;
+      color: white; width: 22px; height: 22px;
+      border-radius: 3px; cursor: pointer;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 0.75rem;
+    }
+    .win-btn:hover { background: #613611; }
+
+    .window-content {
+      padding: 14px;
+      overflow-y: auto; max-height: 70vh;
+      color: var(--ink); font-size: 0.88rem;
+    }
+
+    /* Window specific coordinates */
+    #sheet-window { top: 60px; left: 20px; width: 480px; height: 600px; }
+    #dice-window { top: 60px; right: 20px; width: 350px; }
+    #spawner-window { top: 120px; left: 520px; width: 380px; display: none; }
+    #map-window { top: 150px; left: 300px; width: 360px; display: none; }
+
+    .char-tab-bar {
+      display: flex; gap: 6px; margin-bottom: 12px;
+      border-bottom: 2px solid var(--parchment-border); padding-bottom: 6px;
+    }
+
+    .char-tab-btn {
+      background: #ebd8c0; border: 1px solid #c9a574;
+      padding: 4px 10px; border-radius: 4px;
+      cursor: pointer; font-weight: bold; font-size: 0.82rem;
+    }
+
+    .char-tab-btn.active {
+      background: var(--wood-medium); color: white;
+      border-color: var(--wood-dark);
+    }
+
+    .sheet-stats-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 8px; margin: 10px 0;
+    }
+
+    .sheet-stat-box {
+      background: #f7eedf; border: 1px solid #d4b689;
+      border-radius: 6px; padding: 6px; text-align: center;
+    }
+
+    .stat-name { font-size: 0.75rem; color: var(--ink-muted); font-weight: bold; }
+    .stat-val-input {
+      font-size: 1.1rem; font-weight: bold;
+      color: var(--wood-dark); text-align: center;
+      width: 50px; border: none; background: transparent;
+    }
+    .stat-val-input:focus { background: #fff; border: 1px solid var(--brass); }
+
+    .stat-mod-pill {
+      display: inline-block; padding: 1px 6px;
+      background: #deb887; border-radius: 4px;
+      font-size: 0.75rem; font-weight: bold;
+    }
+
+    .sheet-row {
+      display: flex; justify-content: space-between;
+      gap: 8px; margin-bottom: 8px; align-items: center;
+    }
+    .sheet-row label { font-weight: bold; font-size: 0.85rem; color: var(--wood-dark); }
+    .sheet-input {
+      padding: 4px 8px; border: 1px solid #c9a574;
+      border-radius: 4px; background: #fff; font-family: inherit;
+    }
+
+    .dice-grid-btns {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 8px; margin-bottom: 12px;
+    }
+
+    .vtt-dice-btn {
+      background: linear-gradient(to bottom, #deb887, #ad7845);
+      border: 1px solid #fff; color: #2b1704;
+      padding: 8px; border-radius: 6px;
+      font-weight: bold; cursor: pointer; font-size: 0.85rem;
+    }
+    .vtt-dice-btn:hover { background: linear-gradient(to bottom, #edd2a8, #c58c54); }
+
+    .dice-window-display {
+      background: #eedbc2; border: 2px solid #c09d6e;
+      border-radius: 8px; padding: 12px;
+      text-align: center; min-height: 110px;
+      display: flex; flex-direction: column;
       justify-content: center; align-items: center;
     }
-    .bubble-edit-modal.active { display: flex; }
-    .bubble-edit-card {
-      background: #fbf6ec; border: 3px solid var(--wood-medium);
-      border-radius: 8px; padding: 20px; width: 320px;
+
+    .dice-tray-cubes { display: flex; gap: 12px; margin-bottom: 8px; }
+
+    .window-die {
+      width: 50px; height: 50px;
+      background: white; border: 2px solid var(--wood-medium);
+      border-radius: 8px; display: flex;
+      justify-content: center; align-items: center;
+      font-size: 1.5rem; font-weight: bold;
+      color: var(--wood-dark); box-shadow: 0 3px 6px rgba(0,0,0,0.25);
     }
-    .image-input-group { display: flex; gap: 6px; margin-top: 8px; }
-    .image-input-group input {
-      flex: 1; padding: 4px 8px; font-size: 0.8rem;
-      border: 1px solid var(--parchment-border); border-radius: 4px;
+
+    .window-die.rolling { animation: diceRollShake 0.1s infinite alternate; }
+    .window-die.dramatic { animation: dramaticSuspense 0.35s ease forwards; }
+
+    @keyframes diceRollShake {
+      0% { transform: rotate(-14deg) scale(1.05); background: #ffeeda; }
+      100% { transform: rotate(14deg) scale(0.95); background: #ffffff; }
     }
-    .image-input-group button {
-      background: var(--wood-medium); color: white; border: none;
-      padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; cursor: pointer;
+    @keyframes dramaticSuspense {
+      0% { transform: scale(1.3) rotate(30deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .spawner-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+    .spawner-tab-btn {
+      flex: 1; padding: 5px; background: #ebd8c0;
+      border: 1px solid #c9a574; border-radius: 4px;
+      cursor: pointer; font-weight: bold; font-size: 0.8rem;
+    }
+    .spawner-tab-btn.active { background: var(--wood-medium); color: white; }
+
+    .drop-zone {
+      border: 2px dashed #b8860b; border-radius: 6px;
+      padding: 12px; text-align: center; background: #faf3e6;
+      cursor: pointer; margin-bottom: 10px;
+      font-size: 0.8rem; color: var(--ink-muted);
+    }
+    .drop-zone.dragover { background: #ffecb3; border-color: #e65100; }
+
+    .form-group { margin-bottom: 8px; }
+    .form-group label {
+      display: block; font-weight: bold;
+      font-size: 0.78rem; margin-bottom: 2px; color: var(--wood-dark);
+    }
+    .form-group input, .form-group textarea {
+      width: 100%; padding: 5px 8px;
+      border: 1px solid #caa372; border-radius: 4px;
+      font-family: inherit; font-size: 0.82rem;
+    }
+
+    .btn-create {
+      width: 100%;
+      background: linear-gradient(to bottom, #8a582c, #5e3512);
+      color: white; border: 1px solid #3b200b;
+      padding: 8px; border-radius: 4px;
+      font-weight: bold; cursor: pointer; margin-top: 6px;
+    }
+
+    .bubble-modal {
+      display: none; position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6); z-index: 2000;
+      justify-content: center; align-items: center;
+    }
+    .bubble-modal.active { display: flex; }
+    .bubble-card {
+      background: var(--parchment);
+      border: 3px solid var(--wood-medium);
+      border-radius: 8px; padding: 18px; width: 300px;
     }
   </style>
 </head>
-<body>
+<body class="player-mode">
 
   <header>
-    <div class="title-area">
-      <span>📜</span>
-      <h1>던전월드 TRPG 모험의 전당</h1>
+    <div class="header-left">
+      <div class="brand-title"><span>🎲</span> 던전월드 모험의 전당</div>
+      <div class="menu-bar">
+        <button class="menu-btn active-toggle" id="btn-toggle-sheet" onclick="toggleWindow('sheet-window')">📜 캐릭터 시트</button>
+        <button class="menu-btn active-toggle" id="btn-toggle-dice" onclick="toggleWindow('dice-window')">🎲 주사위 굴림</button>
+        <button class="menu-btn" id="btn-toggle-spawner" onclick="toggleWindow('spawner-window')">➕ 토큰 생성기</button>
+        <button class="menu-btn" id="btn-toggle-map" onclick="toggleWindow('map-window')">🗺️ 맵 배경 설정</button>
+      </div>
     </div>
-    <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchPage('explore')">🗺️ 탐험 및 캐릭터 시트</button>
-      <button class="tab-btn" onclick="switchPage('battle')">⚔️ 전투 전장 (VTT)</button>
-    </div>
-    <div class="role-container">
-      <button id="role-player-btn" class="role-btn active" onclick="setRole('player')">플레이어 모드</button>
-      <button id="role-gm-btn" class="role-btn" onclick="setRole('gm')">게임 마스터(GM) 모드 🔑</button>
+
+    <div class="header-right">
+      <div class="role-toggle">
+        <button id="role-btn-player" class="active" onclick="switchRole('player')">플레이어</button>
+        <button id="role-btn-gm" onclick="switchRole('gm')">게임 마스터(GM) 🔑</button>
+      </div>
     </div>
   </header>
 
-  <main>
-    <div class="dice-dock">
-      <div class="dice-group">
-        <span class="dice-group-title">자주 쓰는 주사위:</span>
-        <button class="dice-btn highlight" onclick="triggerRoll([6, 6], '기본 판정 (2d6)')">🎲 2d6 (기본 판정)</button>
-        <button class="dice-btn" onclick="triggerRoll([4], 'd4 주사위')">d4</button>
-        <button class="dice-btn" onclick="triggerRoll([6], 'd6 주사위')">d6</button>
-        <button class="dice-btn" onclick="triggerRoll([8], 'd8 주사위')">d8</button>
-        <button class="dice-btn" onclick="triggerRoll([12], 'd12 주사위')">d12</button>
-        <button class="dice-btn" onclick="triggerRoll([100], 'd100 백면체')">d100</button>
+  <!-- Interactive VTT Viewport -->
+  <div id="vtt-viewport">
+    <div id="vtt-world">
+      <div id="map-background-layer">
+        <img id="map-image" src="https://images.unsplash.com/photo-1524654458049-e36be0721fa2?auto=format&fit=crop&w=1600&q=80" alt="전술 맵">
       </div>
-      <div class="dice-group">
-        <span class="dice-group-title">커스텀 주사위:</span>
-        <div class="custom-dice-wrap">
-          <input type="number" id="custom-count" value="1" min="1" max="10" title="개수">
-          <span>d</span>
-          <input type="number" id="custom-sides" value="20" min="2" max="1000" title="면수">
-          <button class="dice-btn" onclick="rollCustomDice()">굴리기</button>
-        </div>
-      </div>
+      <div id="tokens-layer"></div>
     </div>
 
-    <!-- 탐험/시트 페이지 -->
-    <section id="page-explore" class="page-section active">
-      <div class="parchment">
-        <h2>🗺️ 모험가 파티 정보 & 캐릭터 시트</h2>
-        <p style="font-size:0.9rem; color:var(--ink-muted); margin-bottom:16px;">
-          구글 스프레드시트의 캐릭터 정보입니다. 
-          <span class="gm-only-tag" style="display:none; color:var(--red-accent); font-weight:bold;">[GM 모드: 수치를 클릭하여 바로 수정할 수 있습니다.]</span>
-        </p>
-        <div class="character-cards-grid" id="character-sheets-container"></div>
+    <div class="vtt-hud">
+      <span>줌 레벨: <strong id="hud-zoom">100%</strong> (범위: 5x5 ~ 100x100)</span>
+      <button onclick="zoomStep(0.15)">➕ 확대</button>
+      <button onclick="zoomStep(-0.15)">➖ 축소</button>
+      <button onclick="resetZoomPan()">🎯 중앙 초기화</button>
+      <span style="color:#deb887; font-size:0.75rem;">※ 마우스 휠: 줌 | 우클릭/빈공간 드래그: 맵 이동</span>
+    </div>
+  </div>
+
+  <!-- FLOATING WINDOW 1: Character Sheet -->
+  <div class="floating-window" id="sheet-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'sheet-window')">
+      <div class="window-title">📜 캐릭터 시트</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('sheet-window')">_</button>
+        <button class="win-btn" onclick="toggleWindow('sheet-window')">×</button>
       </div>
-    </section>
-
-    <!-- 전투 VTT 페이지 -->
-    <section id="page-battle" class="page-section">
-      <div class="parchment" style="padding: 12px 16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <h2>⚔️ 전술 전장 (Battle VTT)</h2>
-          <span style="font-size:0.85rem; color:var(--ink-muted);">
-            토큰을 마우스로 드래그하여 이동하고 상단 버블을 클릭해 상태를 확인/수정하세요.
-          </span>
-        </div>
-        <div class="battle-layout">
-          <div class="vtt-board-container" id="vtt-board">
-            <div class="vtt-grid-canvas"></div>
-            <div class="vtt-top-bar">
-              <span>격자 단위: 5ft</span> | 
-              <span id="vtt-mode-status">현재 모드: 플레이어 뷰</span>
-              <button onclick="resetTokenPositions()" style="background:none; border:none; color:#deb887; text-decoration:underline; cursor:pointer; margin-left:10px;">토큰 재정렬</button>
-            </div>
-            <div id="vtt-tokens-layer"></div>
-          </div>
-
-          <div class="battle-sidebar">
-            <div class="parchment" id="gm-monster-panel" style="margin-bottom:0;">
-              <h3>👹 몬스터 소환 및 제작 <span style="font-size:0.75rem; background:var(--red-accent); color:white; padding:2px 6px; border-radius:3px;">GM 전용</span></h3>
-              <div id="gm-monster-locked-msg" style="font-size:0.85rem; color:var(--ink-muted); padding:10px 0;">
-                몬스터 제작 및 전장 배치는 상단의 <strong>[게임 마스터 모드 🔑]</strong>로 전환 후 이용하실 수 있습니다.
-              </div>
-              <div id="gm-monster-controls" style="display:none;" class="monster-form">
-                <label>몬스터 이름</label>
-                <input type="text" id="m-name" placeholder="예: 와이번, 오크 전사">
-                <div style="display:flex; gap:8px;">
-                  <div style="flex:1;"><label>HP</label><input type="number" id="m-hp" value="10"></div>
-                  <div style="flex:1;"><label>피해</label><input type="text" id="m-dmg" value="d6"></div>
-                  <div style="flex:1;"><label>장갑</label><input type="number" id="m-armor" value="1"></div>
-                </div>
-                <label>서식지</label>
-                <input type="text" id="m-habitat" placeholder="예: 키프로스 산맥 돌 봉우리">
-                <label>특징 및 본능</label>
-                <textarea id="m-features" rows="2" placeholder="예: 공중 급강하 공격, 독 침"></textarea>
-                <label>전리품</label>
-                <input type="text" id="m-loot" placeholder="예: 와이번 날개 가죽, 보석 2개">
-                <label>토큰 이미지 URL (선택)</label>
-                <input type="text" id="m-image" placeholder="https://... (비워둘 시 기본 아이콘)">
-                <button class="action-btn-primary" onclick="createAndSpawnMonster()">전장에 몬스터 배치하기</button>
-              </div>
-            </div>
-
-            <div class="parchment" style="margin-bottom:0;">
-              <h3>📋 빠른 소환 도감</h3>
-              <div id="quick-monster-list">
-                <div class="monster-roster-item">
-                  <div><strong>고블린 정찰병</strong> (HP: 6, 피해: d6)</div>
-                  <button onclick="spawnQuickMonster('고블린 정찰병', 6, 'd6', 1, 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin')">소환</button>
-                </div>
-                <div class="monster-roster-item">
-                  <div><strong>흑마법사 발토</strong> (HP: 16, 피해: d8+2)</div>
-                  <button onclick="spawnQuickMonster('흑마법사 발토', 16, 'd8+2', 0, 'https://api.dicebear.com/7.x/bottts/svg?seed=wizard')">소환</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    </div>
+    <div class="window-content">
+      <div class="char-tab-bar">
+        <button class="char-tab-btn active" onclick="selectSheetChar(0)">김점순 (드루이드)</button>
+        <button class="char-tab-btn" onclick="selectSheetChar(1)">녹티엘 (전사)</button>
       </div>
-    </section>
-  </main>
+      <div id="sheet-details-content"></div>
+    </div>
+  </div>
 
-  <!-- 버블 편집 모달 -->
-  <div class="bubble-edit-modal" id="bubble-edit-modal">
-    <div class="bubble-edit-card">
-      <h3 id="bubble-modal-title" style="margin-bottom:12px; color:var(--wood-dark);">토큰 상태 편집</h3>
-      <div>
-        <label id="bubble-field-label" style="font-weight:bold; font-size:0.9rem;"></label>
-        <input type="text" id="bubble-field-input" style="width:100%; padding:8px; margin:10px 0; border:1px solid #c49a6c; border-radius:4px; font-size:1rem;">
+  <!-- FLOATING WINDOW 2: Dice Roller -->
+  <div class="floating-window" id="dice-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'dice-window')">
+      <div class="window-title">🎲 주사위 롤러</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('dice-window')">_</button>
+        <button class="win-btn" onclick="toggleWindow('dice-window')">×</button>
       </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
-        <button onclick="closeBubbleModal()" style="padding:6px 14px; border:1px solid #8b5a2b; background:#e8d3b9; border-radius:4px; cursor:pointer;">닫기</button>
-        <button id="bubble-save-btn" onclick="saveBubbleEdit()" style="padding:6px 14px; background:var(--wood-medium); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">저장</button>
+    </div>
+    <div class="window-content">
+      <div class="dice-grid-btns">
+        <button class="vtt-dice-btn" style="grid-column: span 3; background:linear-gradient(to bottom, #ffd58a, #cf9236);" onclick="rollDiceSequence([6, 6], '기본 판정 (2d6)')">🎲 2d6 (던전월드 판정)</button>
+        <button class="vtt-dice-btn" onclick="rollDiceSequence([4], 'd4')">d4</button>
+        <button class="vtt-dice-btn" onclick="rollDiceSequence([6], 'd6')">d6</button>
+        <button class="vtt-dice-btn" onclick="rollDiceSequence([8], 'd8')">d8</button>
+        <button class="vtt-dice-btn" onclick="rollDiceSequence([10], 'd10')">d10</button>
+        <button class="vtt-dice-btn" onclick="rollDiceSequence([12], 'd12')">d12</button>
+        <button class="vtt-dice-btn" onclick="rollDiceSequence([100], 'd100')">d100</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+        <span style="font-size:0.8rem; font-weight:bold;">커스텀:</span>
+        <input type="number" id="dice-custom-count" value="1" min="1" max="10" style="width:40px; padding:3px; text-align:center;">
+        <span>d</span>
+        <input type="number" id="dice-custom-sides" value="20" min="2" max="1000" style="width:50px; padding:3px; text-align:center;">
+        <button class="vtt-dice-btn" style="padding:4px 8px;" onclick="rollCustomDice()">굴리기</button>
+      </div>
+      <div class="dice-window-display">
+        <div class="dice-tray-cubes" id="window-dice-tray"><div class="window-die">🎲</div></div>
+        <div id="window-dice-result" style="font-weight:bold; font-size:1rem; color:var(--wood-dark);">주사위를 굴려보세요!</div>
       </div>
     </div>
   </div>
 
-  <!-- 주사위 롤러 연출 모달 -->
-  <div class="dice-modal" id="dice-modal">
-    <div class="dice-box">
-      <h3 id="dice-roll-title" style="color:var(--wood-dark);">주사위 굴리는 중...</h3>
-      <div class="dice-tray" id="dice-tray"></div>
-      <div class="dice-result-msg" id="dice-result-text">주사위가 구르는 중...</div>
-      <button class="close-dice-btn" id="dice-close-btn" style="display:none;" onclick="closeDiceModal()">확인</button>
+  <!-- FLOATING WINDOW 3: Token Spawner -->
+  <div class="floating-window" id="spawner-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'spawner-window')">
+      <div class="window-title">➕ 토큰 생성기</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('spawner-window')">_</button>
+        <button class="win-btn" onclick="toggleWindow('spawner-window')">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <div class="spawner-tabs">
+        <button class="spawner-tab-btn active" onclick="switchSpawnerTab('monster')">👹 몬스터</button>
+        <button class="spawner-tab-btn" onclick="switchSpawnerTab('npc')">👤 NPC</button>
+        <button class="spawner-tab-btn" onclick="switchSpawnerTab('player')">🛡️ 플레이어</button>
+      </div>
+
+      <div class="drop-zone" id="token-drop-zone" onclick="document.getElementById('token-file-input').click()">
+        📁 토큰 이미지 드래그&드롭 또는 클릭하여 업로드
+        <input type="file" id="token-file-input" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+      </div>
+      <div id="token-image-preview-wrap" style="text-align:center; margin-bottom:8px; display:none;">
+        <img id="token-image-preview" src="" style="width:50px; height:50px; border-radius:50%; border:2px solid var(--brass); object-fit:cover;">
+      </div>
+
+      <div id="spawner-form-monster">
+        <div class="form-group"><label>몬스터 이름</label><input type="text" id="spawn-m-name" placeholder="예: 와이번, 오크 전사"></div>
+        <div style="display:flex; gap:6px;">
+          <div class="form-group" style="flex:1;"><label>HP</label><input type="number" id="spawn-m-hp" value="10"></div>
+          <div class="form-group" style="flex:1;"><label>피해량</label><input type="text" id="spawn-m-dmg" value="d6"></div>
+          <div class="form-group" style="flex:1;"><label>장갑</label><input type="number" id="spawn-m-armor" value="1"></div>
+        </div>
+        <div class="form-group"><label>서식지</label><input type="text" id="spawn-m-habitat" placeholder="예: 키프로스 산맥 돌 봉우리"></div>
+        <div class="form-group"><label>특징 및 본능</label><textarea id="spawn-m-features" rows="2" placeholder="예: 고지대에서 급강하 기습"></textarea></div>
+        <div class="form-group"><label>전리품</label><input type="text" id="spawn-m-loot" placeholder="예: 와이번 날개 가죽, 보석 2개"></div>
+      </div>
+
+      <div id="spawner-form-npc" style="display:none;">
+        <div class="form-group"><label>NPC 이름</label><input type="text" id="spawn-npc-name" placeholder="예: 촌장 김팽덕, 약초꾼 최나리"></div>
+        <div style="display:flex; gap:6px;">
+          <div class="form-group" style="flex:1;"><label>HP</label><input type="number" id="spawn-npc-hp" value="12"></div>
+          <div class="form-group" style="flex:1;"><label>피해량</label><input type="text" id="spawn-npc-dmg" value="d4"></div>
+          <div class="form-group" style="flex:1;"><label>장갑</label><input type="number" id="spawn-npc-armor" value="0"></div>
+        </div>
+        <div class="form-group"><label>배경 및 역할</label><textarea id="spawn-npc-bg" rows="3" placeholder="예: 동막골의 경계 감시자."></textarea></div>
+      </div>
+
+      <div id="spawner-form-player" style="display:none;">
+        <div class="form-group"><label>캐릭터 이름</label><input type="text" id="spawn-p-name" placeholder="예: 새로운 모험가"></div>
+        <div style="display:flex; gap:6px;">
+          <div class="form-group" style="flex:1;"><label>HP</label><input type="number" id="spawn-p-hp" value="20"></div>
+          <div class="form-group" style="flex:1;"><label>피해량</label><input type="text" id="spawn-p-dmg" value="d8"></div>
+          <div class="form-group" style="flex:1;"><label>장갑</label><input type="number" id="spawn-p-armor" value="1"></div>
+        </div>
+      </div>
+
+      <button class="btn-create" onclick="spawnNewToken()">전장에 토큰 배치하기</button>
+    </div>
+  </div>
+
+  <!-- FLOATING WINDOW 4: Map Background -->
+  <div class="floating-window" id="map-window">
+    <div class="window-header" onmousedown="startDragWindow(event, 'map-window')">
+      <div class="window-title">🗺️ 전장 배경 맵 설정</div>
+      <div class="window-actions">
+        <button class="win-btn" onclick="minimizeWindow('map-window')">_</button>
+        <button class="win-btn" onclick="toggleWindow('map-window')">×</button>
+      </div>
+    </div>
+    <div class="window-content">
+      <div class="drop-zone" id="map-drop-zone" onclick="document.getElementById('map-file-input').click()">
+        🗺️ 지도 이미지 드래그&드롭 또는 클릭하여 업로드
+        <input type="file" id="map-file-input" accept="image/*" style="display:none;" onchange="handleMapFileSelect(event)">
+      </div>
+      <div class="form-group">
+        <label>또는 이미지 URL 입력</label>
+        <input type="text" id="map-url-input" placeholder="https://example.com/map.jpg">
+      </div>
+      <button class="btn-create" onclick="applyMapUrl()">지도 배경 적용하기</button>
+    </div>
+  </div>
+
+  <!-- Bubble Edit Modal -->
+  <div class="bubble-modal" id="bubble-edit-modal">
+    <div class="bubble-card">
+      <h3 id="bubble-modal-title" style="margin-bottom:10px; font-size:1rem; color:var(--wood-dark);">상태값 편집</h3>
+      <div class="form-group">
+        <label id="bubble-field-label" style="font-weight:bold;"></label>
+        <input type="text" id="bubble-field-input" style="font-size:1.1rem; padding:6px;">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:12px;">
+        <button onclick="closeBubbleModal()" style="padding:5px 12px; background:#ebd8c0; border:1px solid #c9a574; border-radius:4px; cursor:pointer;">취소</button>
+        <button id="bubble-save-btn" onclick="saveBubbleModal()" style="padding:5px 14px; background:var(--wood-medium); color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">저장</button>
+      </div>
     </div>
   </div>
 
   <script>
-    // 스프레드시트 기반 캐릭터 데이터
-    const characters = [
+    let characters = [
       {
         id: 'char_1',
         name: '김점순',
-        gender: '여',
         class: '드루이드',
-        damage: 'd6',
-        armor: 1,
-        currentHp: 14,
-        maxHp: 14,
-        exp: 0,
         level: 1,
-        homeland: '키프로스 산맥 (동막골)',
+        hp: 14,
+        maxHp: 14,
+        load: 2,
+        maxLoad: 5,
+        armor: 1,
+        damage: 'd6',
         tokenImage: 'https://api.dicebear.com/7.x/bottts/svg?seed=jeomsoon',
         stats: {
-          str: { score: 8, mod: -1, label: '근력' },
-          dex: { score: 12, mod: 0, label: '민첩성' },
-          con: { score: 13, mod: 1, label: '체력' },
-          int: { score: 15, mod: 1, label: '지능' },
-          wis: { score: 16, mod: 2, label: '지혜' },
-          cha: { score: 9, mod: 0, label: '매력' }
-        },
-        alignment: '중립 - 자연의 섭리에 어긋나는 위험한 것을 제거합니다.',
-        race: '엘프 - 험난한 여정을 떠날 때 어떤 역할을 맡건 10+인 것처럼 성공합니다.',
-        bonds: [
-          '이춘희(모): 500년 전 동막골의 별종으로, 과거 바깥세상을 여행한 방랑 드루이드다.',
-          '김팽덕(부): 동막골의 경계 감시자로, 산길과 생존 기술에 밝고 신중한 성격이다.',
-          '최나리(친구여): 약초꾼 견습생으로, 점순에게 약초 지식을 챙겨주는 현실적인 친구다.',
-          '박개똥(친구남): 사냥꾼 견습생으로 실전 생존 기술을 알려 준다.',
-          '김옥균(스승): 점순의 드루이드 길을 가르친 원로다.',
-          '밥(그 하플링): 담뱃잎을 둘러싼 팔씨름 내기로 악연을 맺었다.'
-        ],
-        appearance: '고양이상 녹음색 눈 | 은장발 후드 / 정수리 위 나뭇잎 | 희고 맑은 피부, 녹색 망토 | 마르고 얇은 체형',
-        background: '질풍노도의 사춘기(150세)를 겪으며 동막골을 떠나 세상을 구경하고 싶어함. 아는 척, 연륜 있는 척하지만 은근 허당미와 실수가 많음.',
-        inventory: [
-          { name: '골드', tag: '화폐', qty: 0, weight: 0 },
-          { name: '나무방패', tag: '장갑+1', qty: 1, weight: 1 },
-          { name: '창', tag: '몇걸음 투척 중거리', qty: 1, weight: 1 },
-          { name: '하플링 담뱃잎', tag: '1회분 (가보?)', qty: 6, weight: 0 }
-        ],
-        load: { current: 2, max: 5 }
+          str: { score: 8, mod: -1, name: '근력 (STR)' },
+          dex: { score: 12, mod: 0, name: '민첩 (DEX)' },
+          con: { score: 13, mod: 1, name: '체력 (CON)' },
+          int: { score: 15, mod: 1, name: '지능 (INT)' },
+          wis: { score: 16, mod: 2, name: '지혜 (WIS)' },
+          cha: { score: 9, mod: 0, name: '매력 (CHA)' }
+        }
       },
       {
         id: 'char_2',
         name: '녹티엘',
-        gender: '남',
         class: '전사',
-        damage: 'd10',
-        armor: 1,
-        currentHp: 25,
-        maxHp: 25,
-        exp: 0,
         level: 1,
-        homeland: '오리엔탈리즘 / 콜로세움',
+        hp: 25,
+        maxHp: 25,
+        load: 5,
+        maxLoad: 12,
+        armor: 1,
+        damage: 'd10',
         tokenImage: 'https://api.dicebear.com/7.x/bottts/svg?seed=noctiel',
         stats: {
-          str: { score: 12, mod: 0, label: '근력' },
-          dex: { score: 16, mod: 2, label: '민첩성' },
-          con: { score: 15, mod: 1, label: '체력' },
-          int: { score: 8, mod: -1, label: '지능' },
-          wis: { score: 9, mod: 0, label: '지혜' },
-          cha: { score: 13, mod: 1, label: '매력' }
-        },
-        alignment: '악 - 항복했거나 저항하지 못하는 적을 죽입니다.',
-        race: '엘프 - 이 종류의 무기를 쓸 때는 마치 정밀 태그가 붙은 것 처럼 다룹니다.',
-        weapon: '고유무기: 화영 (도검, 리치: 한걸음 반, 예리 - 관통+2, 다목적 - 반걸음)',
-        bonds: [
-          '이름모르는 스승(죽음) - 화산파 무학을 알려준 스승, 부모나 다름이 없다.',
-          '레온(콜로세움 선배, 드워프) - 세상 돌아가는 법을 알려준 은인이자 친구.'
-        ],
-        appearance: '순진해 보이는 자색안 | 묶은 긴 흑색머리 | 연갈색 피부와 잔상처, 검은 후드 가죽갑옷/강철건틀릿 | 큰 키의 근육질',
-        background: '마법 재능 없어 가출 후 화산파 무공을 배운 인간 용병기사의 종자가 됨. 스승 사후 노예 검투사로 팔려 탈출, 무공의 뿌리를 찾는 중(180세).',
-        inventory: [
-          { name: '골드', tag: '화폐', qty: 22, weight: 0 },
-          { name: '화영 (도검)', tag: '중거리, 장거리', qty: 1, weight: 2 },
-          { name: '던전용 식량', tag: '1회분', qty: 5, weight: 1 },
-          { name: '사슬갑옷', tag: '장갑 1', qty: 1, weight: 1 },
-          { name: '모험도구', tag: '1회분', qty: 5, weight: 1 }
-        ],
-        load: { current: 5, max: 12 }
+          str: { score: 12, mod: 0, name: '근력 (STR)' },
+          dex: { score: 16, mod: 2, name: '민첩 (DEX)' },
+          con: { score: 15, mod: 1, name: '체력 (CON)' },
+          int: { score: 8, mod: -1, name: '지능 (INT)' },
+          wis: { score: 9, mod: 0, name: '지혜 (WIS)' },
+          cha: { score: 13, mod: 1, name: '매력 (CHA)' }
+        }
       }
     ];
 
-    // VTT 전장 토큰 상태
     let tokens = [
-      { id: 'char_1', name: '김점순', type: 'player', x: 120, y: 180, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage },
-      { id: 'char_2', name: '녹티엘', type: 'player', x: 200, y: 180, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage },
-      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', x: 440, y: 120, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin' },
-      { id: 'mon_2', name: '흑마법사 발토', type: 'monster', x: 520, y: 240, hp: 16, maxHp: 16, armor: 0, damage: 'd8+2', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=wizard' }
+      { id: 'char_1', name: '김점순', type: 'player', x: 750, y: 750, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage },
+      { id: 'char_2', name: '녹티엘', type: 'player', x: 830, y: 750, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage },
+      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', x: 1050, y: 720, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin' },
+      { id: 'npc_1', name: '김팽덕', type: 'npc', x: 670, y: 750, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok' }
     ];
 
     let currentRole = 'player';
-    let editingTokenId = null;
-    let editingBubbleType = null;
+    let selectedCharIndex = 0;
+    let uploadedTokenDataUrl = null;
 
-    function switchPage(pageId) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
-      if (pageId === 'explore') {
-        document.querySelectorAll('.tab-btn')[0].classList.add('active');
-        document.getElementById('page-explore').classList.add('active');
-      } else {
-        document.querySelectorAll('.tab-btn')[1].classList.add('active');
-        document.getElementById('page-battle').classList.add('active');
-        renderVttTokens();
+    let zoomLevel = 1.0;
+    let panX = -450;
+    let panY = -450;
+    let isPanning = false;
+    let panStartX, panStartY;
+
+    const MIN_ZOOM = 0.25;
+    const MAX_ZOOM = 3.0;
+
+    function updateWorldTransform() {
+      const world = document.getElementById('vtt-world');
+      world.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+      document.getElementById('hud-zoom').innerText = `${Math.round(zoomLevel * 100)}%`;
+    }
+
+    function zoomStep(delta) {
+      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomLevel + delta));
+      zoomLevel = Math.round(newZoom * 100) / 100;
+      updateWorldTransform();
+    }
+
+    function resetZoomPan() {
+      zoomLevel = 1.0;
+      panX = -450;
+      panY = -450;
+      updateWorldTransform();
+    }
+
+    const viewport = document.getElementById('vtt-viewport');
+
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomLevel * zoomFactor));
+
+      const rect = viewport.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      panX = mouseX - (mouseX - panX) * (newZoom / zoomLevel);
+      panY = mouseY - (mouseY - panY) * (newZoom / zoomLevel);
+
+      zoomLevel = Math.round(newZoom * 100) / 100;
+      updateWorldTransform();
+    }, { passive: false });
+
+    viewport.addEventListener('mousedown', (e) => {
+      if (e.button === 2 || e.target.id === 'vtt-world' || e.target.id === 'vtt-viewport' || e.target.id === 'map-background-layer' || e.target.id === 'map-image') {
+        isPanning = true;
+        panStartX = e.clientX - panX;
+        panStartY = e.clientY - panY;
+        viewport.classList.add('panning');
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      panX = e.clientX - panStartX;
+      panY = e.clientY - panStartY;
+      updateWorldTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isPanning = false;
+      viewport.classList.remove('panning');
+    });
+
+    viewport.addEventListener('contextmenu', e => e.preventDefault());
+
+    function toggleWindow(winId) {
+      const win = document.getElementById(winId);
+      const isVisible = win.style.display !== 'none';
+      win.style.display = isVisible ? 'none' : 'flex';
+
+      const btnMap = {
+        'sheet-window': 'btn-toggle-sheet',
+        'dice-window': 'btn-toggle-dice',
+        'spawner-window': 'btn-toggle-spawner',
+        'map-window': 'btn-toggle-map'
+      };
+      if (btnMap[winId]) {
+        document.getElementById(btnMap[winId]).classList.toggle('active-toggle', !isVisible);
       }
     }
 
-    function setRole(role) {
+    function minimizeWindow(winId) {
+      document.getElementById(winId).classList.toggle('minimized');
+    }
+
+    function startDragWindow(e, winId) {
+      const win = document.getElementById(winId);
+      let startX = e.clientX - win.offsetLeft;
+      let startY = e.clientY - win.offsetTop;
+
+      document.querySelectorAll('.floating-window').forEach(w => w.style.zIndex = '1200');
+      win.style.zIndex = '1300';
+
+      function onMove(me) {
+        win.style.left = `${me.clientX - startX}px`;
+        win.style.top = `${Math.max(48, me.clientY - startY)}px`;
+      }
+      function onUp() {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      }
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    }
+
+    function switchRole(role) {
       currentRole = role;
-      const playerBtn = document.getElementById('role-player-btn');
-      const gmBtn = document.getElementById('role-gm-btn');
-      const vttStatus = document.getElementById('vtt-mode-status');
-
-      if (role === 'gm') {
-        gmBtn.classList.add('active');
-        playerBtn.classList.remove('active');
-        vttStatus.innerText = '현재 모드: 게임 마스터(GM) - 전체 제어 가능';
-        document.querySelectorAll('.gm-only-tag').forEach(el => el.style.display = 'inline');
-        document.getElementById('gm-monster-locked-msg').style.display = 'none';
-        document.getElementById('gm-monster-controls').style.display = 'block';
-      } else {
-        playerBtn.classList.add('active');
-        gmBtn.classList.remove('active');
-        vttStatus.innerText = '현재 모드: 플레이어 뷰';
-        document.querySelectorAll('.gm-only-tag').forEach(el => el.style.display = 'none');
-        document.getElementById('gm-monster-locked-msg').style.display = 'block';
-        document.getElementById('gm-monster-controls').style.display = 'none';
-      }
-      renderCharacterSheets();
-      renderVttTokens();
+      document.body.className = role === 'gm' ? 'gm-mode' : 'player-mode';
+      document.getElementById('role-btn-player').classList.toggle('active', role === 'player');
+      document.getElementById('role-btn-gm').classList.toggle('active', role === 'gm');
+      renderSheet();
+      renderTokens();
     }
 
-    function renderCharacterSheets() {
-      const container = document.getElementById('character-sheets-container');
-      container.innerHTML = '';
-
-      characters.forEach((c, idx) => {
-        const isGm = currentRole === 'gm';
-        const card = document.createElement('div');
-        card.className = 'char-card';
-
-        let statsHtml = '';
-        for (const [key, s] of Object.entries(c.stats)) {
-          const modStr = s.mod >= 0 ? `+${s.mod}` : `${s.mod}`;
-          statsHtml += `
-            <div class="stat-cell">
-              <div class="stat-label">${s.label}</div>
-              <div class="stat-val ${isGm ? 'gm-edit-field' : ''}" 
-                   contenteditable="${isGm}" 
-                   onblur="updateCharStat(${idx}, '${key}', this.innerText)">${s.score}</div>
-              <div class="stat-mod">${modStr}</div>
-            </div>
-          `;
-        }
-
-        let bondsHtml = '<ul style="padding-left:18px;">';
-        c.bonds.forEach((b, bIdx) => {
-          bondsHtml += `<li ${isGm ? 'class="gm-edit-field" contenteditable="true"' : ''} onblur="characters[${idx}].bonds[${bIdx}] = this.innerText">${b}</li>`;
-        });
-        bondsHtml += '</ul>';
-
-        let invHtml = '<ul style="padding-left:18px;">';
-        c.inventory.forEach(item => {
-          invHtml += `<li><strong>${item.name}</strong> (${item.tag}) - 수량: ${item.qty}, 무게: ${item.weight}</li>`;
-        });
-        invHtml += `</ul><div style="margin-top:6px; font-weight:bold; font-size:0.8rem;">현재 하중: ${c.load.current} / 최대: ${c.load.max}</div>`;
-
-        card.innerHTML = `
-          <div class="char-header">
-            <div class="char-avatar-wrap">
-              <img src="${c.tokenImage}" alt="${c.name}" class="char-avatar">
-            </div>
-            <div class="char-info-top">
-              <h3>
-                <span>${c.name} (${c.gender}) <span class="badge">${c.class}</span></span>
-                <span style="font-size:0.9rem; color:var(--wood-medium);">Lv.${c.level} (Exp: ${c.exp})</span>
-              </h3>
-              <div style="display:flex; gap:12px; margin-top:6px; font-size:0.9rem; color:var(--ink-muted);">
-                <span>🛡️ 장갑: <strong>${c.armor}</strong></span>
-                <span>💥 피해: <strong>${c.damage}</strong></span>
-                <span>📍 고향: ${c.homeland}</span>
-              </div>
-              <div class="image-input-group">
-                <input type="text" placeholder="내 토큰 이미지 URL 입력" id="img-url-input-${c.id}" value="${c.tokenImage}">
-                <button onclick="updateTokenImage('${c.id}')">토큰 변경</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="vitals-row">
-            <div>
-              <strong>❤️ 생명력 (HP):</strong>
-              <span style="color:var(--green-accent); font-size:1.1rem; margin-left:4px;">
-                <span ${isGm ? 'class="gm-edit-field" contenteditable="true"' : ''} onblur="updateCharHp(${idx}, this.innerText)">${c.currentHp}</span> / ${c.maxHp}
-              </span>
-            </div>
-            <div>
-              <button class="hp-btn" onclick="adjustHp(${idx}, -1)">-1</button>
-              <button class="hp-btn" onclick="adjustHp(${idx}, 1)">+1</button>
-              <button class="hp-btn" onclick="adjustHp(${idx}, -5)">-5</button>
-              <button class="hp-btn" onclick="adjustHp(${idx}, 5)">+5</button>
-            </div>
-          </div>
-
-          <div class="stats-table">${statsHtml}</div>
-
-          <div style="font-size:0.88rem; margin-bottom:8px;">
-            <p><strong>가치관:</strong> ${c.alignment}</p>
-            <p><strong>종족:</strong> ${c.race}</p>
-            ${c.weapon ? `<p><strong>무기:</strong> ${c.weapon}</p>` : ''}
-          </div>
-
-          <details open>
-            <summary>🤝 인연 (Bonds)</summary>
-            <div class="detail-body">${bondsHtml}</div>
-          </details>
-
-          <details>
-            <summary>🎒 소지품 및 장비</summary>
-            <div class="detail-body">${invHtml}</div>
-          </details>
-
-          <details>
-            <summary>📖 외모 및 배경</summary>
-            <div class="detail-body">
-              <p><strong>외모:</strong> ${c.appearance}</p>
-              <p style="margin-top:6px;"><strong>배경:</strong> ${c.background}</p>
-            </div>
-          </details>
-        `;
-        container.appendChild(card);
+    function selectSheetChar(idx) {
+      selectedCharIndex = idx;
+      document.querySelectorAll('.char-tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === idx);
       });
+      renderSheet();
     }
 
-    function adjustHp(idx, delta) {
-      const c = characters[idx];
-      c.currentHp = Math.max(0, Math.min(c.maxHp, c.currentHp + delta));
-      const t = tokens.find(tok => tok.id === c.id);
-      if (t) t.hp = c.currentHp;
-      renderCharacterSheets();
-      renderVttTokens();
+    function renderSheet() {
+      const c = characters[selectedCharIndex];
+      const isGm = currentRole === 'gm';
+      const container = document.getElementById('sheet-details-content');
+
+      let statsHtml = '';
+      for (const [key, s] of Object.entries(c.stats)) {
+        const modStr = s.mod >= 0 ? `+${s.mod}` : `${s.mod}`;
+        statsHtml += `
+          <div class="sheet-stat-box">
+            <div class="stat-name">${s.name}</div>
+            <input type="number" class="stat-val-input" value="${s.score}" 
+                   ${!isGm ? 'disabled' : ''} 
+                   onchange="updateCharStatField(${selectedCharIndex}, '${key}', this.value)">
+            <div><span class="stat-mod-pill">${modStr}</span></div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
+          <img src="${c.tokenImage}" style="width:60px; height:60px; border-radius:50%; border:2px solid var(--brass); object-fit:cover;">
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="font-size:1.1rem; color:var(--wood-dark);">${c.name} (${c.class})</strong>
+              <span>Lv.${c.level}</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--ink-muted); margin-top:2px;">
+              피해 주사위: <strong>${c.damage}</strong> | 장갑: <strong>${c.armor}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#f7eedf; padding:8px 12px; border-radius:6px; margin-bottom:10px;">
+          <div class="sheet-row">
+            <label>❤️ 체력 (HP):</label>
+            <div>
+              <input type="number" class="sheet-input" style="width:55px; font-weight:bold;" value="${c.hp}" 
+                     ${!isGm ? 'disabled' : ''} onchange="updateCharHpField(${selectedCharIndex}, this.value)"> 
+              / ${c.maxHp}
+            </div>
+          </div>
+          <div class="sheet-row">
+            <label>🎒 하중 (Load):</label>
+            <div>
+              <input type="number" class="sheet-input" style="width:50px;" value="${c.load}" 
+                     ${!isGm ? 'disabled' : ''} onchange="characters[${selectedCharIndex}].load = parseInt(this.value,10)"> 
+              / ${c.maxLoad}
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-stats-grid">
+          ${statsHtml}
+        </div>
+
+        ${isGm ? `
+          <div style="margin-top:12px; font-size:0.75rem; color:var(--red); font-weight:bold;">
+            * GM 모드 활성화됨: 모든 수치를 바로 수정할 수 있습니다.
+          </div>
+        ` : `
+          <div style="margin-top:12px; font-size:0.75rem; color:var(--ink-muted);">
+            * 플레이어 뷰: 스탯 열람 모드입니다.
+          </div>
+        `}
+      `;
     }
 
-    function updateCharHp(idx, val) {
+    function updateCharStatField(charIdx, statKey, val) {
       const num = parseInt(val, 10);
-      if (!isNaN(num)) {
-        characters[idx].currentHp = num;
-        const t = tokens.find(tok => tok.id === characters[idx].id);
-        if (t) t.hp = num;
-        renderVttTokens();
-      }
+      if (isNaN(num)) return;
+      const c = characters[charIdx];
+      c.stats[statKey].score = num;
+
+      let mod = 0;
+      if (num <= 3) mod = -3;
+      else if (num <= 5) mod = -2;
+      else if (num <= 8) mod = -1;
+      else if (num <= 12) mod = 0;
+      else if (num <= 15) mod = 1;
+      else if (num <= 17) mod = 2;
+      else mod = 3;
+      c.stats[statKey].mod = mod;
+      renderSheet();
     }
 
-    function updateCharStat(idx, statKey, val) {
+    function updateCharHpField(charIdx, val) {
       const num = parseInt(val, 10);
-      if (!isNaN(num)) {
-        characters[idx].stats[statKey].score = num;
-        let mod = 0;
-        if (num <= 3) mod = -3;
-        else if (num <= 5) mod = -2;
-        else if (num <= 8) mod = -1;
-        else if (num <= 12) mod = 0;
-        else if (num <= 15) mod = 1;
-        else if (num <= 17) mod = 2;
-        else mod = 3;
-        characters[idx].stats[statKey].mod = mod;
-        renderCharacterSheets();
-      }
+      if (isNaN(num)) return;
+      characters[charIdx].hp = num;
+      const t = tokens.find(tok => tok.id === characters[charIdx].id);
+      if (t) t.hp = num;
+      renderTokens();
     }
 
-    function updateTokenImage(charId) {
-      const input = document.getElementById(`img-url-input-${charId}`);
-      if (input && input.value) {
-        const c = characters.find(item => item.id === charId);
-        if (c) c.tokenImage = input.value;
-        const t = tokens.find(tok => tok.id === charId);
-        if (t) t.image = input.value;
-        renderCharacterSheets();
-        renderVttTokens();
-      }
-    }
-
-    // 전장 토큰 렌더링 & 드래그
-    function renderVttTokens() {
-      const layer = document.getElementById('vtt-tokens-layer');
-      if (!layer) return;
+    function renderTokens() {
+      const layer = document.getElementById('tokens-layer');
       layer.innerHTML = '';
 
       tokens.forEach(tok => {
         const el = document.createElement('div');
         el.className = 'vtt-token';
-        el.id = `token-${tok.id}`;
+        el.id = `vtt-tok-${tok.id}`;
         el.style.left = `${tok.x}px`;
         el.style.top = `${tok.y}px`;
 
@@ -875,59 +947,65 @@
 
         el.innerHTML = `
           <div class="token-bubbles">
-            <div class="token-bubble bubble-green" onclick="handleBubbleClick('${tok.id}', 'hp')">
+            <div class="token-bubble bubble-green" data-tooltip="HP: ${tok.hp}/${tok.maxHp}" onclick="openBubbleModal('${tok.id}', 'hp')">
               ${tok.hp}
-              <div class="token-bubble-tooltip">HP: ${tok.hp}/${tok.maxHp}</div>
             </div>
-            <div class="token-bubble bubble-blue" onclick="handleBubbleClick('${tok.id}', 'armor')">
+            <div class="token-bubble bubble-blue" data-tooltip="장갑: ${tok.armor}" onclick="openBubbleModal('${tok.id}', 'armor')">
               ${tok.armor}
-              <div class="token-bubble-tooltip">장갑: ${tok.armor}</div>
             </div>
-            <div class="token-bubble bubble-red" onclick="handleBubbleClick('${tok.id}', 'damage')">
+            <div class="token-bubble bubble-red" data-tooltip="피해: ${tok.damage}" onclick="openBubbleModal('${tok.id}', 'damage')">
               ${tok.damage.replace('d','')}
-              <div class="token-bubble-tooltip">피해량: ${tok.damage}</div>
             </div>
           </div>
+
           <div class="token-hp-bar">
-            <div class="token-hp-fill" style="width:${hpPct}%;"></div>
+            <div class="token-hp-fill" style="width: ${hpPct}%;"></div>
           </div>
-          <div class="token-body ${tok.type === 'monster' ? 'monster' : ''}">
-            <img src="${tok.image}" alt="${tok.name}" class="token-img" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=placeholder'">
+
+          <div class="token-circle ${tok.type}">
+            <img src="${tok.image}" alt="${tok.name}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=token'">
           </div>
-          <div class="token-name-tag">${tok.name}</div>
+
+          <div class="token-label">${tok.name}</div>
+          <button class="token-del-btn" onclick="removeToken('${tok.id}')" title="토큰 제거">×</button>
         `;
-        makeTokenDraggable(el, tok);
+
+        attachTokenDraggable(el, tok);
         layer.appendChild(el);
       });
     }
 
-    function makeTokenDraggable(element, tokenObj) {
+    function attachTokenDraggable(element, tokenObj) {
       let isDragging = false;
-      let startX, startY;
+      let startMouseX, startMouseY;
+      let initialTokenX, initialTokenY;
 
       element.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.token-bubble')) return;
+        if (e.target.closest('.token-bubble') || e.target.closest('.token-del-btn')) return;
         isDragging = true;
-        startX = e.clientX - tokenObj.x;
-        startY = e.clientY - tokenObj.y;
-        e.preventDefault();
+        startMouseX = e.clientX;
+        startMouseY = e.clientY;
+        initialTokenX = tokenObj.x;
+        initialTokenY = tokenObj.y;
+        e.stopPropagation();
+
+        element.style.zIndex = 1000;
 
         function onMouseMove(moveEvent) {
           if (!isDragging) return;
-          const board = document.getElementById('vtt-board');
-          const rect = board.getBoundingClientRect();
-          let newX = moveEvent.clientX - startX;
-          let newY = moveEvent.clientY - startY;
-          newX = Math.max(0, Math.min(rect.width - 70, newX));
-          newY = Math.max(25, Math.min(rect.height - 70, newY));
-          tokenObj.x = newX;
-          tokenObj.y = newY;
-          element.style.left = `${newX}px`;
-          element.style.top = `${newY}px`;
+          const dx = (moveEvent.clientX - startMouseX) / zoomLevel;
+          const dy = (moveEvent.clientY - startMouseY) / zoomLevel;
+
+          tokenObj.x = Math.round(initialTokenX + dx);
+          tokenObj.y = Math.round(initialTokenY + dy);
+
+          element.style.left = `${tokenObj.x}px`;
+          element.style.top = `${tokenObj.y}px`;
         }
 
         function onMouseUp() {
           isDragging = false;
+          element.style.zIndex = 50;
           window.removeEventListener('mousemove', onMouseMove);
           window.removeEventListener('mouseup', onMouseUp);
         }
@@ -937,21 +1015,23 @@
       });
     }
 
-    function resetTokenPositions() {
-      tokens.forEach((t, i) => {
-        t.x = 80 + (i % 4) * 90;
-        t.y = 120 + Math.floor(i / 4) * 100;
-      });
-      renderVttTokens();
+    function removeToken(tokenId) {
+      if (currentRole !== 'gm') {
+        alert('토큰 삭제는 게임 마스터만 가능합니다.');
+        return;
+      }
+      tokens = tokens.filter(t => t.id !== tokenId);
+      renderTokens();
     }
 
-    // 버블 모달 조작
-    function handleBubbleClick(tokenId, type) {
+    let activeBubbleTokenId = null;
+    let activeBubbleType = null;
+
+    function openBubbleModal(tokenId, type) {
+      activeBubbleTokenId = tokenId;
+      activeBubbleType = type;
       const tok = tokens.find(t => t.id === tokenId);
       if (!tok) return;
-
-      editingTokenId = tokenId;
-      editingBubbleType = type;
 
       const modal = document.getElementById('bubble-edit-modal');
       const title = document.getElementById('bubble-modal-title');
@@ -961,27 +1041,28 @@
       const isGm = currentRole === 'gm';
 
       if (type === 'hp') {
-        title.innerText = `${tok.name} - 체력 (HP) 설정`;
-        label.innerText = `현재 HP / 최대 HP: ${tok.maxHp}`;
+        title.innerText = `${tok.name} - 체력 (HP)`;
+        label.innerText = `현재 HP (최대: ${tok.maxHp})`;
         input.value = tok.hp;
       } else if (type === 'armor') {
-        title.innerText = `${tok.name} - 장갑 수치`;
-        label.innerText = '장갑 (Armor):';
+        title.innerText = `${tok.name} - 장갑 (Armor)`;
+        label.innerText = '장갑 수치';
         input.value = tok.armor;
       } else if (type === 'damage') {
-        title.innerText = `${tok.name} - 기본 피해량`;
-        label.innerText = '피해 주사위 (예: d6, d10, d8+2):';
+        title.innerText = `${tok.name} - 피해 주사위`;
+        label.innerText = '피해량 (예: d6, d10, d8+2)';
         input.value = tok.damage;
       }
 
       if (!isGm) {
         input.disabled = true;
         saveBtn.style.display = 'none';
-        label.innerText += " (플레이어는 조회만 가능하며, 변경은 GM 모드에서만 가능합니다)";
+        label.innerText += ' [플레이어 열람 전용 - 수정은 GM만 가능]';
       } else {
         input.disabled = false;
         saveBtn.style.display = 'inline-block';
       }
+
       modal.classList.add('active');
     }
 
@@ -989,174 +1070,231 @@
       document.getElementById('bubble-edit-modal').classList.remove('active');
     }
 
-    function saveBubbleEdit() {
+    function saveBubbleModal() {
       if (currentRole !== 'gm') return;
-      const tok = tokens.find(t => t.id === editingTokenId);
+      const tok = tokens.find(t => t.id === activeBubbleTokenId);
       if (!tok) return;
-      const inputVal = document.getElementById('bubble-field-input').value.trim();
 
-      if (editingBubbleType === 'hp') {
-        const val = parseInt(inputVal, 10);
-        if (!isNaN(val)) {
-          tok.hp = Math.max(0, val);
-          const c = characters.find(char => char.id === tok.id);
-          if (c) c.currentHp = tok.hp;
+      const val = document.getElementById('bubble-field-input').value.trim();
+      if (activeBubbleType === 'hp') {
+        const n = parseInt(val, 10);
+        if (!isNaN(n)) {
+          tok.hp = Math.max(0, n);
+          const c = characters.find(item => item.id === tok.id);
+          if (c) c.hp = tok.hp;
         }
-      } else if (editingBubbleType === 'armor') {
-        const val = parseInt(inputVal, 10);
-        if (!isNaN(val)) tok.armor = val;
-      } else if (editingBubbleType === 'damage') {
-        tok.damage = inputVal;
+      } else if (activeBubbleType === 'armor') {
+        const n = parseInt(val, 10);
+        if (!isNaN(n)) tok.armor = n;
+      } else if (activeBubbleType === 'damage') {
+        tok.damage = val;
       }
 
       closeBubbleModal();
-      renderCharacterSheets();
-      renderVttTokens();
+      renderSheet();
+      renderTokens();
     }
 
-    // 몬스터 생성
-    function createAndSpawnMonster() {
-      const name = document.getElementById('m-name').value.trim() || '이름 없는 몬스터';
-      const hp = parseInt(document.getElementById('m-hp').value, 10) || 10;
-      const dmg = document.getElementById('m-dmg').value.trim() || 'd6';
-      const armor = parseInt(document.getElementById('m-armor').value, 10) || 0;
-      const img = document.getElementById('m-image').value.trim() || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`;
+    let currentSpawnerTab = 'monster';
 
-      tokens.push({
-        id: 'mon_' + Date.now(),
-        name: name,
-        type: 'monster',
-        x: 350 + Math.random() * 80,
-        y: 180 + Math.random() * 80,
-        hp: hp,
-        maxHp: hp,
-        armor: armor,
-        damage: dmg,
-        image: img
-      });
+    function switchSpawnerTab(tab) {
+      currentSpawnerTab = tab;
+      document.querySelectorAll('.spawner-tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
 
-      renderVttTokens();
-      alert(`⚔️ [${name}] 토큰이 전장에 배치되었습니다!`);
+      document.getElementById('spawner-form-monster').style.display = tab === 'monster' ? 'block' : 'none';
+      document.getElementById('spawner-form-npc').style.display = tab === 'npc' ? 'block' : 'none';
+      document.getElementById('spawner-form-player').style.display = tab === 'player' ? 'block' : 'none';
     }
 
-    function spawnQuickMonster(name, hp, dmg, armor, img) {
-      if (currentRole !== 'gm') {
-        alert('몬스터 소환은 GM(게임 마스터) 권한이 필요합니다. 우측 상단에서 GM 모드로 전환해 주세요.');
-        return;
+    const dropZone = document.getElementById('token-drop-zone');
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) {
+        processTokenImageFile(e.dataTransfer.files[0]);
       }
+    });
+
+    function handleFileSelect(e) {
+      if (e.target.files.length > 0) {
+        processTokenImageFile(e.target.files[0]);
+      }
+    }
+
+    function processTokenImageFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        uploadedTokenDataUrl = e.target.result;
+        document.getElementById('token-image-preview').src = uploadedTokenDataUrl;
+        document.getElementById('token-image-preview-wrap').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function spawnNewToken() {
+      let name, hp, dmg, armor, type = currentSpawnerTab;
+      let defaultImg = `https://api.dicebear.com/7.x/bottts/svg?seed=${Date.now()}`;
+
+      if (type === 'monster') {
+        name = document.getElementById('spawn-m-name').value.trim() || '미지의 몬스터';
+        hp = parseInt(document.getElementById('spawn-m-hp').value, 10) || 10;
+        dmg = document.getElementById('spawn-m-dmg').value.trim() || 'd6';
+        armor = parseInt(document.getElementById('spawn-m-armor').value, 10) || 0;
+      } else if (type === 'npc') {
+        name = document.getElementById('spawn-npc-name').value.trim() || '이름 모를 NPC';
+        hp = parseInt(document.getElementById('spawn-npc-hp').value, 10) || 10;
+        dmg = document.getElementById('spawn-npc-dmg').value.trim() || 'd4';
+        armor = parseInt(document.getElementById('spawn-npc-armor').value, 10) || 0;
+      } else {
+        name = document.getElementById('spawn-p-name').value.trim() || '새로운 동료';
+        hp = parseInt(document.getElementById('spawn-p-hp').value, 10) || 20;
+        dmg = document.getElementById('spawn-p-dmg').value.trim() || 'd8';
+        armor = parseInt(document.getElementById('spawn-p-armor').value, 10) || 1;
+      }
+
+      const img = uploadedTokenDataUrl || defaultImg;
+
+      const viewRect = viewport.getBoundingClientRect();
+      const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - 30;
+      const spawnY = Math.round((-panY + viewRect.height / 2) / zoomLevel) - 30;
+
+      const newId = `${type}_${Date.now()}`;
       tokens.push({
-        id: 'mon_' + Date.now(),
+        id: newId,
         name: name,
-        type: 'monster',
-        x: 400 + Math.random() * 80,
-        y: 150 + Math.random() * 80,
+        type: type,
+        x: spawnX + (Math.random() * 40 - 20),
+        y: spawnY + (Math.random() * 40 - 20),
         hp: hp,
         maxHp: hp,
         armor: armor,
         damage: dmg,
         image: img
       });
-      renderVttTokens();
+
+      renderTokens();
+      uploadedTokenDataUrl = null;
+      document.getElementById('token-image-preview-wrap').style.display = 'none';
+      alert(`[${name}] 토큰이 전장에 소환되었습니다!`);
     }
 
-    // 주사위 굴리기 & 연출
-    let rollingInterval = null;
+    const mapDropZone = document.getElementById('map-drop-zone');
+    mapDropZone.addEventListener('dragover', e => { e.preventDefault(); mapDropZone.classList.add('dragover'); });
+    mapDropZone.addEventListener('dragleave', () => mapDropZone.classList.remove('dragover'));
+    mapDropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      mapDropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        const reader = new FileReader();
+        reader.onload = ev => {
+          document.getElementById('map-image').src = ev.target.result;
+          alert('새로운 지도 이미지가 배경에 적용되었습니다!');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
-    function triggerRoll(diceArray, rollLabel) {
-      const modal = document.getElementById('dice-modal');
-      const title = document.getElementById('dice-roll-title');
-      const tray = document.getElementById('dice-tray');
-      const resultText = document.getElementById('dice-result-text');
-      const closeBtn = document.getElementById('dice-close-btn');
+    function handleMapFileSelect(e) {
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = ev => {
+          document.getElementById('map-image').src = ev.target.result;
+          alert('새로운 지도 이미지가 배경에 적용되었습니다!');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
 
-      title.innerText = `🎲 ${rollLabel} 굴리는 중...`;
-      resultText.innerText = '주사위가 구르는 중...';
-      closeBtn.style.display = 'none';
+    function applyMapUrl() {
+      const url = document.getElementById('map-url-input').value.trim();
+      if (url) {
+        document.getElementById('map-image').src = url;
+        alert('입력하신 이미지 주소가 지도 배경으로 적용되었습니다!');
+      }
+    }
+
+    let diceInterval = null;
+
+    function rollDiceSequence(diceArray, label) {
+      const tray = document.getElementById('window-dice-tray');
+      const resultEl = document.getElementById('window-dice-result');
       tray.innerHTML = '';
-      modal.classList.add('active');
+      resultEl.innerText = `${label} 굴리는 중...`;
 
       const diceElements = diceArray.map(sides => {
-        const el = document.createElement('div');
-        el.className = 'animated-die rolling';
-        el.innerText = Math.floor(Math.random() * sides) + 1;
-        tray.appendChild(el);
-        return { el: el, sides: sides };
+        const d = document.createElement('div');
+        d.className = 'window-die rolling';
+        d.innerText = Math.floor(Math.random() * sides) + 1;
+        tray.appendChild(d);
+        return { el: d, sides: sides };
       });
 
       let elapsed = 0;
       const intervalMs = 70;
-      const totalDuration = 850;
-      const isDramatic = Math.random() < 0.35; // 35% 확률로 0.2초 극적 연출
+      const totalDuration = 800;
+      const isDramatic = Math.random() < 0.35;
 
-      if (rollingInterval) clearInterval(rollingInterval);
+      if (diceInterval) clearInterval(diceInterval);
 
-      rollingInterval = setInterval(() => {
+      diceInterval = setInterval(() => {
         elapsed += intervalMs;
         diceElements.forEach(d => {
           d.el.innerText = Math.floor(Math.random() * d.sides) + 1;
         });
 
         if (elapsed >= totalDuration) {
-          clearInterval(rollingInterval);
+          clearInterval(diceInterval);
           if (isDramatic) {
-            resultText.innerText = '운명의 순간...!';
+            resultEl.innerText = '운명의 순간...';
             diceElements.forEach(d => {
               d.el.classList.remove('rolling');
               d.el.classList.add('dramatic');
             });
-            setTimeout(() => { finalizeRoll(diceElements, rollLabel); }, 260);
+            setTimeout(() => { finalizeWindowRoll(diceElements, label); }, 250);
           } else {
-            finalizeRoll(diceElements, rollLabel);
+            finalizeWindowRoll(diceElements, label);
           }
         }
       }, intervalMs);
     }
 
-    function finalizeRoll(diceElements, rollLabel) {
+    function finalizeWindowRoll(diceElements, label) {
       const results = diceElements.map(d => {
-        const finalVal = Math.floor(Math.random() * d.sides) + 1;
-        d.el.classList.remove('rolling');
-        d.el.classList.remove('dramatic');
-        d.el.innerText = finalVal;
-        return finalVal;
+        const val = Math.floor(Math.random() * d.sides) + 1;
+        d.el.classList.remove('rolling', 'dramatic');
+        d.el.innerText = val;
+        return val;
       });
 
       const total = results.reduce((a, b) => a + b, 0);
-      const resultText = document.getElementById('dice-result-text');
-      const title = document.getElementById('dice-roll-title');
-      const closeBtn = document.getElementById('dice-close-btn');
-
-      title.innerText = `🎲 ${rollLabel} 결과`;
+      const resultEl = document.getElementById('window-dice-result');
 
       let verdict = '';
       if (diceElements.length === 2 && diceElements[0].sides === 6 && diceElements[1].sides === 6) {
-        if (total >= 10) {
-          verdict = `<span style="color:#2e7d32; font-weight:bold;">대성공 (10+) 🎉</span>`;
-        } else if (total >= 7) {
-          verdict = `<span style="color:#d69e2e; font-weight:bold;">부분 성공 / 대가 발생 (7~9) ⚠️</span>`;
-        } else {
-          verdict = `<span style="color:#c62828; font-weight:bold;">실패 / GM 액션 발동 (6 이하) 💀</span>`;
-        }
+        if (total >= 10) verdict = '<span style="color:#2e7d32;">대성공 (10+) 🎉</span>';
+        else if (total >= 7) verdict = '<span style="color:#f57f17;">부분 성공 / 대가 발생 (7~9) ⚠️</span>';
+        else verdict = '<span style="color:#c62828;">실패 / GM 액션 발동 (6 이하) 💀</span>';
       }
 
-      resultText.innerHTML = `[${results.join(', ')}] = <strong>총합 ${total}점</strong> ${verdict ? '<br>' + verdict : ''}`;
-      closeBtn.style.display = 'inline-block';
+      resultEl.innerHTML = `[${results.join(', ')}] = <strong>총합 ${total}</strong> ${verdict ? '<br>' + verdict : ''}`;
     }
 
     function rollCustomDice() {
-      const count = parseInt(document.getElementById('custom-count').value, 10) || 1;
-      const sides = parseInt(document.getElementById('custom-sides').value, 10) || 20;
+      const count = parseInt(document.getElementById('dice-custom-count').value, 10) || 1;
+      const sides = parseInt(document.getElementById('dice-custom-sides').value, 10) || 20;
       const diceArr = Array(Math.min(10, Math.max(1, count))).fill(sides);
-      triggerRoll(diceArr, `${count}d${sides}`);
-    }
-
-    function closeDiceModal() {
-      document.getElementById('dice-modal').classList.remove('active');
+      rollDiceSequence(diceArr, `${count}d${sides}`);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      renderCharacterSheets();
-      renderVttTokens();
+      updateWorldTransform();
+      renderSheet();
+      renderTokens();
     });
   </script>
 </body>
