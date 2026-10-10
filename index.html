@@ -33,7 +33,6 @@
       user-select: none;
     }
 
-    /* Top Roll20 Style Menu Header */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -72,7 +71,21 @@
       background: #edd8bf; color: #3b200b; border-color: #ffe6ba;
     }
 
-    .header-right { display: flex; align-items: center; gap: 12px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .user-pill {
+      background: #2a1607;
+      border: 1px solid #8b5a2b;
+      padding: 3px 10px;
+      border-radius: 14px;
+      font-size: 0.78rem;
+      color: #ffdfa9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .user-pill strong { color: #fff; cursor: pointer; text-decoration: underline; }
+
     .role-toggle {
       display: flex; background: #231205; padding: 3px;
       border-radius: 16px; border: 1px solid #8a582c;
@@ -87,7 +100,6 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
 
-    /* VTT Workspace */
     #vtt-viewport {
       position: absolute; top: 48px; left: 0; right: 0; bottom: 0;
       background: #140f0a; overflow: hidden; cursor: default;
@@ -120,7 +132,7 @@
       border: 2px solid var(--parchment-border);
       z-index: 20;
     }
-    #map-image { display: block; max-width: 4000px; max-height: 4000px; pointer-events: none; }
+    #map-image { display: block; pointer-events: none; object-fit: contain; }
 
     .vtt-hud {
       position: absolute; bottom: 16px; right: 16px;
@@ -133,12 +145,12 @@
       padding: 2px 8px; border-radius: 3px; cursor: pointer; font-weight: bold;
     }
 
-    /* Tokens */
     .vtt-token {
       position: absolute; width: 60px; height: 60px;
       cursor: grab; user-select: none; z-index: 50;
     }
-    .vtt-token:active { cursor: grabbing; z-index: 900 !important; }
+    .vtt-token.locked { cursor: not-allowed !important; filter: brightness(0.85); }
+    .vtt-token:active:not(.locked) { cursor: grabbing; z-index: 900 !important; }
 
     .token-bubbles {
       position: absolute; top: -24px; left: 50%;
@@ -184,6 +196,13 @@
       white-space: nowrap; pointer-events: none;
     }
 
+    .token-owner-badge {
+      position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%);
+      background: #3b200b; color: #ffdca8; font-size: 0.65rem;
+      padding: 0 5px; border-radius: 3px; border: 1px solid #c9a574;
+      white-space: nowrap; pointer-events: none;
+    }
+
     .token-del-btn {
       display: none; position: absolute; top: -10px; right: -10px;
       width: 20px; height: 20px; background: #c62828; color: white;
@@ -192,21 +211,21 @@
     }
     .gm-mode .token-del-btn { display: flex; }
 
-    /* Floating Draggable Windows */
     .floating-window {
       position: absolute; background: var(--parchment);
       border: 2px solid var(--wood-medium); border-radius: 8px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: flex; flex-direction: column;
-      z-index: 1200; min-width: 300px; max-width: 90vw; resize: both; overflow: hidden;
+      z-index: 1200; min-width: 280px; min-height: 180px; max-width: 95vw; max-height: 90vh;
+      resize: both; overflow: hidden;
     }
     .floating-window.minimized .window-content { display: none; }
-    .floating-window.minimized { height: auto !important; resize: none; }
+    .floating-window.minimized { height: auto !important; resize: none; min-height: 0 !important; }
 
     .window-header {
       background: linear-gradient(to bottom, #7c4c23, #532e0e);
       color: #fdf5ea; padding: 8px 12px; display: flex; justify-content: space-between;
       align-items: center; cursor: move; border-bottom: 2px solid #381f08;
-      font-size: 0.88rem; font-weight: bold;
+      font-size: 0.88rem; font-weight: bold; flex-shrink: 0;
     }
     .window-title { display: flex; align-items: center; gap: 6px; }
     .window-actions { display: flex; gap: 6px; }
@@ -218,15 +237,15 @@
     .win-btn:hover { background: #613611; }
 
     .window-content {
-      padding: 12px 14px; overflow-y: auto; max-height: 70vh;
+      padding: 12px 14px; overflow-y: auto; flex: 1;
       color: var(--ink); font-size: 0.86rem;
     }
 
-    #sheet-window { top: 60px; left: 20px; width: 480px; height: 580px; }
-    #dice-window { top: 60px; right: 20px; width: 340px; }
-    #spawner-window { top: 120px; left: 520px; width: 380px; display: none; }
-    #compendium-window { top: 100px; left: 250px; width: 520px; height: 480px; display: none; }
-    #map-window { top: 140px; left: 320px; width: 360px; display: none; }
+    #sheet-window { top: 60px; left: 20px; width: 480px; height: 600px; }
+    #dice-window { top: 60px; right: 20px; width: 340px; height: 460px; }
+    #spawner-window { top: 120px; left: 520px; width: 380px; height: 500px; display: none; }
+    #compendium-window { top: 100px; left: 250px; width: 540px; height: 500px; display: none; }
+    #map-window { top: 140px; left: 320px; width: 380px; height: 420px; display: none; }
 
     .char-tab-bar {
       display: flex; gap: 6px; margin-bottom: 10px;
@@ -244,6 +263,15 @@
       font-size: 0.78rem; font-weight: bold; margin-left: auto;
     }
     .char-add-btn:hover { background: #388e3c; }
+
+    .sheet-avatar-drop {
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 2px dashed var(--brass); object-fit: cover;
+      cursor: pointer; transition: transform 0.15s, border-color 0.2s;
+    }
+    .sheet-avatar-drop:hover {
+      transform: scale(1.05); border-color: var(--wood-dark);
+    }
 
     .sheet-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
     .sheet-stat-box {
@@ -302,7 +330,7 @@
 
     .dice-log-box {
       background: #fbf3e4; border: 1px solid #d4b88b; border-radius: 4px;
-      padding: 6px 8px; max-height: 90px; overflow-y: auto; font-size: 0.75rem;
+      padding: 6px 8px; max-height: 100px; overflow-y: auto; font-size: 0.75rem;
       color: #4a2c11; text-align: left;
     }
     .dice-log-item { border-bottom: 1px dashed #e2cca8; padding: 2px 0; }
@@ -325,7 +353,7 @@
       display: block; font-weight: bold; font-size: 0.78rem;
       margin-bottom: 2px; color: var(--wood-dark);
     }
-    .form-group input, .form-group textarea {
+    .form-group input, .form-group textarea, .form-group select {
       width: 100%; padding: 5px 8px; border: 1px solid #caa372;
       border-radius: 4px; font-family: inherit; font-size: 0.82rem;
     }
@@ -340,11 +368,11 @@
       border-bottom: 1px solid var(--parchment-border);
       padding-bottom: 4px; margin-bottom: 6px; color: var(--wood-dark);
     }
-    .compendium-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+    .compendium-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
     .compendium-card {
       background: #f7eedf; border: 1px solid #caa372; border-radius: 6px;
       padding: 8px; display: flex; gap: 8px; align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative;
     }
     .compendium-img {
       width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
@@ -356,8 +384,13 @@
       padding: 3px 8px; border-radius: 3px; cursor: pointer;
       font-weight: bold; font-size: 0.72rem;
     }
+    .compendium-del-btn {
+      position: absolute; top: 4px; right: 4px;
+      width: 18px; height: 18px; background: #c62828; color: white;
+      border-radius: 50%; border: none; font-size: 0.65rem; font-weight: bold;
+      cursor: pointer; display: flex; justify-content: center; align-items: center;
+    }
 
-    /* Semi-transparent Resizable Chat Window */
     #chat-window {
       position: absolute; bottom: 20px; left: 20px;
       width: 320px; height: 240px;
@@ -371,7 +404,7 @@
       background: rgba(90, 52, 23, 0.9); color: #ffe8cc;
       padding: 4px 10px; font-size: 0.8rem; font-weight: bold;
       cursor: move; display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid #7c4c23;
+      border-bottom: 1px solid #7c4c23; flex-shrink: 0;
     }
     .chat-messages {
       flex: 1; padding: 8px; overflow-y: auto; font-size: 0.8rem;
@@ -381,7 +414,7 @@
     .chat-msg.dice { border-left: 3px solid var(--brass); color: #ffdca8; }
     .chat-input-bar {
       display: flex; border-top: 1px solid #7c4c23; padding: 4px;
-      background: rgba(20, 12, 5, 0.9);
+      background: rgba(20, 12, 5, 0.9); flex-shrink: 0;
     }
     .chat-input-bar input {
       flex: 1; background: rgba(255,255,255,0.15); border: 1px solid #8b5a2b;
@@ -392,13 +425,21 @@
       padding: 4px 10px; font-size: 0.78rem; border-radius: 3px; margin-left: 4px; cursor: pointer;
     }
 
-    /* Small BGM Player Dock */
     #bgm-dock {
-      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-      background: rgba(40, 24, 12, 0.9); border: 2px solid var(--wood-light);
-      border-radius: 8px; padding: 6px 14px; color: #ffe6ba; font-size: 0.8rem;
-      display: flex; align-items: center; gap: 10px; z-index: 1000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.6); backdrop-filter: blur(3px);
+      position: absolute; bottom: 16px; left: 450px;
+      background: rgba(40, 24, 12, 0.92); border: 2px solid var(--wood-light);
+      border-radius: 8px; color: #ffe6ba; font-size: 0.8rem;
+      z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      backdrop-filter: blur(3px); min-width: 380px; overflow: hidden;
+    }
+    .bgm-header {
+      background: linear-gradient(to bottom, #7c4c23, #532e0e);
+      padding: 4px 10px; cursor: move; font-weight: bold;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #381f08; color: #fff; font-size: 0.75rem;
+    }
+    .bgm-body {
+      padding: 8px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     }
     .bgm-btn {
       background: #7c4c23; color: white; border: 1px solid #deb887;
@@ -411,6 +452,17 @@
       padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; color: #2b1d0c;
     }
 
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75); z-index: 9999;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .welcome-card {
+      background: var(--parchment); border: 3px solid var(--wood-medium);
+      border-radius: 8px; padding: 22px; width: 380px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+
     .bubble-modal {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.6); z-index: 2000;
@@ -419,11 +471,50 @@
     .bubble-modal.active { display: flex; }
     .bubble-card {
       background: var(--parchment); border: 3px solid var(--wood-medium);
-      border-radius: 8px; padding: 18px; width: 300px;
+      border-radius: 8px; padding: 18px; width: 320px;
     }
   </style>
 </head>
 <body class="player-mode">
+
+  <!-- Welcome / Entry Modal for Nickname and Character Binding -->
+  <div class="modal-overlay" id="welcome-modal">
+    <div class="welcome-card">
+      <h3 style="color:var(--wood-dark); margin-bottom:8px; border-bottom:1px solid var(--parchment-border); padding-bottom:6px;">
+        🎲 모험가 길드 입장
+      </h3>
+      <p style="font-size:0.82rem; color:var(--ink-muted); margin-bottom:12px;">
+        세션에서 사용할 닉네임을 정하고 조종할 캐릭터를 선택하거나 새로 생성하세요.
+      </p>
+
+      <div class="form-group">
+        <label>플레이어 닉네임</label>
+        <input type="text" id="entry-nickname" placeholder="예: 모험가A, 김철수">
+      </div>
+
+      <div class="form-group">
+        <label>귀속할 캐릭터 선택</label>
+        <select id="entry-char-select">
+          <option value="char_1">김점순 (드루이드)</option>
+          <option value="char_2">녹티엘 (전사)</option>
+          <option value="NEW">+ 새 캐릭터 바로 생성하기</option>
+        </select>
+      </div>
+
+      <div id="new-char-entry-fields" style="display:none; background:#f7eedf; padding:8px; border-radius:6px; margin-bottom:8px;">
+        <div class="form-group">
+          <label>새 캐릭터 이름</label>
+          <input type="text" id="entry-new-char-name" placeholder="예: 신규 모험가">
+        </div>
+        <div class="form-group">
+          <label>직업 (예: 성전사, 도적)</label>
+          <input type="text" id="entry-new-char-class" placeholder="예: 성전사">
+        </div>
+      </div>
+
+      <button class="btn-create" onclick="finishEntry()">모험 시작하기</button>
+    </div>
+  </div>
 
   <header>
     <div class="header-left">
@@ -438,6 +529,11 @@
     </div>
 
     <div class="header-right">
+      <div class="user-pill">
+        <span>👤 접속자:</span>
+        <strong id="header-user-display" onclick="reopenEntryModal()">설정 안 됨</strong>
+        <span id="header-bound-char" style="color:#caa372; font-size:0.72rem;"></span>
+      </div>
       <div class="role-toggle">
         <button id="role-btn-player" class="active" onclick="switchRole('player')">플레이어</button>
         <button id="role-btn-gm" onclick="switchRole('gm')">게임 마스터(GM) 🔑</button>
@@ -475,6 +571,7 @@
     <div class="window-content">
       <div class="char-tab-bar" id="char-tab-list"></div>
       <div id="sheet-details-content"></div>
+      <input type="file" id="sheet-avatar-file" accept="image/*" style="display:none;" onchange="handleSheetAvatarUpload(event)">
     </div>
   </div>
 
@@ -573,6 +670,11 @@
         </div>
       </div>
 
+      <div class="form-group" style="margin-top:6px;">
+        <label>조종 권한 부여 (플레이어 닉네임 선택)</label>
+        <select id="spawn-owner-select"></select>
+      </div>
+
       <div style="display:flex; gap:6px;">
         <button class="btn-create" onclick="spawnNewToken(true)" style="background:var(--green);">전장 배치 + 도감 저장</button>
         <button class="btn-create" onclick="spawnNewToken(false)">전장 배치만</button>
@@ -583,7 +685,7 @@
   <!-- FLOATING WINDOW 4: Token Compendium -->
   <div class="floating-window" id="compendium-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'compendium-window')">
-      <div class="window-title">📖 토큰 도감 (원클릭 소환)</div>
+      <div class="window-title">📖 토큰 도감 (원클릭 소환 & 관리)</div>
       <div class="window-actions">
         <button class="win-btn" onclick="minimizeWindow('compendium-window')" title="최소화">_</button>
         <button class="win-btn" onclick="toggleWindow('compendium-window')" title="닫기">×</button>
@@ -595,7 +697,7 @@
   <!-- FLOATING WINDOW 5: Map Settings -->
   <div class="floating-window" id="map-window">
     <div class="window-header" onmousedown="startDragWindow(event, 'map-window')">
-      <div class="window-title">🗺️ 전장 배경 맵 & 격자 설정</div>
+      <div class="window-title">🗺️ 전장 배경 맵 & 격자 맞춤 설정</div>
       <div class="window-actions">
         <button class="win-btn" onclick="minimizeWindow('map-window')" title="최소화">_</button>
         <button class="win-btn" onclick="toggleWindow('map-window')" title="닫기">×</button>
@@ -610,9 +712,23 @@
         <label>또는 이미지 URL 입력</label>
         <input type="text" id="map-url-input" placeholder="https://example.com/map.jpg">
       </div>
-      <button class="btn-create" onclick="applyMapUrl()">지도 배경 적용</button>
 
-      <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--parchment-border);">
+      <div style="background:#f7eedf; padding:8px 10px; border-radius:6px; margin:8px 0; border:1px solid #d4b88b;">
+        <label style="font-weight:bold; font-size:0.8rem; color:var(--wood-dark); display:block; margin-bottom:4px;">
+          📏 지도 격자 크기 맞춤 (가로 × 세로 칸수)
+        </label>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <input type="number" id="map-grid-w" value="30" min="1" max="100" style="width:60px; padding:4px; text-align:center;">
+          <span>칸 ×</span>
+          <input type="number" id="map-grid-h" value="20" min="1" max="100" style="width:60px; padding:4px; text-align:center;">
+          <span>칸</span>
+          <span style="font-size:0.75rem; color:var(--ink-muted); margin-left:auto;">(1칸 = 50px)</span>
+        </div>
+      </div>
+
+      <button class="btn-create" onclick="applyMapSettings()">지도 배경 및 크기 적용</button>
+
+      <div style="margin-top:12px; padding-top:8px; border-top:1px solid var(--parchment-border);">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold;">
           <input type="checkbox" id="chk-grid-ontop" checked onchange="toggleGridOnTop(this.checked)">
           <span>격자 무늬를 지도 위에 띄우기 (Grid Overlay)</span>
@@ -640,16 +756,22 @@
     </div>
   </div>
 
-  <!-- BGM Management Dock at Bottom -->
+  <!-- Draggable BGM Player Dock -->
   <div id="bgm-dock">
-    <span>🎵 BGM:</span>
-    <select id="bgm-select" class="bgm-select" onchange="changeBgmTrack(this.value)">
-      <option value="synth_tavern">🍺 활기찬 모험가 주점 (자체생성 테마)</option>
-      <option value="custom_url">🔗 외부 음악 URL 입력</option>
-    </select>
-    <button class="bgm-btn" id="bgm-play-btn" onclick="toggleBgmPlayback()">▶ 재생</button>
-    <button class="bgm-btn" onclick="openBgmUploadPrompt()">📁 음악 업로드/추가</button>
-    <input type="file" id="bgm-file-input" accept="audio/*" style="display:none;" onchange="handleBgmFileSelect(event)">
+    <div class="bgm-header" onmousedown="startDragWindow(event, 'bgm-dock')">
+      <span>🎵 BGM 플레이어 & 오디오 관리 (드래그 이동 가능)</span>
+      <button class="win-btn" onclick="document.getElementById('bgm-dock').style.display='none'">×</button>
+    </div>
+    <div class="bgm-body">
+      <span>트랙:</span>
+      <select id="bgm-select" class="bgm-select" onchange="changeBgmTrack(this.value)">
+        <option value="synth_tavern">🍺 활기찬 모험가 주점 (자체 류트 연주)</option>
+        <option value="custom_url">🔗 외부 음악 URL 입력</option>
+      </select>
+      <button class="bgm-btn" id="bgm-play-btn" onclick="toggleBgmPlayback()">▶ 재생</button>
+      <button class="bgm-btn" onclick="openBgmUploadPrompt()">📁 음악 업로드</button>
+      <input type="file" id="bgm-file-input" accept="audio/*" style="display:none;" onchange="handleBgmFileSelect(event)">
+    </div>
   </div>
 
   <!-- Bubble Edit Modal -->
@@ -660,6 +782,10 @@
         <label id="bubble-field-label" style="font-weight:bold;"></label>
         <input type="text" id="bubble-field-input" style="font-size:1.1rem; padding:6px;">
       </div>
+      <div class="form-group" id="bubble-owner-group" style="display:none;">
+        <label>토큰 조종 권한 (플레이어 닉네임)</label>
+        <select id="bubble-owner-select"></select>
+      </div>
       <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:12px;">
         <button onclick="closeBubbleModal()" style="padding:5px 12px; background:#ebd8c0; border:1px solid #c9a574; border-radius:4px; cursor:pointer;">취소</button>
         <button id="bubble-save-btn" onclick="saveBubbleModal()" style="padding:5px 14px; background:var(--wood-medium); color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">저장</button>
@@ -668,6 +794,10 @@
   </div>
 
   <script>
+    let myNickname = '모험가';
+    let myBoundCharId = 'char_1';
+    let sessionUsers = ['모험가', 'GM'];
+
     let characters = [
       {
         id: 'char_1',
@@ -729,17 +859,97 @@
     };
 
     let tokens = [
-      { id: 'char_1', name: '김점순', type: 'player', x: 750, y: 750, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage },
-      { id: 'char_2', name: '녹티엘', type: 'player', x: 830, y: 750, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage },
-      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', x: 1050, y: 720, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin' },
-      { id: 'npc_1', name: '김팽덕', type: 'npc', x: 670, y: 750, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok' }
+      { id: 'char_1', name: '김점순', type: 'player', owner: '모험가', x: 750, y: 750, hp: 14, maxHp: 14, armor: 1, damage: 'd6', image: characters[0].tokenImage },
+      { id: 'char_2', name: '녹티엘', type: 'player', owner: 'GM', x: 830, y: 750, hp: 25, maxHp: 25, armor: 1, damage: 'd10', image: characters[1].tokenImage },
+      { id: 'mon_1', name: '고블린 정찰병', type: 'monster', owner: 'GM', x: 1050, y: 720, hp: 6, maxHp: 6, armor: 1, damage: 'd6', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=goblin' },
+      { id: 'npc_1', name: '김팽덕', type: 'npc', owner: 'GM', x: 670, y: 750, hp: 12, maxHp: 12, armor: 0, damage: 'd4', image: 'https://api.dicebear.com/7.x/bottts/svg?seed=paengdeok' }
     ];
 
     let currentRole = 'player';
     let selectedCharIndex = 0;
     let uploadedTokenDataUrl = null;
 
-    // Web Audio Synthesizer
+    document.getElementById('entry-char-select').addEventListener('change', function() {
+      document.getElementById('new-char-entry-fields').style.display = this.value === 'NEW' ? 'block' : 'none';
+    });
+
+    function reopenEntryModal() {
+      document.getElementById('welcome-modal').style.display = 'flex';
+    }
+
+    function finishEntry() {
+      const nickInput = document.getElementById('entry-nickname').value.trim();
+      if (!nickInput) {
+        alert('닉네임을 입력해 주세요!');
+        return;
+      }
+      myNickname = nickInput;
+      if (!sessionUsers.includes(myNickname)) sessionUsers.push(myNickname);
+
+      const selVal = document.getElementById('entry-char-select').value;
+      if (selVal === 'NEW') {
+        const cName = document.getElementById('entry-new-char-name').value.trim() || '신규 모험가';
+        const cClass = document.getElementById('entry-new-char-class').value.trim() || '모험가';
+        const newChar = createCharacterObj(cName, cClass);
+        characters.push(newChar);
+        myBoundCharId = newChar.id;
+        selectedCharIndex = characters.length - 1;
+
+        tokens.push({
+          id: newChar.id,
+          name: newChar.name,
+          type: 'player',
+          owner: myNickname,
+          x: 750 + Math.random() * 50,
+          y: 750 + Math.random() * 50,
+          hp: newChar.hp,
+          maxHp: newChar.maxHp,
+          armor: newChar.armor,
+          damage: newChar.damage,
+          image: newChar.tokenImage
+        });
+      } else {
+        myBoundCharId = selVal;
+        const cIdx = characters.findIndex(c => c.id === selVal);
+        if (cIdx !== -1) selectedCharIndex = cIdx;
+        const tok = tokens.find(t => t.id === selVal);
+        if (tok) tok.owner = myNickname;
+      }
+
+      document.getElementById('header-user-display').innerText = myNickname;
+      const bChar = characters.find(c => c.id === myBoundCharId);
+      document.getElementById('header-bound-char').innerText = bChar ? `[${bChar.name}]` : '';
+
+      document.getElementById('welcome-modal').style.display = 'none';
+
+      populateOwnerDropdowns();
+      renderSheetTabs();
+      renderSheet();
+      renderCompendium();
+      renderTokens();
+      appendChatMessage(`🎉 [${myNickname}]님이 접속하셨습니다. (조종 캐릭터: ${bChar ? bChar.name : '없음'})`);
+    }
+
+    function populateOwnerDropdowns() {
+      const selects = [document.getElementById('spawn-owner-select'), document.getElementById('bubble-owner-select')];
+      selects.forEach(s => {
+        if (!s) return;
+        s.innerHTML = '';
+        const gmOpt = document.createElement('option');
+        gmOpt.value = 'GM';
+        gmOpt.innerText = '👑 GM (게임 마스터)';
+        s.appendChild(gmOpt);
+
+        sessionUsers.forEach(u => {
+          if (u === 'GM') return;
+          const opt = document.createElement('option');
+          opt.value = u;
+          opt.innerText = `👤 ${u}`;
+          s.appendChild(opt);
+        });
+      });
+    }
+
     let audioCtx = null;
 
     function getAudioContext() {
@@ -911,7 +1121,6 @@
       document.getElementById('grid-overlay').classList.toggle('hidden', !isVisible);
     }
 
-    // Viewport Pan/Zoom
     let zoomLevel = 1.0;
     let panX = -450;
     let panY = -450;
@@ -1007,7 +1216,7 @@
       let startX = e.clientX - win.offsetLeft;
       let startY = e.clientY - win.offsetTop;
 
-      document.querySelectorAll('.floating-window').forEach(w => w.style.zIndex = '1200');
+      document.querySelectorAll('.floating-window, #bgm-dock, #chat-window').forEach(w => w.style.zIndex = '1200');
       win.style.zIndex = '1300';
 
       function onMove(me) {
@@ -1050,16 +1259,22 @@
       const addBtn = document.createElement('button');
       addBtn.className = 'char-add-btn';
       addBtn.innerText = '➕ 새 플레이어 생성';
-      addBtn.onclick = createNewCharacter;
+      addBtn.onclick = () => {
+        const name = prompt('새 플레이어 캐릭터 이름:', '신규 모험가');
+        if (!name) return;
+        const job = prompt('직업:', '모험가') || '모험가';
+        const newChar = createCharacterObj(name, job);
+        characters.push(newChar);
+        selectedCharIndex = characters.length - 1;
+        renderSheetTabs();
+        renderSheet();
+        appendChatMessage(`🛡️ 새 캐릭터 [${name} (${job})] 시트가 등록되었습니다.`);
+      };
       bar.appendChild(addBtn);
     }
 
-    function createNewCharacter() {
-      const name = prompt('새 플레이어 캐릭터의 이름을 입력하세요:', '신규 모험가');
-      if (!name) return;
-      const job = prompt('직업을 입력하세요 (예: 성전사, 음유시인, 도적):', '모험가') || '모험가';
-
-      const newChar = {
+    function createCharacterObj(name, job) {
+      return {
         id: 'char_' + Date.now(),
         name: name,
         class: job,
@@ -1080,23 +1295,6 @@
           cha: { score: 10, mod: 0, name: '매력 (CHA)' }
         }
       };
-
-      characters.push(newChar);
-      selectedCharIndex = characters.length - 1;
-
-      tokenCompendium.player.push({
-        name: newChar.name,
-        hp: newChar.hp,
-        damage: newChar.damage,
-        armor: newChar.armor,
-        image: newChar.tokenImage,
-        info: `${newChar.class} Lv.${newChar.level}`
-      });
-
-      renderSheetTabs();
-      renderSheet();
-      renderCompendium();
-      appendChatMessage(`🛡️ 새 캐릭터 [${name} (${job})] 시트가 등록되었습니다.`);
     }
 
     function selectSheetChar(idx) {
@@ -1105,11 +1303,34 @@
       renderSheet();
     }
 
+    function deleteCharacterSheet(idx) {
+      if (currentRole !== 'gm') {
+        alert('캐릭터 시트 삭제는 마스터(GM)만 가능합니다.');
+        return;
+      }
+      const c = characters[idx];
+      if (confirm(`정말로 [${c.name} (${c.class})] 캐릭터 시트를 삭제하시겠습니까? 관련 토큰도 제거됩니다.`)) {
+        tokens = tokens.filter(t => t.id !== c.id);
+        characters.splice(idx, 1);
+        if (selectedCharIndex >= characters.length) {
+          selectedCharIndex = Math.max(0, characters.length - 1);
+        }
+        renderSheetTabs();
+        renderSheet();
+        renderTokens();
+        appendChatMessage(`🗑️ [${c.name}] 캐릭터 시트가 삭제되었습니다.`);
+      }
+    }
+
     function renderSheet() {
       const c = characters[selectedCharIndex];
-      if (!c) return;
       const isGm = currentRole === 'gm';
       const container = document.getElementById('sheet-details-content');
+
+      if (!c) {
+        container.innerHTML = '<div style="padding:20px; text-align:center;">선택된 캐릭터가 없습니다. 새 캐릭터를 생성해 보세요!</div>';
+        return;
+      }
 
       let statsHtml = '';
       for (const [key, s] of Object.entries(c.stats)) {
@@ -1127,14 +1348,33 @@
 
       container.innerHTML = `
         <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
-          <img src="${c.tokenImage}" style="width:58px; height:58px; border-radius:50%; border:2px solid var(--brass); object-fit:cover;">
+          <div style="position:relative; text-align:center;" title="이미지를 클릭하거나 드래그하여 파일 변경">
+            <img src="${c.tokenImage}" class="sheet-avatar-drop" id="sheet-avatar-img"
+                 onclick="document.getElementById('sheet-avatar-file').click()"
+                 ondragover="event.preventDefault(); this.style.borderColor='var(--red)';"
+                 ondragleave="this.style.borderColor='var(--brass)';"
+                 ondrop="handleSheetAvatarDrop(event)">
+            <div style="font-size:0.65rem; color:var(--ink-muted); margin-top:2px;">클릭/드롭 변경</div>
+          </div>
+
           <div style="flex:1;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong style="font-size:1.05rem; color:var(--wood-dark);">${c.name} (${c.class})</strong>
-              <span>Lv.${c.level}</span>
+              <div>
+                <span>Lv.${c.level}</span>
+                ${isGm ? `<button onclick="deleteCharacterSheet(${selectedCharIndex})" style="margin-left:8px; background:#c62828; color:white; border:none; padding:2px 6px; border-radius:3px; font-size:0.7rem; cursor:pointer;" title="시트 삭제">시트 삭제</button>` : ''}
+              </div>
             </div>
-            <div style="font-size:0.8rem; color:var(--ink-muted); margin-top:2px;">
-              피해 주사위: <strong>${c.damage}</strong> | 장갑: <strong>${c.armor}</strong>
+            
+            <div style="display:flex; gap:10px; margin-top:4px; font-size:0.8rem; align-items:center;">
+              <div>
+                <span>💥 피해 주사위: </span>
+                ${isGm ? `<input type="text" class="sheet-input" style="width:60px; padding:2px 4px;" value="${c.damage}" onchange="updateCharDamageField(${selectedCharIndex}, this.value)">` : `<strong>${c.damage}</strong>`}
+              </div>
+              <div>
+                <span>🛡️ 장갑: </span>
+                ${isGm ? `<input type="number" class="sheet-input" style="width:45px; padding:2px 4px;" value="${c.armor}" onchange="updateCharArmorField(${selectedCharIndex}, this.value)">` : `<strong>${c.armor}</strong>`}
+              </div>
             </div>
           </div>
         </div>
@@ -1164,7 +1404,7 @@
 
         ${isGm ? `
           <div style="margin-top:10px; font-size:0.75rem; color:var(--red); font-weight:bold;">
-            * GM 모드: 스탯 수치를 직접 수정하면 보정치가 자동 재계산됩니다.
+            * GM 모드: 스탯 수치, 피해 주사위, 장갑을 직접 수정하고 시트를 삭제할 수 있습니다.
           </div>
         ` : `
           <div style="margin-top:10px; font-size:0.75rem; color:var(--ink-muted);">
@@ -1172,6 +1412,36 @@
           </div>
         `}
       `;
+    }
+
+    function handleSheetAvatarUpload(e) {
+      if (e.target.files.length > 0) {
+        applyAvatarFile(e.target.files[0]);
+      }
+    }
+
+    function handleSheetAvatarDrop(e) {
+      e.preventDefault();
+      e.target.style.borderColor = 'var(--brass)';
+      if (e.dataTransfer.files.length > 0) {
+        applyAvatarFile(e.dataTransfer.files[0]);
+      }
+    }
+
+    function applyAvatarFile(file) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const c = characters[selectedCharIndex];
+        if (c) {
+          c.tokenImage = ev.target.result;
+          const tok = tokens.find(t => t.id === c.id);
+          if (tok) tok.image = c.tokenImage;
+          renderSheet();
+          renderTokens();
+          appendChatMessage(`📷 [${c.name}] 캐릭터 이미지가 변경되었습니다.`);
+        }
+      };
+      reader.readAsDataURL(file);
     }
 
     function updateCharStatField(charIdx, statKey, val) {
@@ -1190,6 +1460,21 @@
       else mod = 3;
       c.stats[statKey].mod = mod;
       renderSheet();
+    }
+
+    function updateCharDamageField(charIdx, val) {
+      characters[charIdx].damage = val;
+      const tok = tokens.find(t => t.id === characters[charIdx].id);
+      if (tok) tok.damage = val;
+      renderTokens();
+    }
+
+    function updateCharArmorField(charIdx, val) {
+      const n = parseInt(val, 10) || 0;
+      characters[charIdx].armor = n;
+      const tok = tokens.find(t => t.id === characters[charIdx].id);
+      if (tok) tok.armor = n;
+      renderTokens();
     }
 
     function updateCharHpField(charIdx, val) {
@@ -1219,10 +1504,11 @@
         const grid = document.createElement('div');
         grid.className = 'compendium-grid';
 
-        tokenCompendium[cat.key].forEach(item => {
+        tokenCompendium[cat.key].forEach((item, itemIdx) => {
           const card = document.createElement('div');
           card.className = 'compendium-card';
           card.innerHTML = `
+            <button class="compendium-del-btn" onclick="deleteCompendiumItem('${cat.key}', ${itemIdx})" title="도감에서 삭제">×</button>
             <img src="${item.image}" class="compendium-img">
             <div class="compendium-info">
               <strong>${item.name}</strong><br>
@@ -1239,6 +1525,15 @@
       });
     }
 
+    function deleteCompendiumItem(category, index) {
+      const target = tokenCompendium[category][index];
+      if (confirm(`정말로 도감에서 [${target.name}] 토큰을 삭제하시겠습니까?`)) {
+        tokenCompendium[category].splice(index, 1);
+        renderCompendium();
+        appendChatMessage(`🗑️ 도감에서 [${target.name}]이(가) 삭제되었습니다.`);
+      }
+    }
+
     function spawnFromCompendium(category, name) {
       const item = tokenCompendium[category].find(x => x.name === name);
       if (!item) return;
@@ -1251,6 +1546,7 @@
         id: `${category}_${Date.now()}`,
         name: item.name,
         type: category,
+        owner: 'GM',
         x: spawnX + (Math.random() * 40 - 20),
         y: spawnY + (Math.random() * 40 - 20),
         hp: item.hp,
@@ -1270,7 +1566,9 @@
 
       tokens.forEach(tok => {
         const el = document.createElement('div');
-        el.className = 'vtt-token';
+        const canControl = currentRole === 'gm' || tok.owner === myNickname;
+
+        el.className = `vtt-token ${canControl ? '' : 'locked'}`;
         el.id = `vtt-tok-${tok.id}`;
         el.style.left = `${tok.x}px`;
         el.style.top = `${tok.y}px`;
@@ -1299,10 +1597,18 @@
           </div>
 
           <div class="token-label">${tok.name}</div>
+          <div class="token-owner-badge">권한: ${tok.owner || '공용'}</div>
           <button class="token-del-btn" onclick="removeToken('${tok.id}')" title="토큰 제거">×</button>
         `;
 
-        attachTokenDraggable(el, tok);
+        if (canControl) {
+          attachTokenDraggable(el, tok);
+        } else {
+          el.addEventListener('mousedown', () => {
+            appendChatMessage(`🚫 [${tok.name}] 토큰은 조종 권한(${tok.owner || 'GM'})이 없습니다.`);
+          });
+        }
+
         layer.appendChild(el);
       });
     }
@@ -1372,6 +1678,9 @@
       const label = document.getElementById('bubble-field-label');
       const input = document.getElementById('bubble-field-input');
       const saveBtn = document.getElementById('bubble-save-btn');
+      const ownerGrp = document.getElementById('bubble-owner-group');
+      const ownerSel = document.getElementById('bubble-owner-select');
+
       const isGm = currentRole === 'gm';
 
       if (type === 'hp') {
@@ -1388,13 +1697,16 @@
         input.value = tok.damage;
       }
 
-      if (!isGm) {
-        input.disabled = true;
-        saveBtn.style.display = 'none';
-        label.innerText += ' [플레이어 열람 전용 - 수정은 GM만 가능]';
-      } else {
+      if (isGm) {
+        ownerGrp.style.display = 'block';
+        ownerSel.value = tok.owner || 'GM';
         input.disabled = false;
         saveBtn.style.display = 'inline-block';
+      } else {
+        ownerGrp.style.display = 'none';
+        input.disabled = true;
+        saveBtn.style.display = 'none';
+        label.innerText += ' [플레이어 열람 전용]';
       }
 
       modal.classList.add('active');
@@ -1410,6 +1722,9 @@
       if (!tok) return;
 
       const val = document.getElementById('bubble-field-input').value.trim();
+      const ownerVal = document.getElementById('bubble-owner-select').value;
+      tok.owner = ownerVal;
+
       if (activeBubbleType === 'hp') {
         const n = parseInt(val, 10);
         if (!isNaN(n)) {
@@ -1494,6 +1809,7 @@
       }
 
       const img = uploadedTokenDataUrl || defaultImg;
+      const owner = document.getElementById('spawn-owner-select').value || 'GM';
 
       const viewRect = viewport.getBoundingClientRect();
       const spawnX = Math.round((-panX + viewRect.width / 2) / zoomLevel) - 30;
@@ -1503,6 +1819,7 @@
         id: `${type}_${Date.now()}`,
         name: name,
         type: type,
+        owner: owner,
         x: spawnX + (Math.random() * 40 - 20),
         y: spawnY + (Math.random() * 40 - 20),
         hp: hp,
@@ -1527,8 +1844,10 @@
       renderTokens();
       uploadedTokenDataUrl = null;
       document.getElementById('token-image-preview-wrap').style.display = 'none';
-      appendChatMessage(`⚔️ [${name}] 토큰이 전장에 배치되었습니다.`);
+      appendChatMessage(`⚔️ [${name}] 토큰이 전장에 배치되었습니다. (조종 권한: ${owner})`);
     }
+
+    let pendingMapImageSrc = null;
 
     const mapDropZone = document.getElementById('map-drop-zone');
     mapDropZone.addEventListener('dragover', e => { e.preventDefault(); mapDropZone.classList.add('dragover'); });
@@ -1540,8 +1859,8 @@
         const file = e.dataTransfer.files[0];
         const reader = new FileReader();
         reader.onload = ev => {
-          document.getElementById('map-image').src = ev.target.result;
-          appendChatMessage('🗺️ 새로운 지도 이미지가 배경으로 설정되었습니다.');
+          pendingMapImageSrc = ev.target.result;
+          alert('이미지가 선택되었습니다. 가로/세로 격자 칸수를 확인 후 [지도 배경 및 크기 적용]을 누르세요.');
         };
         reader.readAsDataURL(file);
       }
@@ -1552,19 +1871,36 @@
         const file = e.target.files[0];
         const reader = new FileReader();
         reader.onload = ev => {
-          document.getElementById('map-image').src = ev.target.result;
-          appendChatMessage('🗺️ 새로운 지도 이미지가 배경으로 설정되었습니다.');
+          pendingMapImageSrc = ev.target.result;
+          alert('이미지가 선택되었습니다. 가로/세로 격자 칸수를 확인 후 [지도 배경 및 크기 적용]을 누르세요.');
         };
         reader.readAsDataURL(file);
       }
     }
 
-    function applyMapUrl() {
-      const url = document.getElementById('map-url-input').value.trim();
-      if (url) {
-        document.getElementById('map-image').src = url;
-        appendChatMessage('🗺️ 입력된 URL로 지도 배경이 변경되었습니다.');
+    function applyMapSettings() {
+      const urlInput = document.getElementById('map-url-input').value.trim();
+      const imgSrc = pendingMapImageSrc || urlInput;
+
+      const gridW = parseInt(document.getElementById('map-grid-w').value, 10) || 30;
+      const gridH = parseInt(document.getElementById('map-grid-h').value, 10) || 20;
+
+      const targetWidth = gridW * 50;
+      const targetHeight = gridH * 50;
+
+      const imgEl = document.getElementById('map-image');
+      const layerEl = document.getElementById('map-background-layer');
+
+      if (imgSrc) {
+        imgEl.src = imgSrc;
       }
+
+      imgEl.style.width = `${targetWidth}px`;
+      imgEl.style.height = `${targetHeight}px`;
+      layerEl.style.width = `${targetWidth}px`;
+      layerEl.style.height = `${targetHeight}px`;
+
+      appendChatMessage(`🗺️ 지도가 ${gridW}×${gridH} 칸(${targetWidth}×${targetHeight}px) 격자 크기에 맞춰 조정되었습니다.`);
     }
 
     let diceInterval = null;
@@ -1628,7 +1964,7 @@
       resultEl.innerHTML = `[${results.join(', ')}] = <strong>총합 ${total}</strong>`;
 
       addDiceLog(label, results, total);
-      appendChatMessage(`🎲 <strong>[${label}]</strong> 굴림 결과: [${results.join(', ')}] = <strong>${total}</strong>`, 'dice');
+      appendChatMessage(`🎲 <strong>[${myNickname}]</strong> ${label} 굴림: [${results.join(', ')}] = <strong>${total}</strong>`, 'dice');
     }
 
     function addDiceLog(label, results, total) {
@@ -1656,8 +1992,8 @@
       const text = input.value.trim();
       if (!text) return;
 
-      const sender = currentRole === 'gm' ? '👑 GM' : '🛡️ 플레이어';
-      appendChatMessage(`<strong>${sender}:</strong> ${text}`);
+      const senderTag = currentRole === 'gm' ? `👑 GM (${myNickname})` : `🛡️ ${myNickname}`;
+      appendChatMessage(`<strong>${senderTag}:</strong> ${text}`);
       input.value = '';
     }
 
@@ -1672,6 +2008,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       updateWorldTransform();
+      populateOwnerDropdowns();
       renderSheetTabs();
       renderSheet();
       renderCompendium();
